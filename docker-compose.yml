@@ -33,7 +33,7 @@ services:
         condition: service_healthy
     environment:
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=StructuredRAG;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
-      - DockerModelRunner__Endpoint=http://model-runner.docker.internal/engines/llama.cpp/v1/chat/completions
+      - DockerModelRunner__Endpoint=http://model-runner.docker.internal/engines/llama.cpp/v1/completions
     networks:
       - structured-rag-network
     restart: on-failure
