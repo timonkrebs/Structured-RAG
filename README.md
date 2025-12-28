@@ -156,15 +156,16 @@ models:
     model: ai/gemma3:2b
 ```
 
-Update `DockerModelRunnerService.cs`:
+Update `appsettings.json` to configure the model name:
 
-```csharp
-var request = new
-{
-    model = "ai/gemma3:2b",  // Change model name
-    // ...
-};
+```json
+"DockerModelRunner": {
+  "Endpoint": "http://model-runner.docker.internal/engines/llama.cpp/v1",
+  "Model": "ai/gemma3:2b"
+}
 ```
+
+**Security Note:** Always use pinned version tags (e.g., `ai/gemma3:2b`) or SHA256 digests instead of mutable tags like `:latest` to ensure reproducible builds and prevent potential security issues from upstream changes.
 
 ## Stopping the Application
 

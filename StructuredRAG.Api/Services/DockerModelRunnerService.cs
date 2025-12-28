@@ -12,12 +12,14 @@ public class DockerModelRunnerService
     private readonly HttpClient _httpClient;
     private readonly ILogger<DockerModelRunnerService> _logger;
     private readonly string _modelEndpoint;
+    private readonly string _modelName;
 
     public DockerModelRunnerService(HttpClient httpClient, IConfiguration configuration, ILogger<DockerModelRunnerService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
         _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://model-runner.docker.internal/engines/llama.cpp/v1";
+        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3:2b";
     }
 
     /// <summary>
@@ -29,7 +31,7 @@ public class DockerModelRunnerService
         {
             var request = new
             {
-                model = "ai/gemma3:2b",
+                model = _modelName,
                 prompt = prompt,
                 stream = false,
                 options = new
