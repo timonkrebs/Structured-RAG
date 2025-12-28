@@ -153,7 +153,7 @@ Edit `docker-compose.yml` to use a different model in the `models` section:
 ```yaml
 models:
   llm:
-    model: ai/gemma3:latest
+    model: ai/gemma3:2b
 ```
 
 Update `DockerModelRunnerService.cs`:
@@ -161,7 +161,7 @@ Update `DockerModelRunnerService.cs`:
 ```csharp
 var request = new
 {
-    model = "ai/gemma3:latest",  // Change model name
+    model = "ai/gemma3:2b",  // Change model name
     // ...
 };
 ```

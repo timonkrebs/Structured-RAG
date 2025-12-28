@@ -49,4 +49,4 @@ volumes:
 
 models:
   llm:
-    model: ai/gemma3:latest
+    model: ai/gemma3:2b

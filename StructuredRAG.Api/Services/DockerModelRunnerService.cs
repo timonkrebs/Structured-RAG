@@ -29,7 +29,7 @@ public class DockerModelRunnerService
         {
             var request = new
             {
-                model = "ai/gemma3:latest",
+                model = "ai/gemma3:2b",
                 prompt = prompt,
                 stream = false,
                 options = new
