@@ -1,0 +1,17 @@
+**/.git
+**/.gitignore
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+**/*.md
+**/charts
+**/node_modules
+**/npm-debug.log
+**/secrets.dev.yaml
+**/values.dev.yaml
+LICENSE
+README.md

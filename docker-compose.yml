@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # SQL Server database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: structured-rag-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - structured-rag-network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong@Passw0rd" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Ollama with Gemma 3 model
+  gemma:
+    image: ollama/ollama:latest
+    container_name: structured-rag-gemma
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - structured-rag-network
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: serve
+
+  # Helper service to pull Gemma model
+  gemma-setup:
+    image: ollama/ollama:latest
+    container_name: structured-rag-gemma-setup
+    depends_on:
+      gemma:
+        condition: service_healthy
+    networks:
+      - structured-rag-network
+    entrypoint: /bin/sh
+    command: >
+      -c "
+        echo 'Pulling gemma2:3b model...' &&
+        ollama pull gemma2:3b --host http://gemma:11434 &&
+        echo 'Model pulled successfully!' &&
+        sleep 10
+      "
+    restart: "no"
+
+  # .NET Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: structured-rag-app
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      gemma:
+        condition: service_healthy
+      gemma-setup:
+        condition: service_completed_successfully
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=StructuredRAG;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - Gemma__Endpoint=http://gemma:11434/api/generate
+    networks:
+      - structured-rag-network
+    restart: on-failure
+
+networks:
+  structured-rag-network:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
+  ollama-data:
