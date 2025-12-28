@@ -19,7 +19,7 @@ public class DockerModelRunnerService
         _httpClient = httpClient;
         _logger = logger;
         _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://model-runner.docker.internal/engines/llama.cpp/v1";
-        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3:2b";
+        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3-qat:1B-Q4_K_M";
     }
 
     /// <summary>
