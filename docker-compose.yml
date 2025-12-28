@@ -1,13 +1,13 @@
-version: '3.8'
-
 services:
   # SQL Server database
+  # SECURITY NOTE: The password below is for development only.
+  # For production, use Docker secrets or environment variables from a secure source.
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: structured-rag-sqlserver
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrong@Passw0rd
+      - SA_PASSWORD=YourStrong@Passw0rd  # TODO: Use secrets for production
       - MSSQL_PID=Developer
     ports:
       - "1433:1433"

@@ -10,6 +10,8 @@ namespace StructuredRAG.Api.Services;
 /// </summary>
 public class RagQueryService
 {
+    private const int MaxEntitiesPerQuery = 10;
+    
     private readonly ApplicationDbContext _dbContext;
     private readonly GemmaLlmService _llmService;
     private readonly ILogger<RagQueryService> _logger;
@@ -112,7 +114,7 @@ Selected Tags:";
             // If no tags selected, return all entities (or implement default filtering)
             return await _dbContext.Entities
                 .Include(e => e.Tags)
-                .Take(10)
+                .Take(MaxEntitiesPerQuery)
                 .ToListAsync(cancellationToken);
         }
 
@@ -121,7 +123,7 @@ Selected Tags:";
             .Include(e => e.Tags)
             .Where(e => e.Tags.Any(t => tags.Contains(t.Name)))
             .OrderByDescending(e => e.Tags.Count(t => tags.Contains(t.Name)))
-            .Take(10)
+            .Take(MaxEntitiesPerQuery)
             .ToListAsync(cancellationToken);
 
         return entities;

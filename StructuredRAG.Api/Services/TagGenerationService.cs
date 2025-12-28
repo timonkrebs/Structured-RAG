@@ -58,7 +58,7 @@ public class TagGenerationService
                 entity.Tags.Add(new Tag
                 {
                     Name = tagName,
-                    Description = $"Auto-generated tag for RAG optimization",
+                    Description = $"Auto-generated tag for RAG optimization on {DateTime.UtcNow:yyyy-MM-dd}",
                     CreatedAt = DateTime.UtcNow
                 });
             }
