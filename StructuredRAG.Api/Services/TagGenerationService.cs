@@ -12,12 +12,12 @@ namespace StructuredRAG.Api.Services;
 public class TagGenerationService
 {
     private readonly ApplicationDbContext _dbContext;
-    private readonly GemmaLlmService _llmService;
+    private readonly DockerModelRunnerService _llmService;
     private readonly ILogger<TagGenerationService> _logger;
 
     public TagGenerationService(
         ApplicationDbContext dbContext,
-        GemmaLlmService llmService,
+        DockerModelRunnerService llmService,
         ILogger<TagGenerationService> logger)
     {
         _dbContext = dbContext;

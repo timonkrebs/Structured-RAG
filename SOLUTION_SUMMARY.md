@@ -2,7 +2,7 @@
 
 ## What Was Built
 
-A complete containerized .NET solution that implements Retrieval-Augmented Generation (RAG) with intelligent tag-based filtering using Gemma 3 LLM.
+A complete containerized .NET solution that implements Retrieval-Augmented Generation (RAG) with intelligent tag-based filtering using Docker Model Runner (Gemma 3).
 
 ## Key Components
 
@@ -15,9 +15,9 @@ A complete containerized .NET solution that implements Retrieval-Augmented Gener
   - Sample data seeding
   - Relationship management between entities and tags
 
-### 2. LLM Integration (Gemma 3 via Ollama)
-- **GemmaLlmService**: Communicates with Ollama REST API
-- **Model**: Gemma 2 3B (automatically downloaded)
+### 2. LLM Integration (Docker Model Runner)
+- **DockerModelRunnerService**: Communicates with Docker Model Runner API
+- **Model**: Gemma 3 (via Docker Model Runner)
 - **Features**:
   - Configurable endpoint
   - Error handling and logging
@@ -49,7 +49,6 @@ A complete containerized .NET solution that implements Retrieval-Augmented Gener
 
 ### 5. Docker Orchestration
 - **SQL Server**: Database container with health checks
-- **Ollama**: LLM container with Gemma 3 model
 - **.NET App**: Application container with dependencies
 - **Features**:
   - Automated service startup order
@@ -94,7 +93,7 @@ Query → LLM Tag Selection → Tag-Based Filter → Vector Search → LLM Respo
 
 ### Environment Variables
 - `ConnectionStrings__DefaultConnection`: Database connection
-- `Gemma__Endpoint`: LLM API endpoint
+- `DockerModelRunner__Endpoint`: LLM API endpoint
 
 ### Security Considerations
 - ⚠️ Development passwords included for convenience
@@ -113,12 +112,11 @@ docker compose up --build
 
 ### Expected Behavior
 1. SQL Server starts and initializes
-2. Ollama downloads Gemma 2 3B model (~2GB)
-3. Application creates database schema
-4. Sample entities are seeded (5 programming/tech topics)
-5. Tags generated for all entities
-6. Demo RAG query: "What programming languages are mentioned?"
-7. Results logged with selected tags and response
+2. Application creates database schema
+3. Sample entities are seeded (5 programming/tech topics)
+4. Tags generated for all entities
+5. Demo RAG query: "What programming languages are mentioned?"
+6. Results logged with selected tags and response
 
 ### Sample Output
 ```
@@ -130,11 +128,10 @@ C#, Python, and JavaScript...
 
 ## Technical Decisions
 
-### Why Gemma 3?
-- Open-source and locally runnable
-- Good balance of size (3B) vs capability
-- Compatible with Ollama for easy deployment
-- No external API dependencies
+### Why Docker Model Runner?
+- Integrated with Docker Desktop
+- Easy to use locally
+- Supports various models including Gemma 3
 
 ### Why Tag-Based Filtering?
 - Complements vector search rather than replacing it

@@ -13,12 +13,12 @@ public class RagQueryService
     private const int MaxEntitiesPerQuery = 10;
 
     private readonly ApplicationDbContext _dbContext;
-    private readonly GemmaLlmService _llmService;
+    private readonly DockerModelRunnerService _llmService;
     private readonly ILogger<RagQueryService> _logger;
 
     public RagQueryService(
         ApplicationDbContext dbContext,
-        GemmaLlmService llmService,
+        DockerModelRunnerService llmService,
         ILogger<RagQueryService> logger)
     {
         _dbContext = dbContext;

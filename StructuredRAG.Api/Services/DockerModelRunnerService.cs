@@ -5,23 +5,23 @@ using System.Net.Http.Json;
 namespace StructuredRAG.Api.Services;
 
 /// <summary>
-/// Service for interacting with Gemma 3 LLM via Docker model runner
+/// Service for interacting with Docker Model Runner
 /// </summary>
-public class GemmaLlmService
+public class DockerModelRunnerService
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<GemmaLlmService> _logger;
+    private readonly ILogger<DockerModelRunnerService> _logger;
     private readonly string _modelEndpoint;
 
-    public GemmaLlmService(HttpClient httpClient, IConfiguration configuration, ILogger<GemmaLlmService> logger)
+    public DockerModelRunnerService(HttpClient httpClient, IConfiguration configuration, ILogger<DockerModelRunnerService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
-        _modelEndpoint = configuration["Gemma:Endpoint"] ?? "http://gemma:11434/api/generate";
+        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://model-runner.docker.internal/engines/llama.cpp/v1";
     }
 
     /// <summary>
-    /// Sends a prompt to the Gemma LLM and returns the response
+    /// Sends a prompt to the LLM and returns the response
     /// </summary>
     public async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken = default)
     {
@@ -29,7 +29,7 @@ public class GemmaLlmService
         {
             var request = new
             {
-                model = "gemma2:3b",
+                model = "ai/gemma3:latest",
                 prompt = prompt,
                 stream = false,
                 options = new
@@ -42,17 +42,17 @@ public class GemmaLlmService
             var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<GemmaResponse>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<ModelRunnerResponse>(cancellationToken);
             return result?.Response ?? string.Empty;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating response from Gemma LLM");
+            _logger.LogError(ex, "Error generating response from Docker Model Runner");
             throw;
         }
     }
 
-    private class GemmaResponse
+    private class ModelRunnerResponse
     {
         public string Response { get; set; } = string.Empty;
     }

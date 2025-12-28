@@ -3,11 +3,11 @@ Metadata-Enriched-RAG with auto-generated tags for improved query generation
 
 ## Overview
 
-This project implements a containerized .NET solution that uses **Gemma 3** (via Ollama) to generate optimized tags for entities stored in a SQL Server database. The tags are designed for Retrieval-Augmented Generation (RAG) workflows, where the LLM analyzes user queries, selects relevant tags, and filters entities before performing vector search.
+This project implements a containerized .NET solution that uses **Docker Model Runner** (running Gemma 3) to generate optimized tags for entities stored in a SQL Server database. The tags are designed for Retrieval-Augmented Generation (RAG) workflows, where the LLM analyzes user queries, selects relevant tags, and filters entities before performing vector search.
 
 ## Features
 
-- **Automated Tag Generation**: Uses Gemma 3 LLM to generate relevant tags for entities
+- **Automated Tag Generation**: Uses LLM (Docker Model Runner) to generate relevant tags for entities
 - **Tag Consistency**: Considers existing tags to maintain consistency across the system
 - **RAG Query Processing**: LLM-driven tag selection for optimal entity retrieval
 - **Containerized Architecture**: Fully containerized with Docker Compose
@@ -18,7 +18,7 @@ This project implements a containerized .NET solution that uses **Gemma 3** (via
 The solution consists of three main components:
 
 1. **SQL Server**: Stores entities and their generated tags
-2. **Ollama (Gemma 3)**: Provides LLM capabilities for tag generation and query processing
+2. **Docker Model Runner**: Provides LLM capabilities for tag generation and query processing
 3. **.NET Application**: Orchestrates tag generation and RAG query processing
 
 ## Prerequisites
@@ -44,7 +44,6 @@ docker-compose up --build
 
 This will:
 - Start SQL Server
-- Start Ollama and pull the Gemma 2 3B model
 - Build and run the .NET application
 - Seed sample data
 - Generate tags for entities
@@ -69,7 +68,7 @@ Structured-RAG/
 │   ├── Data/
 │   │   └── ApplicationDbContext.cs # EF Core DbContext
 │   ├── Services/
-│   │   ├── GemmaLlmService.cs     # LLM interaction service
+│   │   ├── DockerModelRunnerService.cs     # LLM interaction service
 │   │   ├── TagGenerationService.cs # Tag generation logic
 │   │   └── RagQueryService.cs     # RAG query processing
 │   ├── Program.cs                  # Application entry point
@@ -85,7 +84,7 @@ Structured-RAG/
 
 1. **Load Entities**: Retrieves entities from SQL Server using EF Core
 2. **Get Existing Tags**: Fetches all existing tags to maintain consistency
-3. **Generate Tags**: Uses Gemma 3 to generate 3-7 optimized tags per entity
+3. **Generate Tags**: Uses Docker Model Runner (Gemma 3) to generate 3-7 optimized tags per entity
 4. **Store Tags**: Saves new tags to the database
 
 ### RAG Query Process
@@ -110,14 +109,14 @@ Edit `appsettings.json` or set environment variable:
 }
 ```
 
-### Gemma Endpoint
+### Docker Model Runner Endpoint
 
 Edit `appsettings.json` or set environment variable:
 
 ```json
 {
-  "Gemma": {
-    "Endpoint": "http://gemma:11434/api/generate"
+  "DockerModelRunner": {
+    "Endpoint": "http://model-runner.docker.internal/engines/llama.cpp/v1"
   }
 }
 ```
@@ -149,20 +148,20 @@ Modify `TagGenerationService.cs` to customize:
 
 ### Changing the Model
 
-Edit `docker-compose.yml` to use a different model:
+Edit `docker-compose.yml` to use a different model in the `models` section:
 
 ```yaml
-gemma-setup:
-  command: >
-    -c "ollama pull gemma2:7b --host http://gemma:11434"
+models:
+  llm:
+    model: ai/gemma3:latest
 ```
 
-Update `GemmaLlmService.cs`:
+Update `DockerModelRunnerService.cs`:
 
 ```csharp
 var request = new
 {
-    model = "gemma2:7b",  // Change model name
+    model = "ai/gemma3:latest",  // Change model name
     // ...
 };
 ```
@@ -185,16 +184,8 @@ docker-compose down -v
 
 If containers fail to start, ensure:
 - Docker has enough resources (8GB RAM minimum)
-- Ports 1433 and 11434 are available
-- No other SQL Server or Ollama instances are running
-
-### Model Download Issues
-
-The Gemma model download may take 5-10 minutes. Check logs:
-
-```bash
-docker-compose logs gemma-setup
-```
+- Ports 1433 is available
+- No other SQL Server instances are running
 
 ### Database Connection Issues
 
@@ -212,4 +203,3 @@ See LICENSE file for details.
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
-
