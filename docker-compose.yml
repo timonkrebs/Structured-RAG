@@ -22,45 +22,6 @@ services:
       retries: 10
       start_period: 30s
 
-  # Ollama with Gemma 3 model
-  gemma:
-    image: ollama/ollama:latest
-    container_name: structured-rag-gemma
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama-data:/root/.ollama
-    networks:
-      - structured-rag-network
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    command: serve
-
-  # Helper service to pull Gemma model
-  gemma-setup:
-    image: ollama/ollama:latest
-    container_name: structured-rag-gemma-setup
-    depends_on:
-      gemma:
-        condition: service_healthy
-    networks:
-      - structured-rag-network
-    entrypoint: /bin/sh
-    command: >
-      -c "
-        echo 'Pulling gemma2:3b model...' &&
-        ollama pull gemma2:3b --host http://gemma:11434 &&
-        echo 'Model pulled successfully!' &&
-        sleep 10
-      "
-    restart: "no"
-
   # .NET Application
   app:
     build:
@@ -70,16 +31,14 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
-      gemma:
-        condition: service_healthy
-      gemma-setup:
-        condition: service_completed_successfully
     environment:
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=StructuredRAG;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
-      - Gemma__Endpoint=http://gemma:11434/api/generate
+      - DockerModelRunner__Endpoint=http://model-runner.docker.internal/engines/llama.cpp/v1
     networks:
       - structured-rag-network
     restart: on-failure
+    models:
+      - llm
 
 networks:
   structured-rag-network:
@@ -87,4 +46,7 @@ networks:
 
 volumes:
   sqlserver-data:
-  ollama-data:
+
+models:
+  llm:
+    model: ai/gemma3:latest

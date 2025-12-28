@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,8 +20,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Configure HTTP client for Gemma LLM
-builder.Services.AddHttpClient<GemmaLlmService>(client =>
+// Configure HTTP client for Docker Model Runner
+builder.Services.AddHttpClient<DockerModelRunnerService>(client =>
 {
     client.Timeout = TimeSpan.FromMinutes(5);
 });

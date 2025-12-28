@@ -9,10 +9,9 @@
    - Uses EF Core for ORM
    - Connection managed via Entity Framework
 
-2. **Ollama with Gemma 3**
+2. **Docker Model Runner (Gemma 3)**
    - Provides LLM capabilities
-   - Runs as a separate container
-   - Gemma 2 3B model is automatically pulled
+   - Runs as a Docker service (Model Runner)
 
 3. **.NET Application**
    - Console application orchestrating the RAG pipeline
@@ -43,7 +42,7 @@ StructuredRAG.Api/
 ├── Data/                # Database context
 │   └── ApplicationDbContext.cs
 ├── Services/            # Business logic
-│   ├── GemmaLlmService.cs      # LLM communication
+│   ├── DockerModelRunnerService.cs      # LLM communication
 │   ├── TagGenerationService.cs # Tag generation logic
 │   └── RagQueryService.cs      # RAG query processing
 ├── Program.cs           # Entry point and configuration
@@ -52,9 +51,9 @@ StructuredRAG.Api/
 
 ## Key Services
 
-### GemmaLlmService
+### DockerModelRunnerService
 
-Handles communication with the Gemma LLM via Ollama's REST API.
+Handles communication with the Gemma LLM via Docker Model Runner.
 
 **Key Methods:**
 - `GenerateAsync(string prompt)`: Sends a prompt to the LLM and returns the response
@@ -110,12 +109,12 @@ environment:
 
 ### LLM Endpoint
 
-Configure the Gemma endpoint:
+Configure the Docker Model Runner endpoint:
 
 ```json
 {
-  "Gemma": {
-    "Endpoint": "http://gemma:11434/api/generate"
+  "DockerModelRunner": {
+    "Endpoint": "http://model-runner.docker.internal/engines/llama.cpp/v1"
   }
 }
 ```
@@ -126,8 +125,9 @@ Configure the Gemma endpoint:
 
 1. **Start dependencies:**
    ```bash
-   docker compose up sqlserver gemma gemma-setup
+   docker compose up sqlserver
    ```
+   (Note: LLM is handled by Docker Model Runner if configured in Docker Desktop, or you may need to ensure the environment is set up correctly).
 
 2. **Run application locally:**
    ```bash
@@ -148,12 +148,7 @@ docker compose up --build
    docker compose logs sqlserver
    ```
 
-2. **Check Gemma:**
-   ```bash
-   docker compose logs gemma
-   ```
-
-3. **Check Application:**
+2. **Check Application:**
    ```bash
    docker compose logs app
    ```
@@ -198,12 +193,9 @@ Modify `RagQueryService.ProcessQueryAsync()` to:
    - Check `Entities` and `Tags` tables
 
 2. **Test LLM:**
+   (If accessible from host)
    ```bash
-   curl http://localhost:11434/api/generate -d '{
-     "model": "gemma2:3b",
-     "prompt": "Hello, world!",
-     "stream": false
-   }'
+   curl http://localhost:PORT/engines/llama.cpp/v1 -d '{...}'
    ```
 
 3. **Monitor Logs:**
@@ -229,7 +221,7 @@ To add unit tests:
 
 ## Performance Considerations
 
-- **LLM Latency**: Gemma responses can take 5-30 seconds
+- **LLM Latency**: Model responses can take 5-30 seconds
 - **Database Connection**: Use connection pooling (enabled by default)
 - **Tag Caching**: Consider caching all tags in memory
 - **Batch Processing**: Process multiple entities in parallel
@@ -239,13 +231,13 @@ To add unit tests:
 ### Application doesn't start
 
 - Check Docker resources (8GB+ RAM recommended)
-- Verify all ports are available (1433, 11434)
+- Verify the port is available (1433)
 - Check Docker logs for each service
 
 ### LLM timeouts
 
-- Increase timeout in GemmaLlmService
-- Use a smaller model (gemma2:2b)
+- Increase timeout in DockerModelRunnerService
+- Use a smaller model
 - Reduce prompt length
 
 ### Database connection issues
@@ -265,7 +257,6 @@ Before deploying to production:
 
 2. **Performance:**
    - Use a dedicated SQL Server instance
-   - Consider GPU acceleration for Gemma
    - Implement caching strategy
 
 3. **Monitoring:**
