@@ -48,9 +48,9 @@ public class TagGenerationService
 
         var prompt = BuildTagGenerationPrompt(entity, existingTags);
         var response = await _llmService.GenerateAsync(prompt, cancellationToken);
-        
+
         var newTags = ParseTagsFromResponse(response);
-        
+
         foreach (var tagName in newTags)
         {
             if (!entity.Tags.Any(t => t.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase)))
@@ -66,7 +66,7 @@ public class TagGenerationService
 
         entity.LastTagGeneratedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
-        
+
         _logger.LogInformation("Generated {Count} new tags for entity {EntityId}", newTags.Count, entityId);
     }
 
@@ -89,7 +89,7 @@ public class TagGenerationService
 
     private string BuildTagGenerationPrompt(Entity entity, List<string> existingTags)
     {
-        var existingTagsText = existingTags.Any() 
+        var existingTagsText = existingTags.Any()
             ? $"\n\nExisting tags in the system that you should consider and reuse when appropriate:\n{string.Join(", ", existingTags)}"
             : "";
 
@@ -117,7 +117,7 @@ Tags:";
             // Try to extract JSON array from response
             var jsonStart = response.IndexOf('[');
             var jsonEnd = response.LastIndexOf(']');
-            
+
             if (jsonStart >= 0 && jsonEnd > jsonStart)
             {
                 var jsonContent = response.Substring(jsonStart, jsonEnd - jsonStart + 1);

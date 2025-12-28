@@ -11,7 +11,7 @@ namespace StructuredRAG.Api.Services;
 public class RagQueryService
 {
     private const int MaxEntitiesPerQuery = 10;
-    
+
     private readonly ApplicationDbContext _dbContext;
     private readonly GemmaLlmService _llmService;
     private readonly ILogger<RagQueryService> _logger;
@@ -53,13 +53,13 @@ public class RagQueryService
 
         // Step 2: Use LLM to select relevant tags
         var relevantTags = await SelectRelevantTagsAsync(userQuery, allTags, cancellationToken);
-        
-        _logger.LogInformation("Selected {Count} relevant tags: {Tags}", 
+
+        _logger.LogInformation("Selected {Count} relevant tags: {Tags}",
             relevantTags.Count, string.Join(", ", relevantTags));
 
         // Step 3: Filter entities by selected tags
         var filteredEntities = await FilterEntitiesByTagsAsync(relevantTags, cancellationToken);
-        
+
         _logger.LogInformation("Found {Count} entities matching the tags", filteredEntities.Count);
 
         // Step 4: Generate response using filtered entities
@@ -80,8 +80,8 @@ public class RagQueryService
     }
 
     private async Task<List<string>> SelectRelevantTagsAsync(
-        string userQuery, 
-        List<string> availableTags, 
+        string userQuery,
+        List<string> availableTags,
         CancellationToken cancellationToken)
     {
         var prompt = $@"You are a tag selection system for a RAG (Retrieval-Augmented Generation) pipeline.
@@ -106,7 +106,7 @@ Selected Tags:";
     }
 
     private async Task<List<Models.Entity>> FilterEntitiesByTagsAsync(
-        List<string> tags, 
+        List<string> tags,
         CancellationToken cancellationToken)
     {
         if (!tags.Any())
@@ -139,7 +139,7 @@ Selected Tags:";
             return "I couldn't find any relevant information to answer your query.";
         }
 
-        var contextText = string.Join("\n\n", filteredEntities.Select(e => 
+        var contextText = string.Join("\n\n", filteredEntities.Select(e =>
             $"[{e.Name}]\n{e.Content}"));
 
         var prompt = $@"You are a helpful assistant answering user questions based on provided context.
@@ -166,7 +166,7 @@ Answer:";
         {
             var jsonStart = response.IndexOf('[');
             var jsonEnd = response.LastIndexOf(']');
-            
+
             if (jsonStart >= 0 && jsonEnd > jsonStart)
             {
                 var jsonContent = response.Substring(jsonStart, jsonEnd - jsonStart + 1);

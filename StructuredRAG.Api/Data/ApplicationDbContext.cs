@@ -26,7 +26,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Content).IsRequired();
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-            
+
             entity.HasMany(e => e.Tags)
                 .WithOne(t => t.Entity)
                 .HasForeignKey(t => t.EntityId)
@@ -39,7 +39,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(t => t.Name).IsRequired().HasMaxLength(100);
             entity.Property(t => t.Description).HasMaxLength(500);
             entity.Property(t => t.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-            
+
             entity.HasIndex(t => t.Name);
         });
     }

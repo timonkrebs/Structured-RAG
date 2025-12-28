@@ -10,7 +10,7 @@ public class Entity
     public string Content { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime? LastTagGeneratedAt { get; set; }
-    
+
     // Navigation property
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
 }

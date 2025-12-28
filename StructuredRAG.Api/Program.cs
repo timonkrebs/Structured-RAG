@@ -37,7 +37,7 @@ using (var scope = host.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var logger = services.GetRequiredService<ILogger<Program>>();
-    
+
     try
     {
         var dbContext = services.GetRequiredService<ApplicationDbContext>();
@@ -56,14 +56,14 @@ using (var scope = host.Services.CreateScope())
         var tagService = services.GetRequiredService<TagGenerationService>();
         logger.LogInformation("Generating tags for entities...");
         await tagService.GenerateTagsForAllEntitiesAsync();
-        
+
         // Demo RAG query
         var ragService = services.GetRequiredService<RagQueryService>();
         logger.LogInformation("Running demo RAG query...");
-        
+
         var result = await ragService.ProcessQueryAsync(
             "What programming languages are mentioned?");
-        
+
         logger.LogInformation("\n=== RAG Query Demo ===");
         logger.LogInformation("Query: {Query}", result.Query);
         logger.LogInformation("Selected Tags: {Tags}", string.Join(", ", result.SelectedTags));
