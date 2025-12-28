@@ -231,7 +231,7 @@ To add unit tests:
 ### Application doesn't start
 
 - Check Docker resources (8GB+ RAM recommended)
-- Verify all ports are available (1433)
+- Verify the port is available (1433)
 - Check Docker logs for each service
 
 ### LLM timeouts
