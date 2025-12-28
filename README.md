@@ -184,7 +184,7 @@ docker-compose down -v
 
 If containers fail to start, ensure:
 - Docker has enough resources (8GB RAM minimum)
-- Ports 1433 is available
+- Port 1433 is available
 - No other SQL Server instances are running
 
 ### Database Connection Issues
