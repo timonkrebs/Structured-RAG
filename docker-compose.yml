@@ -49,4 +49,4 @@ volumes:
 
 models:
   llm:
-    model: ai/gemma3:latest
+    model: ai/gemma3-qat:1B-Q4_K_M
