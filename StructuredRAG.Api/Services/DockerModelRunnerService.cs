@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace StructuredRAG.Api.Services;
 
@@ -32,19 +33,28 @@ public class DockerModelRunnerService
             var request = new
             {
                 model = _modelName,
-                messages = new[] { new 
+                messages = new[]
                 {
-                    role =  "user",
-                    content = prompt,
-                    timestamp = new DateTime()
-                } }
+                    new
+                    {
+                        role = "system",
+                        content = "You are a helpful assistant.",
+                        timestamp = DateTime.UtcNow
+                    },
+                    new
+                    {
+                        role = "user",
+                        content = prompt,
+                        timestamp = DateTime.UtcNow
+                    }
+                }
             };
 
             var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<ModelRunnerResponse>(cancellationToken);
-            return result?.Response ?? string.Empty;
+            var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
+            return result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -53,8 +63,25 @@ public class DockerModelRunnerService
         }
     }
 
-    private class ModelRunnerResponse
+    // Response models matching OpenAI Chat Completion format
+    private class ChatCompletionResponse
     {
-        public string Response { get; set; } = string.Empty;
+        [JsonPropertyName("choices")]
+        public List<Choice> Choices { get; set; } = new();
+    }
+
+    private class Choice
+    {
+        [JsonPropertyName("message")]
+        public Message Message { get; set; } = new();
+    }
+
+    private class Message
+    {
+        [JsonPropertyName("role")]
+        public string Role { get; set; } = string.Empty;
+
+        [JsonPropertyName("content")]
+        public string Content { get; set; } = string.Empty;
     }
 }
