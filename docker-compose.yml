@@ -49,4 +49,5 @@ volumes:
 
 models:
   llm:
-    model: ai/gemma3
+    model: ai/mistral:latest
+    context_size: 16384
