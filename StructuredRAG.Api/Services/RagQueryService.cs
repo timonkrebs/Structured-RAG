@@ -86,9 +86,9 @@ public class RagQueryService
     {
         var prompt = $@"Select 1-5 most relevant tags (JSON array) for this query from the list.
 
-Query: {userQuery}
+Query: '{userQuery}'
 
-Tags: [{string.Join(", ", availableTags)}]
+Tags: [""{string.Join(", ", availableTags)}""]
 
 Output Format: [""tag1"", ""tag2""] or []";
 
