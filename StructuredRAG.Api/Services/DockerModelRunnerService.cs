@@ -18,8 +18,8 @@ public class DockerModelRunnerService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://model-runner.docker.internal/engines/llama.cpp/v1/completions";
-        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3-qat:1B-Q4_K_M";
+        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1/chat/completions";
+        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3";
     }
 
     /// <summary>
@@ -32,13 +32,12 @@ public class DockerModelRunnerService
             var request = new
             {
                 model = _modelName,
-                prompt = prompt,
-                stream = false,
-                options = new
+                messages = new[] { new 
                 {
-                    temperature = 0.7,
-                    top_p = 0.9
-                }
+                    role =  "user",
+                    content = prompt,
+                    timestamp = new DateTime()
+                } }
             };
 
             var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, cancellationToken);
