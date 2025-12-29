@@ -90,24 +90,15 @@ public class TagGenerationService
     private string BuildTagGenerationPrompt(Entity entity, List<string> existingTags)
     {
         var existingTagsText = existingTags.Any()
-            ? $"\n\nExisting tags in the system that you should consider and reuse when appropriate:\n{string.Join(", ", existingTags)}"
+            ? $"\nReuse these tags if appropriate: {string.Join(", ", existingTags)}"
             : "";
 
-        return $@"You are a tagging system that generates optimized tags for Retrieval-Augmented Generation (RAG).
+        return $@"Generate 3-5 concise tags (JSON array) for this entity.
 
-Your task is to generate 3-7 relevant tags for the following entity. These tags should:
-1. Be descriptive and specific
-2. Help with semantic search and retrieval
-3. Cover different aspects (topic, domain, type, key concepts)
-4. Reuse existing tags from the system when appropriate to maintain consistency
-5. Be concise (1-3 words per tag)
+Entity: {entity.Name}
+Content: {entity.Content}{existingTagsText}
 
-Entity Name: {entity.Name}
-Entity Content: {entity.Content}{existingTagsText}
-
-Generate the tags as a JSON array of strings, like this: [""tag1"", ""tag2"", ""tag3""]
-
-Tags:";
+Format: [""tag1"", ""tag2""]";
     }
 
     private List<string> ParseTagsFromResponse(string response)

@@ -84,22 +84,12 @@ public class RagQueryService
         List<string> availableTags,
         CancellationToken cancellationToken)
     {
-        var prompt = $@"You are a tag selection system for a RAG (Retrieval-Augmented Generation) pipeline.
+        var prompt = $@"Select 1-5 most relevant tags (JSON array) for this query from the list.
 
-Given a user query and a list of available tags, select the most relevant tags that would help retrieve the right information.
+Query: {userQuery}
+Tags: {string.Join(", ", availableTags)}
 
-User Query: {userQuery}
-
-Available Tags:
-{string.Join(", ", availableTags)}
-
-Instructions:
-1. Analyze the user query
-2. Select 1-5 most relevant tags from the available tags
-3. Return ONLY the selected tags as a JSON array of strings
-4. If no tags are relevant, return an empty array []
-
-Selected Tags:";
+Format: [""tag1"", ""tag2""] or []";
 
         var response = await _llmService.GenerateAsync(prompt, cancellationToken);
         return ParseTagsFromResponse(response);
@@ -142,20 +132,12 @@ Selected Tags:";
         var contextText = string.Join("\n\n", filteredEntities.Select(e =>
             $"[{e.Name}]\n{e.Content}"));
 
-        var prompt = $@"You are a helpful assistant answering user questions based on provided context.
+        var prompt = $@"Answer this query using ONLY the provided context. Be concise.
 
-User Query: {userQuery}
+Query: {userQuery}
 
 Context:
-{contextText}
-
-Instructions:
-1. Answer the user's query based ONLY on the provided context
-2. Be concise and specific
-3. If the context doesn't contain enough information, say so
-4. Reference the relevant entities when appropriate
-
-Answer:";
+{contextText}";
 
         return await _llmService.GenerateAsync(prompt, cancellationToken);
     }
