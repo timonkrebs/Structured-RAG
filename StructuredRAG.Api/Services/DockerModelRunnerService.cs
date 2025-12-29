@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
 
 namespace StructuredRAG.Api.Services;
 
@@ -14,6 +16,7 @@ public class DockerModelRunnerService
     private readonly ILogger<DockerModelRunnerService> _logger;
     private readonly string _modelEndpoint;
     private readonly string _modelName;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public DockerModelRunnerService(HttpClient httpClient, IConfiguration configuration, ILogger<DockerModelRunnerService> logger)
     {
@@ -21,6 +24,12 @@ public class DockerModelRunnerService
         _logger = logger;
         _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1/chat/completions";
         _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3";
+
+        _jsonOptions = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 
     /// <summary>
@@ -50,7 +59,7 @@ public class DockerModelRunnerService
                 }
             };
 
-            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, _jsonOptions, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
