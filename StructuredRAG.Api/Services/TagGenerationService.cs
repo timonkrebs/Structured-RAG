@@ -90,13 +90,13 @@ public class TagGenerationService
     private string BuildTagGenerationPrompt(Entity entity, List<string> existingTags)
     {
         var existingTagsText = existingTags.Any()
-            ? $"\nReuse these tags if appropriate to maintain consistency: [\"{string.Join(", ", existingTags)}\"]"
+            ? $"\nReuse these tags if appropriate: {string.Join(", ", existingTags)}"
             : "";
 
-        return $@"Generate 3-7 concise tags (JSON array) for this entity.
+        return $@"Generate 3-5 concise tags (JSON array) for this entity.
 
-Entity: '{entity.Name}'
-Content: '{entity.Content}'{existingTagsText}
+Entity: {entity.Name}
+Content: {entity.Content}{existingTagsText}
 
 Format: [""tag1"", ""tag2""]";
     }

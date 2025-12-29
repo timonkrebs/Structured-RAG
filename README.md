@@ -153,7 +153,7 @@ Edit `docker-compose.yml` to use a different model in the `models` section:
 ```yaml
 models:
   llm:
-    model: ai/ministral3:latest
+    model: ai/gemma3-qat:1B-Q4_K_M
 ```
 
 Update `appsettings.json` to configure the model name:
@@ -161,11 +161,11 @@ Update `appsettings.json` to configure the model name:
 ```json
 "DockerModelRunner": {
   "Endpoint": "http://model-runner.docker.internal/engines/llama.cpp/v1",
-  "Model": "ai/ministral3:latest"
+  "Model": "ai/gemma3-qat:1B-Q4_K_M"
 }
 ```
 
-**Security Note:** Always use pinned version tags (e.g., `ai/ministral3:latest`) or SHA256 digests instead of mutable tags like `:latest` to ensure reproducible builds and prevent potential security issues from upstream changes.
+**Security Note:** Always use pinned version tags (e.g., `ai/gemma3-qat:1B-Q4_K_M`) or SHA256 digests instead of mutable tags like `:latest` to ensure reproducible builds and prevent potential security issues from upstream changes.
 
 ## Stopping the Application
 
