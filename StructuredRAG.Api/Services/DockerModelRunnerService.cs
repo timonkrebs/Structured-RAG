@@ -23,7 +23,7 @@ public class DockerModelRunnerService
         _httpClient = httpClient;
         _logger = logger;
         _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1/chat/completions";
-        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/granite-4.0-nano:latest";
+        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/qwen3-reranker:latest";
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -47,7 +47,7 @@ public class DockerModelRunnerService
                     new
                     {
                         role = "system",
-                        content = $@"You are a tagging system that generates tags.",
+                        content = $@"You are a tagging system that generates tags in the Format: [""tag1"", ""tag2""]",
                         timestamp = DateTime.UtcNow
                     },
                     new

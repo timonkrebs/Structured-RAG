@@ -43,9 +43,7 @@ public class TagGenerationService
         // Get all existing tags from database
         var existingTags = await _dbContext.Tags
             .Select(t => t.Name)
-            .GroupBy(x => x)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
+            .Distinct()
             .ToListAsync(cancellationToken);
 
         var prompt = BuildTagGenerationPrompt(entity, existingTags);
@@ -95,9 +93,11 @@ public class TagGenerationService
             ? $"\nReuse these tags if appropriate to maintain consistency: [\"{string.Join(", ", existingTags)}\"]"
             : "";
 
-        return $@"Generate 3-7 concise tags (JSON array) for this entity.
+        return $@"Generate at least 3-7 concise but descriptive tags (JSON array).
+        Make sure that every aspect of the relevant topics in the Titel and Content are represented.
+        You must not use more than 3 words per tag!
 
-Entity: '{entity.Name}'
+Titel: '{entity.Name}'
 Content: '{entity.Content}'{existingTagsText}
 
 Format: [""tag1"", ""tag2""]";
