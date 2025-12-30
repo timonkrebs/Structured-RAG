@@ -23,7 +23,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Configure HTTP client for Docker Model Runner
 builder.Services.AddHttpClient<DockerModelRunnerService>(client =>
 {
-    client.Timeout = TimeSpan.FromMinutes(5);
+    var timeoutSeconds = builder.Configuration.GetValue<int>("DockerModelRunner:TimeoutSeconds", 300);
+    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 });
 
 // Register services

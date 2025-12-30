@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
 
 namespace StructuredRAG.Api.Services;
 
@@ -13,13 +16,20 @@ public class DockerModelRunnerService
     private readonly ILogger<DockerModelRunnerService> _logger;
     private readonly string _modelEndpoint;
     private readonly string _modelName;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public DockerModelRunnerService(HttpClient httpClient, IConfiguration configuration, ILogger<DockerModelRunnerService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
-        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://model-runner.docker.internal/engines/llama.cpp/v1/completions";
-        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/gemma3-qat:1B-Q4_K_M";
+        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1/chat/completions";
+        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/qwen3-reranker:latest";
+
+        _jsonOptions = new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 
     /// <summary>
@@ -32,20 +42,28 @@ public class DockerModelRunnerService
             var request = new
             {
                 model = _modelName,
-                prompt = prompt,
-                stream = false,
-                options = new
+                messages = new[]
                 {
-                    temperature = 0.7,
-                    top_p = 0.9
+                    new
+                    {
+                        role = "system",
+                        content = $@"You are a tagging system that generates tags in the Format: [""tag1"", ""tag2""]",
+                        timestamp = DateTime.UtcNow
+                    },
+                    new
+                    {
+                        role = "user",
+                        content = prompt,
+                        timestamp = DateTime.UtcNow
+                    }
                 }
             };
 
-            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, _jsonOptions, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<ModelRunnerResponse>(cancellationToken);
-            return result?.Response ?? string.Empty;
+            var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
+            return result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -54,8 +72,25 @@ public class DockerModelRunnerService
         }
     }
 
-    private class ModelRunnerResponse
+    // Response models matching OpenAI Chat Completion format
+    private class ChatCompletionResponse
     {
-        public string Response { get; set; } = string.Empty;
+        [JsonPropertyName("choices")]
+        public List<Choice> Choices { get; set; } = new();
+    }
+
+    private class Choice
+    {
+        [JsonPropertyName("message")]
+        public Message Message { get; set; } = new();
+    }
+
+    private class Message
+    {
+        [JsonPropertyName("role")]
+        public string Role { get; set; } = string.Empty;
+
+        [JsonPropertyName("content")]
+        public string Content { get; set; } = string.Empty;
     }
 }
