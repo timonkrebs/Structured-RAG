@@ -49,5 +49,5 @@ volumes:
 
 models:
   llm:
-    model: ai/mistral:latest
+    model: ai/granite-4.0-nano:latest
     context_size: 16384

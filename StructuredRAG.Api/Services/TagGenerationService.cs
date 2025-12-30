@@ -43,7 +43,9 @@ public class TagGenerationService
         // Get all existing tags from database
         var existingTags = await _dbContext.Tags
             .Select(t => t.Name)
-            .Distinct()
+            .GroupBy(x => x)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
             .ToListAsync(cancellationToken);
 
         var prompt = BuildTagGenerationPrompt(entity, existingTags);
