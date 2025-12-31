@@ -99,7 +99,7 @@ public class TagGenerationService
         You must not use more than 3 words per tag!
         Instead of [""Nature and technology"", ...] or [""nature, technology"", ...] make multiple tags like [""nature"", ""technology"", ...].
         Do not split tags like [""team analysis"", ...] into [""team"", ""analysis"", ...] but keep it as [""team analysis"", ...]!
-        Do not use comma seperated words in tags. Instead of [""nature, technology"", ...] make multiple tags like [""nature"", ""technology"", ...]!
+        Do not use comma seperated words in tags. Instead of [""aesthetics, space, immersion"", ""experience, theory, design"", ""sensory, spatial, narrative""] make multiple tags like [""aesthetics"", ""space"", ""immersion"", ""sensory experience"", ""spatial theory"", ""design narrative"", ...]!
 
 Titel: '{entity.Name}'
 Content: '{entity.Content}'{existingTagsText}
