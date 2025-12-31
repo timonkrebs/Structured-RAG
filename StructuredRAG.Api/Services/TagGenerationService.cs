@@ -90,12 +90,15 @@ public class TagGenerationService
     private string BuildTagGenerationPrompt(Entity entity, List<string> existingTags)
     {
         var existingTagsText = existingTags.Any()
-            ? $"\n Use these existing tags if appropriate to maintain consistency: [\"{string.Join(", ", existingTags)}\"]"
+            ? $"\n Use these existing tags if suitable to maintain consistency: [\"{string.Join(", ", existingTags)}\"]"
             : "";
 
         return $@"Generate at least 3-7 concise but descriptive tags (JSON array).
         Make sure that every aspect of the relevant topics in the Titel and Content are represented.
+        
         You must not use more than 3 words per tag!
+        Instead of [""Nature and technology"", ...] or [""Nature, technology"", ...] make multiple tags like [""nature"", ""technology"", ...]
+
 
 Titel: '{entity.Name}'
 Content: '{entity.Content}'{existingTagsText}
