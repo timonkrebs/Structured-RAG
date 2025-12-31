@@ -97,8 +97,8 @@ public class TagGenerationService
         Make sure that every aspect of the relevant topics in the Titel and Content are represented.
         
         You must not use more than 3 words per tag!
-        Instead of [""Nature and technology"", ...] or [""Nature, technology"", ...] make multiple tags like [""nature"", ""technology"", ...]
-
+        Instead of [""Nature and technology"", ...] or [""nature, technology"", ...] make multiple tags like [""nature"", ""technology"", ...].
+        But do not split tags like [""team analysis"", ...] into [""team"", ""analysis"", ...] but keep it as [""team analysis"", ...]!
 
 Titel: '{entity.Name}'
 Content: '{entity.Content}'{existingTagsText}
