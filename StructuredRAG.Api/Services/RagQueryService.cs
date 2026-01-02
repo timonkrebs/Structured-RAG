@@ -84,11 +84,11 @@ public class RagQueryService
         List<string> availableTags,
         CancellationToken cancellationToken)
     {
-        var prompt = $@"Select 1-5 most relevant tags (JSON array) for this query from the list.
+        var prompt = $@"Select up to 10 of the most relevant tags (JSON array) for this query from the list.
 
 Query: '{userQuery}'
 
-Tags: [""{string.Join(", ", availableTags)}""]
+Tags: [{string.Join(", ", availableTags)}]
 
 Output Format: [""tag1"", ""tag2""] or []";
 
@@ -132,15 +132,15 @@ Output Format: [""tag1"", ""tag2""] or []";
 
         var contextText = string.Join("\n\n", filteredEntities.Select(e =>
             $"[{e.Name}]\n{e.Content}"));
-
+        var systemPrompt = "You are a helpful assistent!";
         var prompt = $@"Answer this query using ONLY the provided context. Be concise.
 
-Query: {userQuery}
+Query: '{userQuery}'
 
 Context:
 {contextText}";
 
-        return await _llmService.GenerateAsync(prompt, cancellationToken);
+        return await _llmService.GenerateAsync(prompt, cancellationToken, systemPrompt);
     }
 
     private List<string> ParseTagsFromResponse(string response)

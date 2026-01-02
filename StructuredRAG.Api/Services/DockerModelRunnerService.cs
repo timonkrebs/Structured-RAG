@@ -22,8 +22,8 @@ public class DockerModelRunnerService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1/chat/completions";
-        _modelName = configuration["DockerModelRunner:Model"] ?? "ai/qwen3-reranker:latest";
+        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1";
+        _modelName = configuration["DockerModelRunner:SimpleModel"] ?? "ai/granite-4.0-nano:latest";
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -35,7 +35,7 @@ public class DockerModelRunnerService
     /// <summary>
     /// Sends a prompt to the LLM and returns the response
     /// </summary>
-    public async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken = default)
+    public async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken = default, string system = null)
     {
         try
         {
@@ -47,7 +47,7 @@ public class DockerModelRunnerService
                     new
                     {
                         role = "system",
-                        content = $@"You are a tagging system that generates tags in the Format: [""tag1"", ""tag2""]",
+                        content = system ?? $@"You are an expert content classifier and taxonomy system. Your goal is to analyze the provided text and generate precise, hierarchical tags. Format: [""tag1"", ""tag2""]",
                         timestamp = DateTime.UtcNow
                     },
                     new
@@ -59,7 +59,7 @@ public class DockerModelRunnerService
                 }
             };
 
-            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint, request, _jsonOptions, cancellationToken);
+            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint + "/chat/completions", request, _jsonOptions, cancellationToken);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);

@@ -90,21 +90,35 @@ public class TagGenerationService
     private string BuildTagGenerationPrompt(Entity entity, List<string> existingTags)
     {
         var existingTagsText = existingTags.Any()
-            ? $"\n Use these existing tags if suitable to maintain consistency: [\"{string.Join(", ", existingTags)}\"]"
+            ? $@"\n Use these existing tags if suitable to maintain consistency: [{string.Join(", ", existingTags)}]. 
+            Add new tags if relevant but not found in the existing ones."
             : "";
 
-        return $@"Generate at least 3-7 concise and descriptive tags (JSON array).
-        Make sure that every aspect of the relevant topics in the Titel and Content are represented.
-        
-        You must not use more than 3 words per tag!
-        Instead of [""Nature and technology"", ...] or [""nature, technology"", ...] make multiple tags like [""nature"", ""technology"", ...].
-        Do not split tags like [""team analysis"", ...] into [""team"", ""analysis"", ...] but keep it as [""team analysis"", ...]!
-        Do not use comma seperated words in tags. Instead of [""aesthetics, space, immersion"", ""experience, theory, design"", ""sensory, spatial, narrative""] make multiple tags like [""aesthetics"", ""space"", ""immersion"", ""sensory experience"", ""spatial theory"", ""design narrative"", ...]!
+        return $@"### Instructions
+1. **Analyze:** Read the Title, Content, and any Existing Tags to understand the core subject.
+2. **Hierarchy:** Generate tags ranging from the general domain to specific topics.
+3. **Quantity:** Output exactly between 3 to 10 tags.
+4. **Formatting Rules:**
+    * Output a raw JSON array of strings (e.g., [""tag1"", ""tag2""]).
+    * Maximum 3 words per tag.
+    * **Atomic Concepts:** Split distinct concepts (e.g., convert ""Nature and Technology"" -> ""Nature"", ""Technology"").
+    * **Compound Nouns:** Keep standard phrases together (e.g., keep ""Team Analysis"" or ""Machine Learning"" as single tags).
+    * Do not use commas within a tag.
 
-Titel: '{entity.Name}'
+### Examples
+Input: ""The aesthetics of space and immersion in design.""
+Bad Output: [""aesthetics, space"", ""immersion design""]
+Good Output: [""Design"", ""Aesthetics"", ""Space"", ""Immersion"", ""Spatial Theory""]
+
+Input: ""How to conduct a team analysis using Python.""
+Bad Output: [""team"", ""analysis"", ""python code""]
+Good Output: [""Data Science"", ""Team Analysis"", ""Python"", ""Management""]
+
+### Data to Process
+Title: '{entity.Name}'
 Content: '{entity.Content}'{existingTagsText}
 
-Format: [""tag1"", ""tag2""]";
+Output JSON:";
     }
 
     private List<string> ParseTagsFromResponse(string response)
