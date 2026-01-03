@@ -55,7 +55,10 @@ using (var scope = host.Services.CreateScope())
 
         // Generate tags for all entities
         var tagService = services.GetRequiredService<TagGenerationService>();
-        logger.LogInformation("Generating tags for entities...");
+        logger.LogInformation("Generating initial tag set from a sample of entities...");
+        await tagService.GenerateInitialTagSetAsync();
+
+        logger.LogInformation("Generating tags for remaining entities...");
         await tagService.GenerateTagsForAllEntitiesAsync();
 
         // Demo RAG query

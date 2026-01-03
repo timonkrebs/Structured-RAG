@@ -87,6 +87,36 @@ public class TagGenerationService
         }
     }
 
+    /// <summary>
+    /// Generates an initial set of tags from a representative subset of entities (10%)
+    /// to ensure tag consistency.
+    /// </summary>
+    public async Task GenerateInitialTagSetAsync(CancellationToken cancellationToken = default)
+    {
+        var untaggedEntities = await _dbContext.Entities
+            .Where(e => e.LastTagGeneratedAt == null)
+            .ToListAsync(cancellationToken);
+
+        if (untaggedEntities.Count == 0)
+        {
+            _logger.LogInformation("No untagged entities found to generate initial tag set.");
+            return;
+        }
+
+        var sampleSize = (int)Math.Max(1, untaggedEntities.Count * 0.1);
+        var random = new Random();
+        var sampleEntities = untaggedEntities.OrderBy(e => random.Next()).Take(sampleSize).ToList();
+
+        _logger.LogInformation("Generating initial tag set from a sample of {SampleSize} entities.", sampleEntities.Count);
+
+        foreach (var entity in sampleEntities)
+        {
+            await GenerateTagsForEntityAsync(entity.Id, cancellationToken);
+        }
+
+        _logger.LogInformation("Finished generating initial tag set.");
+    }
+
     private string BuildTagGenerationPrompt(Entity entity, List<string> existingTags)
     {
         var existingTagsText = existingTags.Any()
