@@ -36,20 +36,10 @@ services:
     networks:
       - structured-rag-network
     restart: on-failure
-    models:
-      - qwen
-      - granite
+
 networks:
   structured-rag-network:
     driver: bridge
 
 volumes:
   sqlserver-data:
-
-models:
-  qwen:
-    model: ai/qwen3-reranker:latest
-    context_size: 32768
-  granite:
-    model: ai/granite-4.0-nano:latest
-    context_size: 32768

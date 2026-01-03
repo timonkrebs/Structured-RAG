@@ -1,4 +1,4 @@
-namespace StructuredRAG.Api.Models;
+namespace StructuredRAG.Core.Models;
 
 /// <summary>
 /// Represents an entity that can have tags generated for RAG optimization

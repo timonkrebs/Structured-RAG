@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using StructuredRAG.Api.Models;
+using StructuredRAG.Core.Models;
 
-namespace StructuredRAG.Api.Data;
+namespace StructuredRAG.Core.Data;
 
 /// <summary>
 /// Database context for the Structured RAG application
