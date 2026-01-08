@@ -3,9 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using StructuredRAG.Api.Data;
-using StructuredRAG.Api.Models;
-using StructuredRAG.Api.Services;
+using StructuredRAG.Core.Data;
+using StructuredRAG.Core.Models;
+using StructuredRAG.Core.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 

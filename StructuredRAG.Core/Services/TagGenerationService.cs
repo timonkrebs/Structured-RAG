@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using StructuredRAG.Api.Data;
-using StructuredRAG.Api.Models;
+using StructuredRAG.Core.Data;
+using StructuredRAG.Core.Models;
 using System.Text.Json;
 
-namespace StructuredRAG.Api.Services;
+namespace StructuredRAG.Core.Services;
 
 /// <summary>
 /// Service for generating and managing tags for entities using LLM

@@ -1,4 +1,4 @@
-namespace StructuredRAG.Api.Models;
+namespace StructuredRAG.Core.Models;
 
 /// <summary>
 /// Represents a tag optimized for RAG retrieval

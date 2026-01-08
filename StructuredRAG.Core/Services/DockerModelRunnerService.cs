@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
 
-namespace StructuredRAG.Api.Services;
+namespace StructuredRAG.Core.Services;
 
 /// <summary>
 /// Service for interacting with Docker Model Runner
