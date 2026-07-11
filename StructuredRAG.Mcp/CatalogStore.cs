@@ -140,11 +140,14 @@ public class CatalogStore
         return match?.Name;
     }
 
+    // One-character tokens are kept only when the user capitalized them ("R", "C" —
+    // deliberate course/language terms); lowercase singles ("i", "a") are noise.
     private static List<string> Tokenize(string query) =>
-        query.ToLowerInvariant()
+        query
             .Split(new[] { ' ', ',', ';', '?', '!', '.', '/', '(', ')', '"', '\'' },
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(t => t.Length > 1)
+            .Where(t => t.Length > 1 || (t.Length == 1 && char.IsUpper(t[0])))
+            .Select(t => t.ToLowerInvariant())
             .Distinct()
             .ToList();
 

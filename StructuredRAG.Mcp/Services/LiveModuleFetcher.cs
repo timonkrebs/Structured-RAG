@@ -29,14 +29,32 @@ public class LiveModuleFetcher
 
     public async Task<FetchResult> FetchAsync(CompiledModule m, CancellationToken ct = default)
     {
-        var planId = m.Offerings.FirstOrDefault()?.PlanSemesterModulId;
-        if (planId != null)
+        // Offerings are ordered newest-first; the newest can 404 (expired/withdrawn)
+        // while an older one is still published — try each id before giving up on live.
+        foreach (var offering in m.Offerings)
         {
-            var detail = await GetLiveDetailAsync(planId, ct);
+            ModuleDetailDto? detail;
+            try
+            {
+                detail = await GetLiveDetailAsync(offering.PlanSemesterModulId, ct);
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                // The client aborted the request — propagate instead of serving a fallback.
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Live fetch for {PlanId} failed; falling back to compiled record",
+                    offering.PlanSemesterModulId);
+                break; // transport trouble — further ids would just retry against the same host
+            }
+
             if (detail != null)
             {
                 return BuildResult(m, SourceModuleMapper.Map(detail), source: "live");
             }
+            // null means 404 for this offering — try the next one.
         }
 
         return BuildResult(m, live: null, source: "compiled");
@@ -49,25 +67,12 @@ public class LiveModuleFetcher
             return cached.Detail;
         }
 
-        try
+        var detail = await _client.GetModuleDetailAsync(planId, ct);
+        if (detail != null)
         {
-            var detail = await _client.GetModuleDetailAsync(planId, ct);
-            if (detail != null)
-            {
-                _cache[planId] = (DateTime.UtcNow, detail);
-            }
-            return detail;
+            _cache[planId] = (DateTime.UtcNow, detail);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            // The client aborted the request — propagate instead of serving a fallback.
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Live fetch for {PlanId} failed; falling back to compiled record", planId);
-            return null;
-        }
+        return detail;
     }
 
     private static FetchResult BuildResult(CompiledModule compiled, SourceModule? live, string source)

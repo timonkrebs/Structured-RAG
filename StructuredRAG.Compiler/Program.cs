@@ -15,8 +15,21 @@ using System.Text.Json;
 // All settings can be overridden via appsettings.json, environment variables or
 // --Section:Key=value arguments (e.g. --Compiler:SourcePath=data/modules.ingested.json).
 
-var command = args.FirstOrDefault(a => !a.StartsWith('-'))?.ToLowerInvariant() ?? "compile";
-var configArgs = args.Where(a => a.StartsWith('-')).ToArray();
+// Only the first token can be the subcommand; everything after it goes to the
+// configuration provider intact — AddCommandLine supports both "--Key=value"
+// and the space-separated "--Key value" form, so values must not be filtered out.
+string command;
+string[] configArgs;
+if (args.Length > 0 && !args[0].StartsWith('-'))
+{
+    command = args[0].ToLowerInvariant();
+    configArgs = args.Skip(1).ToArray();
+}
+else
+{
+    command = "compile";
+    configArgs = args;
+}
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
