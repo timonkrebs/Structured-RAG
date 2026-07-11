@@ -5,6 +5,59 @@ Metadata-Enriched-RAG with auto-generated tags for improved query generation
 
 This project implements a containerized .NET solution that uses **Docker Model Runner** (running Gemma 3) to generate optimized tags for entities stored in a SQL Server database. The tags are designed for Retrieval-Augmented Generation (RAG) workflows, where the LLM analyzes user queries, selects relevant tags, and filters entities before performing vector search.
 
+## Module Catalog MCP Server (compile offline, reason on the client)
+
+Besides the original tag-RAG pipeline, the repo contains a second, newer architecture
+built for capable client models (ChatGPT, Claude, …): **all LLM inference happens
+offline at compile time or on the client at query time — the serving layer does none.**
+
+```
+                 daily/weekly (cron)                          query time
+┌──────────────┐   ┌──────────────────────┐   ┌───────────┐   ┌──────────────────────┐
+│ module data  │ → │ StructuredRAG.       │ → │ compiled/ │ → │ StructuredRAG.Mcp    │ ⇄ ChatGPT / Claude
+│ (JSON, DB…)  │   │ Compiler (LLM-heavy) │   │ JSON      │   │ (zero inference)     │   (does the reasoning)
+└──────────────┘   └──────────────────────┘   └───────────┘   └──────────────────────┘
+```
+
+- **`StructuredRAG.Compiler`** — offline knowledge compilation, run daily/weekly: one
+  LLM pass designs a **closed tag taxonomy** over the whole catalog, then each module is
+  enriched against that vocabulary (retrieval-optimized summary, target audience,
+  typical student questions). Works with any OpenAI-compatible endpoint — use a strong
+  model here; it runs rarely.
+- **`StructuredRAG.Mcp`** — stateless MCP server over the compiled artifacts:
+  ChatGPT-connector-compatible `search`/`fetch`, structured `search_modules`,
+  `list_tags`, a deterministic `plan_semester` (prerequisite/semester eligibility), and
+  MCP resources (`catalog://index`, `catalog://taxonomy`) clients can load into context.
+
+Quick start (uses the hand-compiled sample catalog in `compiled-sample/`):
+
+```bash
+dotnet run --project StructuredRAG.Mcp     # MCP endpoint at http://localhost:<port>/mcp
+```
+
+### Real data: FHNW module catalog pilot
+
+`StructuredRAG.Fhnw` connects the pipeline to the official FHNW Modulbeschreibungen
+API (public). The pilot scope is *BSc in Wirtschaftsinformatik*; ingested source data
+lives in `data/modules.wirtschaftsinformatik.json`:
+
+```bash
+dotnet run --project StructuredRAG.Compiler -- ingest    # FHNW API -> source JSON
+dotnet run --project StructuredRAG.Compiler -- compile   # LLM compile -> compiled/
+Catalog__CompiledPath=compiled dotnet run --project StructuredRAG.Mcp
+```
+
+The compilation is bilingual (DE/EN), extracts structured prerequisite links from the
+official free-text requirements, keeps tag names stable across runs, and skips
+unchanged modules. At query time, `fetch` passes through to the live FHNW API so
+module details are always current — the compiled catalog is the index, the official
+catalog stays the source of truth. Note: the source app covers 6 FHNW schools
+(Wirtschaft, Pädagogik, Musik, Gestaltung/Kunst, Soziale Arbeit, Psychologie) —
+Hochschule für Technik is not included.
+
+See [StructuredRAG.Mcp/README.md](StructuredRAG.Mcp/README.md) for tool reference and
+how to register the server in the ChatGPT web interface or Claude.
+
 ## Features
 
 - **Automated Tag Generation**: Uses LLM (Docker Model Runner) to generate relevant tags for entities

@@ -2,10 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
+# Copy solution and project files (all projects referenced by the solution,
+# otherwise `dotnet restore` of the solution fails)
 COPY StructuredRAG.sln .
 COPY StructuredRAG.Core/StructuredRAG.Core.csproj StructuredRAG.Core/
 COPY StructuredRAG.Example/StructuredRAG.Example.csproj StructuredRAG.Example/
+COPY StructuredRAG.Fhnw/StructuredRAG.Fhnw.csproj StructuredRAG.Fhnw/
+COPY StructuredRAG.Compiler/StructuredRAG.Compiler.csproj StructuredRAG.Compiler/
+COPY StructuredRAG.Mcp/StructuredRAG.Mcp.csproj StructuredRAG.Mcp/
 
 # Restore dependencies
 RUN dotnet restore "StructuredRAG.sln"

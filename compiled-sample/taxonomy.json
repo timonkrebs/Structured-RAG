@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Programming Foundations",
+    "description": "Learning to write, structure and test code; entry point for students with little or no programming experience.",
+    "moduleCount": 2
+  },
+  {
+    "name": "Algorithms",
+    "description": "Algorithmic thinking, data structures and complexity analysis; for students who want to solve computational problems efficiently.",
+    "moduleCount": 1
+  },
+  {
+    "name": "Data Engineering",
+    "description": "Storing, modeling and querying data with relational and NoSQL databases.",
+    "moduleCount": 1
+  },
+  {
+    "name": "Data Science",
+    "description": "Statistics, data analysis and drawing conclusions from datasets; foundation for AI and research-oriented work.",
+    "moduleCount": 2
+  },
+  {
+    "name": "Machine Learning",
+    "description": "Training and evaluating predictive models, from classic ML to neural networks; for students interested in AI.",
+    "moduleCount": 2
+  },
+  {
+    "name": "Artificial Intelligence",
+    "description": "AI applications including language models, NLP and responsible AI topics.",
+    "moduleCount": 2
+  },
+  {
+    "name": "Web Development",
+    "description": "Building web applications: frontend, backend, APIs and deployment.",
+    "moduleCount": 3
+  },
+  {
+    "name": "Security",
+    "description": "Understanding and defending against security threats; secure coding and penetration testing in lab settings.",
+    "moduleCount": 1
+  },
+  {
+    "name": "Cloud & DevOps",
+    "description": "Cloud platforms, containers, serverless and infrastructure automation; for students aiming at operations or platform engineering roles.",
+    "moduleCount": 1
+  },
+  {
+    "name": "Project & Teamwork",
+    "description": "Managing projects and working effectively in teams: agile methods, communication and leadership skills.",
+    "moduleCount": 1
+  },
+  {
+    "name": "Hands-on Project",
+    "description": "Modules assessed mainly through practical project work rather than written exams; good for students who learn by building.",
+    "moduleCount": 6
+  },
+  {
+    "name": "Career Foundations",
+    "description": "Broadly required base modules that unlock many follow-up modules and are expected in most study plans.",
+    "moduleCount": 5
+  },
+  {
+    "name": "English Instruction",
+    "description": "Modules taught in English; relevant for exchange students or students preferring English.",
+    "moduleCount": 5
+  }
+]
