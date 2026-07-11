@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -8,7 +9,9 @@ using System.Text.Encodings.Web;
 namespace StructuredRAG.Core.Services;
 
 /// <summary>
-/// Service for interacting with Docker Model Runner
+/// Client for any OpenAI-compatible chat-completions endpoint: Docker Model Runner,
+/// llama.cpp, OpenAI, Azure OpenAI, OpenRouter, ... Configure via
+/// DockerModelRunner:Endpoint, :SimpleModel and (for hosted APIs) :ApiKey.
 /// </summary>
 public class DockerModelRunnerService
 {
@@ -22,8 +25,14 @@ public class DockerModelRunnerService
     {
         _httpClient = httpClient;
         _logger = logger;
-        _modelEndpoint = configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1";
+        _modelEndpoint = (configuration["DockerModelRunner:Endpoint"] ?? "http://localhost:12434/engines/llama.cpp/v1").TrimEnd('/');
         _modelName = configuration["DockerModelRunner:SimpleModel"] ?? "ai/granite-4.0-nano:latest";
+
+        var apiKey = configuration["DockerModelRunner:ApiKey"];
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        }
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -35,7 +44,7 @@ public class DockerModelRunnerService
     /// <summary>
     /// Sends a prompt to the LLM and returns the response
     /// </summary>
-    public async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken = default, string system = null)
+    public async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken = default, string? system = null)
     {
         try
         {
@@ -47,14 +56,12 @@ public class DockerModelRunnerService
                     new
                     {
                         role = "system",
-                        content = system ?? $@"You are an expert content classifier and taxonomy system. Your goal is to analyze the provided text and generate precise, hierarchical tags. Format: [""tag1"", ""tag2""]",
-                        timestamp = DateTime.UtcNow
+                        content = system ?? @"You are an expert content classifier and taxonomy system. Your goal is to analyze the provided text and generate precise, hierarchical tags. Format: [""tag1"", ""tag2""]"
                     },
                     new
                     {
                         role = "user",
-                        content = prompt,
-                        timestamp = DateTime.UtcNow
+                        content = prompt
                     }
                 }
             };
@@ -67,7 +74,7 @@ public class DockerModelRunnerService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating response from Docker Model Runner");
+            _logger.LogError(ex, "Error generating response from LLM endpoint {Endpoint}", _modelEndpoint);
             throw;
         }
     }

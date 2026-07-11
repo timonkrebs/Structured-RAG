@@ -65,9 +65,11 @@ public class CatalogStore
 
     private static int ScoreModule(CompiledModule m, IReadOnlyCollection<string> terms)
     {
-        var title = m.Title.ToLowerInvariant();
+        var title = $"{m.Title} {m.TitleEn}".ToLowerInvariant();
         var tags = string.Join(' ', m.Tags).ToLowerInvariant();
-        var body = $"{m.Summary} {m.Audience} {string.Join(' ', m.TypicalQuestions)} {m.Description}"
+        var body = ($"{m.Summary} {m.SummaryEn} {m.Audience} {m.AudienceEn} " +
+                    $"{string.Join(' ', m.TypicalQuestions)} {string.Join(' ', m.TypicalQuestionsEn)} " +
+                    $"{m.PrerequisiteNotes} {m.Description} {m.DescriptionEn}")
             .ToLowerInvariant();
 
         var score = 0;
@@ -79,6 +81,16 @@ public class CatalogStore
             if (body.Contains(term)) score += 1;
         }
         return score;
+    }
+
+    /// <summary>Resolves a tag given by canonical (German) name or English alias to its canonical name.</summary>
+    public string? ResolveTagName(string tag)
+    {
+        EnsureFresh();
+        var match = _taxonomy.FirstOrDefault(t =>
+            t.Name.Equals(tag, StringComparison.OrdinalIgnoreCase)
+            || (t.NameEn?.Equals(tag, StringComparison.OrdinalIgnoreCase) ?? false));
+        return match?.Name;
     }
 
     private static List<string> Tokenize(string query) =>
@@ -96,11 +108,17 @@ public class CatalogStore
         var sb = new StringBuilder();
         sb.AppendLine($"# Module catalog index ({_manifest.ModuleCount} modules, compiled {_manifest.CompiledAt:yyyy-MM-dd})");
         sb.AppendLine();
-        sb.AppendLine("| Code | Title | ECTS | Level | Offered | Tags |");
-        sb.AppendLine("|------|-------|------|-------|---------|------|");
-        foreach (var m in _modules.OrderBy(m => m.Code))
+        sb.AppendLine("| Code | Title | ECTS | Level | Type | Offered | Lang | Tags |");
+        sb.AppendLine("|------|-------|------|-------|------|---------|------|------|");
+        foreach (var m in _modules.OrderBy(m => m.Title, StringComparer.OrdinalIgnoreCase))
         {
-            sb.AppendLine($"| {m.Code} | {m.Title} | {m.Ects} | {m.Level} | {string.Join("/", m.OfferedIn)} | {string.Join(", ", m.Tags)} |");
+            var title = string.IsNullOrWhiteSpace(m.TitleEn) || m.TitleEn == m.Title
+                ? m.Title
+                : $"{m.Title} / {m.TitleEn}";
+            var offered = m.Offerings.Count > 0
+                ? string.Join("/", m.Offerings.Select(o => o.SemesterId))
+                : string.Join("/", m.OfferedIn);
+            sb.AppendLine($"| {m.Code} | {title} | {m.Ects} | {m.Level} | {m.ModuleType} | {offered} | {string.Join(",", m.Languages)} | {string.Join(", ", m.Tags)} |");
         }
         return sb.ToString();
     }
@@ -111,11 +129,13 @@ public class CatalogStore
         var sb = new StringBuilder();
         sb.AppendLine("# Tag taxonomy");
         sb.AppendLine();
-        sb.AppendLine("Use these tags to filter modules with the search_modules tool.");
+        sb.AppendLine("Use these tags (German canonical name or English alias) to filter modules with the search_modules tool.");
         sb.AppendLine();
         foreach (var t in _taxonomy.OrderByDescending(t => t.ModuleCount))
         {
-            sb.AppendLine($"- **{t.Name}** ({t.ModuleCount} modules): {t.Description}");
+            var alias = string.IsNullOrWhiteSpace(t.NameEn) || t.NameEn == t.Name ? "" : $" / {t.NameEn}";
+            var descriptionEn = string.IsNullOrWhiteSpace(t.DescriptionEn) ? "" : $" — {t.DescriptionEn}";
+            sb.AppendLine($"- **{t.Name}**{alias} ({t.ModuleCount} modules): {t.Description}{descriptionEn}");
         }
         return sb.ToString();
     }

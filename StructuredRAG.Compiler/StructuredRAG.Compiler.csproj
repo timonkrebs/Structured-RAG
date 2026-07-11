@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StructuredRAG.Core\StructuredRAG.Core.csproj" />
+    <ProjectReference Include="..\StructuredRAG.Fhnw\StructuredRAG.Fhnw.csproj" />
   </ItemGroup>
 
   <ItemGroup>

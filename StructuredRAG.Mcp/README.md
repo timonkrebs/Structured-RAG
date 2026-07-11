@@ -22,11 +22,12 @@ milliseconds.
 
 | Tool | Purpose |
 |------|---------|
-| `search` | Free-text search (ChatGPT-connector-compatible shape) |
-| `fetch` | Full compiled record of one module by code (ChatGPT-connector-compatible shape) |
-| `search_modules` | Structured filtering: tags, semester, level, ECTS range, language |
-| `list_tags` | The closed tag taxonomy with descriptions and module counts |
-| `plan_semester` | Eligible vs. blocked modules for a semester, given completed modules |
+| `search` | Free-text search, German or English (ChatGPT-connector-compatible shape) |
+| `fetch` | One module in full: **current official description fetched live** from the FHNW module directory (TTL-cached, deterministic HTTP — still no inference) plus compiled enrichments; falls back to the compiled record when the API is unreachable (`metadata.source`: `live`/`compiled`) |
+| `search_modules` | Structured filtering: tags (German canonical or English alias), semester (`HS`/`FS` or concrete `26HS`), level, module type, study program, ECTS range, language |
+| `list_tags` | The closed bilingual tag taxonomy with descriptions and module counts |
+| `get_catalog_overview` | Taxonomy + full module index as one markdown blob — ideal first call for clients without resource support (ChatGPT) |
+| `plan_semester` | Eligible vs. blocked modules for a semester, given completed modules; includes free-text prerequisite notes and weekdays for the client's planning reasoning |
 
 ## Resources
 
@@ -66,17 +67,29 @@ The server must be reachable over HTTPS on the public internet for hosted client
 
 ## Updating the catalog (daily/weekly)
 
-Run the compiler on a schedule (cron, GitHub Actions, scheduled container):
+The pipeline ingests directly from the official FHNW Modulbeschreibungen API
+(`bariapi.fhnw.ch`, public) and then compiles. Run on a schedule (cron, GitHub
+Actions, scheduled container) from the repo root:
 
 ```bash
-dotnet run --project StructuredRAG.Compiler -- \
-  --Compiler:SourcePath=data/modules.json \
-  --Compiler:OutputPath=/var/catalog/compiled \
+# 1. Ingest: FHNW API -> data/modules.wirtschaftsinformatik.json (raw cache in data/raw/)
+dotnet run --project StructuredRAG.Compiler -- ingest \
+  --Ingest:Semesters="26HS;27FS" \
+  --Ingest:StudyPrograms="BSc in Wirtschaftsinformatik"
+
+# 2. Compile: source JSON -> compiled artifacts (bilingual, prerequisite extraction)
+DockerModelRunner__ApiKey=$LLM_API_KEY \
+dotnet run --project StructuredRAG.Compiler -- compile \
   --DockerModelRunner:Endpoint=https://<llm-endpoint>/v1 \
   --DockerModelRunner:SimpleModel=<model>
+
+# or both in one go:  dotnet run --project StructuredRAG.Compiler -- all
 ```
 
-The compiler works with any OpenAI-compatible chat-completions endpoint. Because
-compilation is offline and infrequent, this is the place to spend on a strong model —
-taxonomy quality determines how well the client can search. The compiler writes
-`manifest.json` last, so a watching MCP server only reloads complete catalogs.
+The compiler works with any OpenAI-compatible chat-completions endpoint (set
+`DockerModelRunner:ApiKey` for hosted APIs). Because compilation is offline and
+infrequent, this is the place to spend on a strong model — taxonomy quality determines
+how well the client can search. Repeat runs are cheap: the previous taxonomy is passed
+to the model to keep tag names stable, and modules whose source is unchanged
+(SourceHash) are reused without LLM calls. The compiler writes `manifest.json` last,
+so a watching MCP server only reloads complete catalogs.

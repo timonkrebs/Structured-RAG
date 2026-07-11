@@ -35,6 +35,26 @@ Quick start (uses the hand-compiled sample catalog in `compiled-sample/`):
 dotnet run --project StructuredRAG.Mcp     # MCP endpoint at http://localhost:<port>/mcp
 ```
 
+### Real data: FHNW module catalog pilot
+
+`StructuredRAG.Fhnw` connects the pipeline to the official FHNW Modulbeschreibungen
+API (public). The pilot scope is *BSc in Wirtschaftsinformatik*; ingested source data
+lives in `data/modules.wirtschaftsinformatik.json`:
+
+```bash
+dotnet run --project StructuredRAG.Compiler -- ingest    # FHNW API -> source JSON
+dotnet run --project StructuredRAG.Compiler -- compile   # LLM compile -> compiled/
+Catalog__CompiledPath=compiled dotnet run --project StructuredRAG.Mcp
+```
+
+The compilation is bilingual (DE/EN), extracts structured prerequisite links from the
+official free-text requirements, keeps tag names stable across runs, and skips
+unchanged modules. At query time, `fetch` passes through to the live FHNW API so
+module details are always current — the compiled catalog is the index, the official
+catalog stays the source of truth. Note: the source app covers 6 FHNW schools
+(Wirtschaft, Pädagogik, Musik, Gestaltung/Kunst, Soziale Arbeit, Psychologie) —
+Hochschule für Technik is not included.
+
 See [StructuredRAG.Mcp/README.md](StructuredRAG.Mcp/README.md) for tool reference and
 how to register the server in the ChatGPT web interface or Claude.
 

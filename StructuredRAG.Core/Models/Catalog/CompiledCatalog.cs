@@ -23,10 +23,13 @@ public class CatalogManifest
 /// <summary>
 /// One tag of the closed taxonomy. The description is essential: query-time clients
 /// use it to map free-form student questions onto tags without server-side inference.
+/// Name is the canonical identifier used on modules; NameEn is a display alias.
 /// </summary>
 public class TagDefinition
 {
     public string Name { get; set; } = string.Empty;
+    public string? NameEn { get; set; }
     public string Description { get; set; } = string.Empty;
+    public string? DescriptionEn { get; set; }
     public int ModuleCount { get; set; }
 }

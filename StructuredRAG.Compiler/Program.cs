@@ -1,25 +1,28 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using StructuredRAG.Core.Models.Catalog;
+using StructuredRAG.Compiler.Commands;
 using StructuredRAG.Core.Services;
+using StructuredRAG.Fhnw;
 using System.Text.Json;
 
-// Offline knowledge compilation. Run this daily/weekly (cron, GitHub Actions, ...):
+// Offline knowledge pipeline. Run daily/weekly (cron, GitHub Actions, ...):
 //
-//   dotnet run --project StructuredRAG.Compiler -- \
-//     --Compiler:SourcePath=data/modules.sample.json \
-//     --Compiler:OutputPath=compiled
+//   dotnet run --project StructuredRAG.Compiler -- ingest    # FHNW API -> data/modules.*.json
+//   dotnet run --project StructuredRAG.Compiler -- compile   # source JSON -> compiled artifacts
+//   dotnet run --project StructuredRAG.Compiler -- all       # both
 //
-// It reads raw module data, uses an LLM to compile a closed taxonomy and enriched
-// module records, and writes static JSON artifacts consumed by StructuredRAG.Mcp.
-// All configuration can be overridden via environment variables or command line.
+// All settings can be overridden via appsettings.json, environment variables or
+// --Section:Key=value arguments (e.g. --Compiler:SourcePath=data/modules.ingested.json).
+
+var command = args.FirstOrDefault(a => !a.StartsWith('-'))?.ToLowerInvariant() ?? "compile";
+var configArgs = args.Where(a => a.StartsWith('-')).ToArray();
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: true)
     .AddEnvironmentVariables()
-    .AddCommandLine(args)
+    .AddCommandLine(configArgs)
     .Build();
 
 var services = new ServiceCollection();
@@ -30,15 +33,13 @@ services.AddHttpClient<DockerModelRunnerService>(client =>
     var timeoutSeconds = configuration.GetValue("DockerModelRunner:TimeoutSeconds", 300);
     client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 });
+services.AddHttpClient<BariApiClient>(client => client.Timeout = TimeSpan.FromSeconds(60));
 services.AddSingleton<KnowledgeCompilationService>();
+services.AddSingleton<IngestCommand>();
+services.AddSingleton<CompileCommand>();
 
 await using var provider = services.BuildServiceProvider();
 var logger = provider.GetRequiredService<ILogger<Program>>();
-
-var sourcePath = configuration["Compiler:SourcePath"]
-    ?? throw new InvalidOperationException("Compiler:SourcePath is not configured");
-var outputPath = configuration["Compiler:OutputPath"] ?? "compiled";
-var sourceName = configuration["Compiler:SourceName"] ?? Path.GetFileName(sourcePath);
 
 var jsonOptions = new JsonSerializerOptions
 {
@@ -47,30 +48,28 @@ var jsonOptions = new JsonSerializerOptions
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 };
 
-logger.LogInformation("Reading source modules from {Path}", sourcePath);
-var modules = JsonSerializer.Deserialize<List<SourceModule>>(
-        await File.ReadAllTextAsync(sourcePath), jsonOptions)
-    ?? throw new InvalidOperationException($"No modules found in {sourcePath}");
-
-var duplicateCodes = modules.GroupBy(m => m.Code, StringComparer.OrdinalIgnoreCase)
-    .Where(g => g.Count() > 1).Select(g => g.Key).ToList();
-if (duplicateCodes.Count > 0)
+try
 {
-    throw new InvalidOperationException($"Duplicate module codes in source: {string.Join(", ", duplicateCodes)}");
+    switch (command)
+    {
+        case "ingest":
+            return await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
+
+        case "compile":
+            return await provider.GetRequiredService<CompileCommand>().RunAsync(jsonOptions);
+
+        case "all":
+            var ingestResult = await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
+            if (ingestResult != 0) return ingestResult;
+            return await provider.GetRequiredService<CompileCommand>().RunAsync(jsonOptions);
+
+        default:
+            logger.LogError("Unknown command '{Command}'. Use: ingest | compile | all", command);
+            return 1;
+    }
 }
-
-var compiler = provider.GetRequiredService<KnowledgeCompilationService>();
-var catalog = await compiler.CompileAsync(modules, sourceName);
-
-Directory.CreateDirectory(outputPath);
-await File.WriteAllTextAsync(Path.Combine(outputPath, "taxonomy.json"),
-    JsonSerializer.Serialize(catalog.Taxonomy, jsonOptions));
-await File.WriteAllTextAsync(Path.Combine(outputPath, "modules.json"),
-    JsonSerializer.Serialize(catalog.Modules, jsonOptions));
-// Manifest last: its mtime signals consumers that a complete new version is present.
-await File.WriteAllTextAsync(Path.Combine(outputPath, "manifest.json"),
-    JsonSerializer.Serialize(catalog.Manifest, jsonOptions));
-
-logger.LogInformation(
-    "Compiled {Modules} modules with {Tags} tags into {Output}",
-    catalog.Manifest.ModuleCount, catalog.Manifest.TagCount, Path.GetFullPath(outputPath));
+catch (Exception ex)
+{
+    logger.LogError(ex, "Command '{Command}' failed", command);
+    return 1;
+}
