@@ -27,9 +27,13 @@ public class CompileCommand
         _logger = logger;
     }
 
-    public async Task<int> RunAsync(JsonSerializerOptions jsonOptions, CancellationToken ct = default)
+    public async Task<int> RunAsync(
+        JsonSerializerOptions jsonOptions,
+        string? sourcePathOverride = null,
+        CancellationToken ct = default)
     {
-        var sourcePath = _configuration["Compiler:SourcePath"]
+        var sourcePath = sourcePathOverride
+            ?? _configuration["Compiler:SourcePath"]
             ?? throw new InvalidOperationException("Compiler:SourcePath is not configured");
         var outputPath = _configuration["Compiler:OutputPath"] ?? "compiled";
         var sourceName = _configuration["Compiler:SourceName"] ?? Path.GetFileName(sourcePath);
@@ -61,12 +65,12 @@ public class CompileCommand
         var catalog = await _compiler.CompileAsync(modules, sourceName, force ? null : previous, ct);
 
         Directory.CreateDirectory(outputPath);
-        await File.WriteAllTextAsync(Path.Combine(outputPath, "taxonomy.json"),
+        await WriteAtomicAsync(Path.Combine(outputPath, "taxonomy.json"),
             JsonSerializer.Serialize(catalog.Taxonomy, jsonOptions), ct);
-        await File.WriteAllTextAsync(Path.Combine(outputPath, "modules.json"),
+        await WriteAtomicAsync(Path.Combine(outputPath, "modules.json"),
             JsonSerializer.Serialize(catalog.Modules, jsonOptions), ct);
         // Manifest last: its mtime signals consumers that a complete new version is present.
-        await File.WriteAllTextAsync(Path.Combine(outputPath, "manifest.json"),
+        await WriteAtomicAsync(Path.Combine(outputPath, "manifest.json"),
             JsonSerializer.Serialize(catalog.Manifest, jsonOptions), ct);
 
         _logger.LogInformation(
@@ -74,6 +78,17 @@ public class CompileCommand
             catalog.Manifest.ModuleCount, catalog.Manifest.TagCount, Path.GetFullPath(outputPath));
 
         return 0;
+    }
+
+    /// <summary>
+    /// Writes via temp file + rename so a watching MCP server never observes a
+    /// partially-written artifact.
+    /// </summary>
+    private static async Task WriteAtomicAsync(string path, string content, CancellationToken ct)
+    {
+        var tempPath = path + ".tmp";
+        await File.WriteAllTextAsync(tempPath, content, ct);
+        File.Move(tempPath, path, overwrite: true);
     }
 
     private CompiledCatalog? LoadPreviousCatalog(string outputPath, JsonSerializerOptions jsonOptions)

@@ -1,6 +1,7 @@
 using StructuredRAG.Core.Models.Catalog;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace StructuredRAG.Mcp;
 
@@ -28,9 +29,23 @@ public class CatalogStore
 
     public CatalogStore(IConfiguration configuration, ILogger<CatalogStore> logger)
     {
-        _compiledPath = configuration["Catalog:CompiledPath"] ?? "../compiled-sample";
+        _compiledPath = ResolveCompiledPath(configuration["Catalog:CompiledPath"]);
         _logger = logger;
         Reload();
+    }
+
+    /// <summary>
+    /// Relative paths resolve against the process working directory, which differs
+    /// between `dotnet run --project StructuredRAG.Mcp` (repo root) and running from
+    /// the project directory — so the default probes both locations for the sample.
+    /// </summary>
+    private static string ResolveCompiledPath(string? configured)
+    {
+        var candidates = configured != null
+            ? new[] { configured }
+            : new[] { "compiled-sample", Path.Combine("..", "compiled-sample") };
+        return candidates.FirstOrDefault(c => File.Exists(Path.Combine(c, "manifest.json")))
+               ?? candidates[0];
     }
 
     public CatalogManifest Manifest { get { EnsureFresh(); return _manifest; } }
@@ -47,15 +62,18 @@ public class CatalogStore
     /// Lexical relevance search over compiled fields. Deliberately simple: semantic
     /// interpretation of the query is the client model's job (it has the taxonomy);
     /// this only has to reward literal overlap with the compiled text.
+    /// Pass <paramref name="within"/> to rank only a pre-filtered subset.
     /// </summary>
-    public IReadOnlyList<(CompiledModule Module, int Score)> Search(string query, int limit = 10)
+    public IReadOnlyList<(CompiledModule Module, int Score)> Search(
+        string query, int limit = 10, IReadOnlyCollection<CompiledModule>? within = null)
     {
         EnsureFresh();
-        var terms = Tokenize(query);
-        if (terms.Count == 0) return Array.Empty<(CompiledModule, int)>();
+        var matchers = Tokenize(query).Select(TermMatcher.For).ToList();
+        if (matchers.Count == 0) return Array.Empty<(CompiledModule, int)>();
 
-        return _modules
-            .Select(m => (Module: m, Score: ScoreModule(m, terms)))
+        var pool = within ?? (IReadOnlyCollection<CompiledModule>)_modules;
+        return pool
+            .Select(m => (Module: m, Score: ScoreModule(m, matchers)))
             .Where(x => x.Score > 0)
             .OrderByDescending(x => x.Score)
             .ThenBy(x => x.Module.Code)
@@ -63,7 +81,36 @@ public class CatalogStore
             .ToList();
     }
 
-    private static int ScoreModule(CompiledModule m, IReadOnlyCollection<string> terms)
+    /// <summary>
+    /// Matches one query term against lowercased text. Short terms (acronyms like
+    /// "AI"/"KI"/"BI" or the language "R") match on word boundaries only — plain
+    /// substring matching would hit them inside almost every word.
+    /// </summary>
+    private sealed class TermMatcher
+    {
+        private readonly string _term;
+        private readonly Regex? _wordBoundary;
+
+        private TermMatcher(string term, Regex? wordBoundary)
+        {
+            _term = term;
+            _wordBoundary = wordBoundary;
+        }
+
+        public static TermMatcher For(string term) => new(
+            term,
+            term.Length <= 3
+                ? new Regex($@"(?<![\p{{L}}\p{{N}}]){Regex.Escape(term)}(?![\p{{L}}\p{{N}}])",
+                    RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                : null);
+
+        public string Term => _term;
+
+        public bool Matches(string lowercasedText) =>
+            _wordBoundary?.IsMatch(lowercasedText) ?? lowercasedText.Contains(_term);
+    }
+
+    private static int ScoreModule(CompiledModule m, IReadOnlyCollection<TermMatcher> matchers)
     {
         var title = $"{m.Title} {m.TitleEn}".ToLowerInvariant();
         var tags = string.Join(' ', m.Tags).ToLowerInvariant();
@@ -73,12 +120,12 @@ public class CatalogStore
             .ToLowerInvariant();
 
         var score = 0;
-        foreach (var term in terms)
+        foreach (var matcher in matchers)
         {
-            if (m.Code.Equals(term, StringComparison.OrdinalIgnoreCase)) score += 10;
-            if (title.Contains(term)) score += 5;
-            if (tags.Contains(term)) score += 3;
-            if (body.Contains(term)) score += 1;
+            if (m.Code.Equals(matcher.Term, StringComparison.OrdinalIgnoreCase)) score += 10;
+            if (matcher.Matches(title)) score += 5;
+            if (matcher.Matches(tags)) score += 3;
+            if (matcher.Matches(body)) score += 1;
         }
         return score;
     }
@@ -97,7 +144,7 @@ public class CatalogStore
         query.ToLowerInvariant()
             .Split(new[] { ' ', ',', ';', '?', '!', '.', '/', '(', ')', '"', '\'' },
                 StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(t => t.Length > 2)
+            .Where(t => t.Length > 1)
             .Distinct()
             .ToList();
 
@@ -165,11 +212,27 @@ public class CatalogStore
             var writeTime = File.GetLastWriteTimeUtc(manifestFile);
             if (writeTime <= _loadedManifestWriteTime) return; // another request already reloaded
 
-            _manifest = Read<CatalogManifest>(manifestFile) ?? new CatalogManifest();
-            _taxonomy = Read<List<TagDefinition>>(Path.Combine(_compiledPath, "taxonomy.json")) ?? new();
-            _modules = Read<List<CompiledModule>>(Path.Combine(_compiledPath, "modules.json")) ?? new();
-            _byCode = _modules.ToDictionary(m => m.Code, StringComparer.OrdinalIgnoreCase);
-            _loadedManifestWriteTime = writeTime;
+            try
+            {
+                // Load into locals first: if any file is truncated or mid-write, keep the
+                // previous snapshot and retry on a later request (mtime not advanced).
+                var manifest = Read<CatalogManifest>(manifestFile) ?? new CatalogManifest();
+                var taxonomy = Read<List<TagDefinition>>(Path.Combine(_compiledPath, "taxonomy.json")) ?? new();
+                var modules = Read<List<CompiledModule>>(Path.Combine(_compiledPath, "modules.json")) ?? new();
+
+                _manifest = manifest;
+                _taxonomy = taxonomy;
+                _modules = modules;
+                _byCode = modules.ToDictionary(m => m.Code, StringComparer.OrdinalIgnoreCase);
+                _loadedManifestWriteTime = writeTime;
+            }
+            catch (Exception ex) when (ex is JsonException or IOException)
+            {
+                _logger.LogWarning(ex,
+                    "Compiled catalog at {Path} could not be (re)loaded — keeping the previous snapshot and retrying later",
+                    Path.GetFullPath(_compiledPath));
+                return;
+            }
 
             _logger.LogInformation(
                 "Loaded compiled catalog: {Modules} modules, {Tags} tags (compiled {At:u})",

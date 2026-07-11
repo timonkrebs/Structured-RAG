@@ -16,7 +16,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904908"
+        "planSemesterModulId": "26HS_9904908",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -57,7 +61,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9491802"
+        "planSemesterModulId": "26HS_9491802",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -97,7 +107,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903784"
+        "planSemesterModulId": "26HS_9903784",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Saturday"
+        ]
       }
     ],
     "languages": [
@@ -140,7 +156,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903770"
+        "planSemesterModulId": "26HS_9903770",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -182,7 +204,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9774571"
+        "planSemesterModulId": "26HS_9774571",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -229,7 +260,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776618"
+        "planSemesterModulId": "26HS_9776618",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -277,7 +317,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9905081"
+        "planSemesterModulId": "26HS_9905081",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -318,7 +362,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9905082"
+        "planSemesterModulId": "26HS_9905082",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -359,7 +407,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212348"
+        "planSemesterModulId": "26HS_9212348",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -396,7 +448,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898673"
+        "planSemesterModulId": "26HS_9898673",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -439,7 +497,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903769"
+        "planSemesterModulId": "26HS_9903769",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -482,7 +546,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9881436"
+        "planSemesterModulId": "26HS_9881436",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -520,7 +588,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827912"
+        "planSemesterModulId": "26HS_9827912",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -560,7 +634,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9491774"
+        "planSemesterModulId": "26HS_9491774",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -601,7 +681,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9853140"
+        "planSemesterModulId": "26HS_9853140",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -641,7 +727,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904937"
+        "planSemesterModulId": "26HS_9904937",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -682,7 +772,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9312101"
+        "planSemesterModulId": "26HS_9312101",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -724,7 +818,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845652"
+        "planSemesterModulId": "26HS_9845652",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -768,7 +869,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212342"
+        "planSemesterModulId": "26HS_9212342",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Saturday"
+        ]
       }
     ],
     "languages": [
@@ -807,7 +914,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898676"
+        "planSemesterModulId": "26HS_9898676",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -850,7 +963,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9902054"
+        "planSemesterModulId": "26HS_9902054",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -893,7 +1012,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9905080"
+        "planSemesterModulId": "26HS_9905080",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -936,7 +1061,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845636"
+        "planSemesterModulId": "26HS_9845636",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -981,7 +1113,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845639"
+        "planSemesterModulId": "26HS_9845639",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -1024,7 +1162,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9716287"
+        "planSemesterModulId": "26HS_9716287",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -1066,7 +1210,15 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776616"
+        "planSemesterModulId": "26HS_9776616",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -1112,7 +1264,15 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9577523"
+        "planSemesterModulId": "26HS_9577523",
+        "languages": [
+          "de",
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -1157,7 +1317,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212177"
+        "planSemesterModulId": "26HS_9212177",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -1196,7 +1362,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827891"
+        "planSemesterModulId": "26HS_9827891",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -1237,7 +1410,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898709"
+        "planSemesterModulId": "26HS_9898709",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -1280,7 +1459,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904904"
+        "planSemesterModulId": "26HS_9904904",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1321,7 +1504,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9469734"
+        "planSemesterModulId": "26HS_9469734",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1362,7 +1549,17 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776631"
+        "planSemesterModulId": "26HS_9776631",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -1410,7 +1607,17 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776655"
+        "planSemesterModulId": "26HS_9776655",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ]
       }
     ],
     "languages": [
@@ -1460,7 +1667,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827885"
+        "planSemesterModulId": "26HS_9827885",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -1500,7 +1713,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903780"
+        "planSemesterModulId": "26HS_9903780",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1540,7 +1757,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827889"
+        "planSemesterModulId": "26HS_9827889",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -1580,7 +1803,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827890"
+        "planSemesterModulId": "26HS_9827890",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -1620,7 +1849,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9481963"
+        "planSemesterModulId": "26HS_9481963",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -1659,7 +1894,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9905077"
+        "planSemesterModulId": "26HS_9905077",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1700,7 +1939,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845755"
+        "planSemesterModulId": "26HS_9845755",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1741,7 +1984,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904945"
+        "planSemesterModulId": "26HS_9904945",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -1784,7 +2033,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827914"
+        "planSemesterModulId": "26HS_9827914",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -1826,7 +2082,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898716"
+        "planSemesterModulId": "26HS_9898716",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -1870,7 +2132,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827887"
+        "planSemesterModulId": "26HS_9827887",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -1910,7 +2178,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904909"
+        "planSemesterModulId": "26HS_9904909",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1952,7 +2224,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9376104"
+        "planSemesterModulId": "26HS_9376104",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -1991,7 +2267,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827876"
+        "planSemesterModulId": "26HS_9827876",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -2033,7 +2316,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827881"
+        "planSemesterModulId": "26HS_9827881",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -2074,7 +2364,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897618"
+        "planSemesterModulId": "26HS_9897618",
+        "languages": [
+          "fr"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -2117,7 +2413,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897612"
+        "planSemesterModulId": "26HS_9897612",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -2158,7 +2458,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904910"
+        "planSemesterModulId": "26HS_9904910",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -2199,7 +2503,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898680"
+        "planSemesterModulId": "26HS_9898680",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -2242,7 +2552,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9847826"
+        "planSemesterModulId": "26HS_9847826",
+        "languages": [
+          "de",
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -2286,7 +2603,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897625"
+        "planSemesterModulId": "26HS_9897625",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -2330,7 +2653,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776667"
+        "planSemesterModulId": "26HS_9776667",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Saturday"
+        ]
       }
     ],
     "languages": [
@@ -2371,7 +2701,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776665"
+        "planSemesterModulId": "26HS_9776665",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -2412,7 +2749,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9733118"
+        "planSemesterModulId": "26HS_9733118",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -2455,7 +2798,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845642"
+        "planSemesterModulId": "26HS_9845642",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -2498,7 +2847,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9785785"
+        "planSemesterModulId": "26HS_9785785",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Wednesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -2544,7 +2900,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212217"
+        "planSemesterModulId": "26HS_9212217",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -2583,7 +2945,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897622"
+        "planSemesterModulId": "26HS_9897622",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -2624,7 +2990,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9879640"
+        "planSemesterModulId": "26HS_9879640",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -2664,7 +3036,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9879643"
+        "planSemesterModulId": "26HS_9879643",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -2704,7 +3082,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845649"
+        "planSemesterModulId": "26HS_9845649",
+        "languages": [
+          "it"
+        ],
+        "weekdays": [
+          "Monday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -2749,7 +3134,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845651"
+        "planSemesterModulId": "26HS_9845651",
+        "languages": [
+          "it"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -2792,7 +3183,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904554"
+        "planSemesterModulId": "26HS_9904554",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -2835,7 +3232,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9870393"
+        "planSemesterModulId": "26HS_9870393",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -2877,7 +3280,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9774570"
+        "planSemesterModulId": "26HS_9774570",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -2924,7 +3336,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212225"
+        "planSemesterModulId": "26HS_9212225",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ]
       }
     ],
     "languages": [
@@ -2963,7 +3381,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9491769"
+        "planSemesterModulId": "26HS_9491769",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -3004,7 +3428,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9853148"
+        "planSemesterModulId": "26HS_9853148",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -3044,7 +3474,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898683"
+        "planSemesterModulId": "26HS_9898683",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3085,7 +3519,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9774574"
+        "planSemesterModulId": "26HS_9774574",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -3132,7 +3575,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776619"
+        "planSemesterModulId": "26HS_9776619",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -3179,7 +3631,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212344"
+        "planSemesterModulId": "26HS_9212344",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3216,7 +3672,17 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9774564"
+        "planSemesterModulId": "26HS_9774564",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -3266,7 +3732,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776613"
+        "planSemesterModulId": "26HS_9776613",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -3313,7 +3786,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898685"
+        "planSemesterModulId": "26HS_9898685",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3355,7 +3832,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776676"
+        "planSemesterModulId": "26HS_9776676",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -3397,7 +3881,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212188"
+        "planSemesterModulId": "26HS_9212188",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -3436,7 +3926,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897623"
+        "planSemesterModulId": "26HS_9897623",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3477,7 +3971,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9847306"
+        "planSemesterModulId": "26HS_9847306",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3518,10 +4016,18 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9847298"
+        "planSemesterModulId": "26HS_9847298",
+        "languages": [
+          "ru"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
-    "languages": [],
+    "languages": [
+      "ru"
+    ],
     "weekdays": [
       "Friday"
     ],
@@ -3559,10 +4065,18 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9847301"
+        "planSemesterModulId": "26HS_9847301",
+        "languages": [
+          "ru"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
-    "languages": [],
+    "languages": [
+      "ru"
+    ],
     "weekdays": [
       "Friday"
     ],
@@ -3600,7 +4114,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903467"
+        "planSemesterModulId": "26HS_9903467",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3638,7 +4156,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897620"
+        "planSemesterModulId": "26HS_9897620",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3679,7 +4201,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897621"
+        "planSemesterModulId": "26HS_9897621",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3720,7 +4246,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9458410"
+        "planSemesterModulId": "26HS_9458410",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -3763,7 +4295,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898687"
+        "planSemesterModulId": "26HS_9898687",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3804,7 +4340,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9491812"
+        "planSemesterModulId": "26HS_9491812",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -3844,7 +4386,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903479"
+        "planSemesterModulId": "26HS_9903479",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -3884,7 +4430,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845646"
+        "planSemesterModulId": "26HS_9845646",
+        "languages": [
+          "es"
+        ],
+        "weekdays": [
+          "Monday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -3930,7 +4483,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9845647"
+        "planSemesterModulId": "26HS_9845647",
+        "languages": [
+          "es"
+        ],
+        "weekdays": [
+          "Monday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -3975,7 +4535,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9852233"
+        "planSemesterModulId": "26HS_9852233",
+        "languages": [
+          "es"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -4019,7 +4585,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897614"
+        "planSemesterModulId": "26HS_9897614",
+        "languages": [
+          "es"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -4062,7 +4634,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904949"
+        "planSemesterModulId": "26HS_9904949",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -4105,7 +4683,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898681"
+        "planSemesterModulId": "26HS_9898681",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4146,7 +4728,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776620"
+        "planSemesterModulId": "26HS_9776620",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -4193,7 +4784,14 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776627"
+        "planSemesterModulId": "26HS_9776627",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Tuesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -4238,7 +4836,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9774578"
+        "planSemesterModulId": "26HS_9774578",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -4285,7 +4892,16 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9776645"
+        "planSemesterModulId": "26HS_9776645",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday"
+        ]
       }
     ],
     "languages": [
@@ -4332,7 +4948,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212220"
+        "planSemesterModulId": "26HS_9212220",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -4371,7 +4993,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898691"
+        "planSemesterModulId": "26HS_9898691",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ]
       }
     ],
     "languages": [
@@ -4414,7 +5042,15 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9491795"
+        "planSemesterModulId": "26HS_9491795",
+        "languages": [
+          "en",
+          "de"
+        ],
+        "weekdays": [
+          "Monday",
+          "Wednesday"
+        ]
       }
     ],
     "languages": [
@@ -4457,7 +5093,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9728814"
+        "planSemesterModulId": "26HS_9728814",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4499,7 +5139,12 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904938"
+        "planSemesterModulId": "26HS_9904938",
+        "languages": [
+          "de",
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4542,7 +5187,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904934"
+        "planSemesterModulId": "26HS_9904934",
+        "languages": [
+          "en"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4583,7 +5232,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9903775"
+        "planSemesterModulId": "26HS_9903775",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4621,7 +5274,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9491771"
+        "planSemesterModulId": "26HS_9491771",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4659,7 +5316,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9212275"
+        "planSemesterModulId": "26HS_9212275",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Saturday"
+        ]
       }
     ],
     "languages": [
@@ -4698,7 +5361,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827892"
+        "planSemesterModulId": "26HS_9827892",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -4738,7 +5407,13 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9827917"
+        "planSemesterModulId": "26HS_9827917",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday"
+        ]
       }
     ],
     "languages": [
@@ -4778,7 +5453,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898694"
+        "planSemesterModulId": "26HS_9898694",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4819,7 +5498,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9904951"
+        "planSemesterModulId": "26HS_9904951",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4860,7 +5543,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898696"
+        "planSemesterModulId": "26HS_9898696",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4901,7 +5588,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9898698"
+        "planSemesterModulId": "26HS_9898698",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [
@@ -4942,7 +5633,11 @@
     "offerings": [
       {
         "semesterId": "26HS",
-        "planSemesterModulId": "26HS_9897627"
+        "planSemesterModulId": "26HS_9897627",
+        "languages": [
+          "de"
+        ],
+        "weekdays": []
       }
     ],
     "languages": [

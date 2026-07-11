@@ -74,7 +74,10 @@ public static class ModuleCatalogTools
             candidates = candidates.Where(m => m.Tags.Intersect(canonical, StringComparer.OrdinalIgnoreCase).Any());
         }
         if (!string.IsNullOrWhiteSpace(semester))
-            candidates = candidates.Where(m => MatchesSemester(m, semester));
+        {
+            var validated = ValidateSemester(semester);
+            candidates = candidates.Where(m => MatchesSemester(m, validated));
+        }
         if (!string.IsNullOrWhiteSpace(level))
             candidates = candidates.Where(m => m.Level.Equals(level, StringComparison.OrdinalIgnoreCase));
         if (!string.IsNullOrWhiteSpace(moduleType))
@@ -84,16 +87,16 @@ public static class ModuleCatalogTools
         if (minEcts.HasValue) candidates = candidates.Where(m => m.Ects >= minEcts.Value);
         if (maxEcts.HasValue) candidates = candidates.Where(m => m.Ects <= maxEcts.Value);
         if (!string.IsNullOrWhiteSpace(language))
-            candidates = candidates.Where(m => m.Languages.Contains(language, StringComparer.OrdinalIgnoreCase));
+            candidates = candidates.Where(m => MatchesLanguage(m, language, semester));
 
         var filtered = candidates.ToList();
 
         if (!string.IsNullOrWhiteSpace(query))
         {
-            var codes = store.Search(query, limit: filtered.Count).Select(x => x.Module.Code).ToList();
-            filtered = filtered
-                .Where(m => codes.Contains(m.Code, StringComparer.OrdinalIgnoreCase))
-                .OrderBy(m => codes.FindIndex(c => c.Equals(m.Code, StringComparison.OrdinalIgnoreCase)))
+            // Rank within the filtered set — ranking the whole catalog first and
+            // intersecting would drop filtered matches outscored by unfiltered ones.
+            filtered = store.Search(query, limit: filtered.Count, within: filtered)
+                .Select(x => x.Module)
                 .ToList();
         }
 
@@ -118,6 +121,7 @@ public static class ModuleCatalogTools
         [Description("Module codes the student has already completed")] string[]? completedModules = null,
         [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null)
     {
+        semester = ValidateSemester(semester);
         var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
         var interests = (interestTags ?? Array.Empty<string>())
             .Select(store.ResolveTagName).Where(t => t != null).Select(t => t!).ToList();
@@ -157,6 +161,20 @@ public static class ModuleCatalogTools
                   "resolved to module codes — take them into account when planning.");
     }
 
+    /// <summary>Rejects malformed semester inputs early — silently returning an empty
+    /// result for a typo like "Herbst" would mislead the client model.</summary>
+    private static string ValidateSemester(string semester)
+    {
+        var s = semester.Trim();
+        if (!System.Text.RegularExpressions.Regex.IsMatch(s, @"^(HS|FS|\d{2}(HS|FS))$",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+        {
+            throw new McpException(
+                $"Invalid semester '{semester}'. Use the type 'HS' (autumn) / 'FS' (spring) or a concrete id like '26HS'.");
+        }
+        return s;
+    }
+
     /// <summary>Semester matching: "HS"/"FS" match the offering type; "26HS" matches a concrete offering.
     /// Falls back to OfferedIn for catalogs without concrete offerings (e.g. sample data).</summary>
     private static bool MatchesSemester(CompiledModule m, string semester)
@@ -168,6 +186,20 @@ public static class ModuleCatalogTools
         var type = isConcrete ? semester[2..] : semester;
         return m.OfferedIn.Contains(type, StringComparer.OrdinalIgnoreCase)
                || m.Offerings.Any(o => o.SemesterId.EndsWith(type, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Language filtering: when a concrete semester is given and that offering
+    /// carries its own language list, use it — languages can differ between semesters.</summary>
+    private static bool MatchesLanguage(CompiledModule m, string language, string? semester)
+    {
+        if (semester is { Length: 4 })
+        {
+            var offering = m.Offerings.FirstOrDefault(o =>
+                o.SemesterId.Equals(semester, StringComparison.OrdinalIgnoreCase));
+            if (offering is { Languages.Count: > 0 })
+                return offering.Languages.Contains(language, StringComparer.OrdinalIgnoreCase);
+        }
+        return m.Languages.Contains(language, StringComparer.OrdinalIgnoreCase);
     }
 
     private static string OfferedText(CompiledModule m) =>

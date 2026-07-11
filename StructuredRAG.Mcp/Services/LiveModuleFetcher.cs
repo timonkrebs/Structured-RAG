@@ -58,6 +58,11 @@ public class LiveModuleFetcher
             }
             return detail;
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            // The client aborted the request — propagate instead of serving a fallback.
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Live fetch for {PlanId} failed; falling back to compiled record", planId);
@@ -67,11 +72,20 @@ public class LiveModuleFetcher
 
     private static FetchResult BuildResult(CompiledModule compiled, SourceModule? live, string source)
     {
+        // Everything the live record carries wins over the compiled snapshot — official
+        // changes (ECTS, level, schedule, ...) must show up even before the next compile.
+        // Only the LLM enrichments (summary, audience, tags) and the offering list
+        // (the live record covers a single semester) come from the compiled catalog.
         var title = live?.Title ?? compiled.Title;
         var description = live?.Description ?? compiled.Description;
         var requirements = live?.RequirementsText ?? compiled.PrerequisiteNotes;
         var assessment = live?.Assessment ?? compiled.Assessment;
         var url = live?.Url ?? compiled.Url;
+        var ects = live?.Ects ?? compiled.Ects;
+        var level = live?.Level ?? compiled.Level;
+        var moduleType = live?.ModuleType ?? compiled.ModuleType;
+        var languages = live is { Languages.Count: > 0 } ? live.Languages : compiled.Languages;
+        var weekdays = live is { Weekdays.Count: > 0 } ? live.Weekdays : compiled.Weekdays;
 
         var sb = new StringBuilder();
         sb.AppendLine($"# {title} ({compiled.Code})");
@@ -81,10 +95,10 @@ public class LiveModuleFetcher
         sb.AppendLine();
         sb.AppendLine($"**Who should take it:** {compiled.Audience}");
         sb.AppendLine();
-        sb.AppendLine($"**Details:** {compiled.Ects} ECTS · {compiled.Level} · {compiled.ModuleType} · " +
+        sb.AppendLine($"**Details:** {ects} ECTS · {level} · {moduleType} · " +
                       $"offered in {(compiled.Offerings.Count > 0 ? string.Join("/", compiled.Offerings.Select(o => o.SemesterId)) : string.Join("/", compiled.OfferedIn))} · " +
-                      $"languages: {string.Join(", ", compiled.Languages)}" +
-                      (compiled.Weekdays.Count > 0 ? $" · weekdays: {string.Join(", ", compiled.Weekdays)}" : ""));
+                      $"languages: {string.Join(", ", languages)}" +
+                      (weekdays.Count > 0 ? $" · weekdays: {string.Join(", ", weekdays)}" : ""));
         sb.AppendLine($"**Assessment:** {assessment}");
         sb.AppendLine($"**Tags:** {string.Join(", ", compiled.Tags)}");
         sb.AppendLine($"**Prerequisites (module codes):** {(compiled.Prerequisites.Count > 0 ? string.Join(", ", compiled.Prerequisites) : "none")}");
@@ -108,13 +122,13 @@ public class LiveModuleFetcher
             Metadata: new Dictionary<string, object?>
             {
                 ["source"] = source,
-                ["ects"] = compiled.Ects,
-                ["level"] = compiled.Level,
-                ["moduleType"] = compiled.ModuleType,
+                ["ects"] = ects,
+                ["level"] = level,
+                ["moduleType"] = moduleType,
                 ["offerings"] = compiled.Offerings.Select(o => o.SemesterId).ToList(),
                 ["tags"] = compiled.Tags,
                 ["prerequisites"] = compiled.Prerequisites,
-                ["studyPrograms"] = compiled.StudyPrograms
+                ["studyPrograms"] = live is { StudyPrograms.Count: > 0 } ? live.StudyPrograms : compiled.StudyPrograms
             });
     }
 }

@@ -20,13 +20,16 @@ public static class ModuleCatalogResources
     [Description("The closed tag taxonomy with a description of what each tag covers. Read this to map student interests onto tags for search_modules.")]
     public static string Taxonomy(CatalogStore store) => store.TaxonomyMarkdown();
 
+    // camelCase to match the compiled artifacts and the tool outputs.
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOptions =
+        new(System.Text.Json.JsonSerializerDefaults.Web) { WriteIndented = true };
+
     [McpServerResource(UriTemplate = "catalog://module/{code}", Name = "Module details", MimeType = "application/json")]
     [Description("Full compiled record of a single module by code.")]
     public static string Module(CatalogStore store, string code)
     {
         var module = store.GetModule(code)
             ?? throw new McpException($"No module with code '{code}'");
-        return System.Text.Json.JsonSerializer.Serialize(module,
-            new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        return System.Text.Json.JsonSerializer.Serialize(module, JsonOptions);
     }
 }

@@ -75,4 +75,10 @@ public class ModuleOffering
 
     /// <summary>Per-semester catalog id, e.g. "26HS_9521316".</summary>
     public string PlanSemesterModulId { get; set; } = string.Empty;
+
+    /// <summary>Languages of instruction in THIS offering (may differ between semesters).</summary>
+    public List<string> Languages { get; set; } = new();
+
+    /// <summary>Class weekdays of THIS offering (English day names).</summary>
+    public List<string> Weekdays { get; set; } = new();
 }

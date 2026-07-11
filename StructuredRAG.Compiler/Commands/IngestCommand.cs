@@ -25,13 +25,18 @@ public class IngestCommand
         _logger = logger;
     }
 
-    public async Task<int> RunAsync(JsonSerializerOptions jsonOptions, CancellationToken ct = default)
+    /// <summary>Runs the ingestion and returns the path of the written source JSON.</summary>
+    public async Task<string> RunAsync(JsonSerializerOptions jsonOptions, CancellationToken ct = default)
     {
         var semesters = SplitList(_configuration["Ingest:Semesters"] ?? "26HS;27FS");
         var programs = SplitList(_configuration["Ingest:StudyPrograms"] ?? "BSc in Wirtschaftsinformatik");
         var rawDir = _configuration["Ingest:RawCachePath"] ?? "data/raw";
         var outputPath = _configuration["Ingest:OutputPath"] ?? "data/modules.ingested.json";
         var refreshRaw = _configuration.GetValue("Ingest:RefreshRaw", false);
+        // Cached details go stale when FHNW edits an existing offering — refetch on
+        // scheduled runs once the cached copy is older than the TTL (cheap HTTP; the
+        // compiler's SourceHash check still avoids LLM cost for unchanged modules).
+        var rawCacheTtl = TimeSpan.FromHours(_configuration.GetValue("Ingest:RawCacheTtlHours", 12.0));
 
         var latest = await _client.GetLatestPlanSemesterAsync(ct);
         _logger.LogInformation("Latest plan semester according to API: {Semester}", latest?.Value ?? "unknown");
@@ -62,8 +67,10 @@ public class IngestCommand
         foreach (var planId in planIds.Keys.OrderBy(k => k, StringComparer.Ordinal))
         {
             var rawPath = Path.Combine(rawDir, planId + ".json");
+            var cacheIsFresh = File.Exists(rawPath)
+                && DateTime.UtcNow - File.GetLastWriteTimeUtc(rawPath) < rawCacheTtl;
             string? raw;
-            if (!refreshRaw && File.Exists(rawPath))
+            if (!refreshRaw && cacheIsFresh)
             {
                 raw = await File.ReadAllTextAsync(rawPath, ct);
                 fromCache++;
@@ -112,7 +119,7 @@ public class IngestCommand
             merged.Count, merged.Sum(m => m.Offerings.Count), Path.GetFullPath(outputPath),
             fetched, fromCache, missing, emptyDescriptions);
 
-        return 0;
+        return outputPath;
     }
 
     private async Task<int> EnumerateSliceAsync(

@@ -16,6 +16,8 @@ public static class SourceModuleMapper
     public static SourceModule Map(ModuleDetailDto d)
     {
         var semesterId = d.SemesterId ?? SemesterIdFromPlanId(d.PlanSemesterModulId);
+        var languages = ExtractLanguages(d);
+        var weekdays = ExtractWeekdays(d);
 
         // English-taught modules often have content only in the *EN fields — fall back
         // so Description is never empty when the catalog has any content at all.
@@ -39,10 +41,16 @@ public static class SourceModuleMapper
             OfferedIn = SemesterTypeOf(semesterId) is { } type ? new List<string> { type } : new(),
             Offerings = new List<ModuleOffering>
             {
-                new() { SemesterId = semesterId, PlanSemesterModulId = d.PlanSemesterModulId }
+                new()
+                {
+                    SemesterId = semesterId,
+                    PlanSemesterModulId = d.PlanSemesterModulId,
+                    Languages = languages,
+                    Weekdays = weekdays
+                }
             },
-            Languages = ExtractLanguages(d),
-            Weekdays = ExtractWeekdays(d),
+            Languages = languages,
+            Weekdays = weekdays,
             StudyPrograms = d.StudyPrograms ?? new List<string>(),
             ModuleType = d.ModuleTypes?.FirstOrDefault(),
             Locations = d.Locations ?? new List<string>(),
@@ -72,6 +80,8 @@ public static class SourceModuleMapper
             .Select(t => t!)
             .Distinct()
             .ToList();
+        // Module-level fields are the union across offerings (coarse filtering); the
+        // per-semester truth lives on each ModuleOffering (Languages/Weekdays).
         newer.Languages = newer.Languages.Union(older.Languages).ToList();
         newer.Weekdays = newer.Weekdays.Union(older.Weekdays, StringComparer.OrdinalIgnoreCase).ToList();
         return newer;
@@ -170,6 +180,11 @@ public static class SourceModuleMapper
         AddIf("französisch", "fr");
         AddIf("italienisch", "it");
         AddIf("spanisch", "es");
+        AddIf("russisch", "ru");
+        AddIf("chinesisch", "zh");
+        AddIf("japanisch", "ja");
+        AddIf("portugiesisch", "pt");
+        AddIf("arabisch", "ar");
         return result;
     }
 

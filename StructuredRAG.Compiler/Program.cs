@@ -53,15 +53,17 @@ try
     switch (command)
     {
         case "ingest":
-            return await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
+            await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
+            return 0;
 
         case "compile":
             return await provider.GetRequiredService<CompileCommand>().RunAsync(jsonOptions);
 
         case "all":
-            var ingestResult = await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
-            if (ingestResult != 0) return ingestResult;
-            return await provider.GetRequiredService<CompileCommand>().RunAsync(jsonOptions);
+            // Compile exactly what this run ingested — otherwise a non-default
+            // Ingest:OutputPath would silently compile a stale Compiler:SourcePath.
+            var ingestedPath = await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
+            return await provider.GetRequiredService<CompileCommand>().RunAsync(jsonOptions, ingestedPath);
 
         default:
             logger.LogError("Unknown command '{Command}'. Use: ingest | compile | all", command);
