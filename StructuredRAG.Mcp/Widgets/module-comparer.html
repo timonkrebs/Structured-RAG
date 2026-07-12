@@ -1,0 +1,504 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Role tokens; dark mode is its own selected set, not an automatic flip. */
+  :root {
+    --surface: #fcfcfb;
+    --plane: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --ring: rgba(11, 11, 11, 0.10);
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+  }
+  :root[data-theme="dark"] {
+    --surface: #1a1a19;
+    --plane: #0d0d0d;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: #2c2c2a;
+    --ring: rgba(255, 255, 255, 0.10);
+    --accent: #3987e5;
+    --accent-soft: #184f95;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #root { padding: 14px 16px 12px; }
+  h1 { font-size: 15px; font-weight: 650; margin: 0 0 8px; }
+  button {
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ring);
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--plane); }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  .notice { font-size: 12.5px; color: var(--ink-2); margin: 0 0 8px; }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 420px; }
+  th, td {
+    text-align: left; vertical-align: top; padding: 7px 10px;
+    border-top: 1px solid var(--hairline); font-weight: 400;
+    min-width: 150px; max-width: 260px;
+  }
+  thead th { border-top: none; background: var(--plane); }
+  th.rowlabel, td.rowlabel {
+    position: sticky; left: 0; background: var(--surface);
+    color: var(--muted); font-size: 12px; white-space: nowrap;
+    min-width: 90px; max-width: 130px; border-right: 1px solid var(--hairline);
+  }
+  thead th.rowlabel { background: var(--plane); }
+  .col-head { display: flex; align-items: flex-start; gap: 6px; }
+  .col-title { font-weight: 600; flex: 1 1 auto; }
+  .col-title .code { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; }
+  .col-remove {
+    flex: none; border: none; color: var(--muted); padding: 0 4px; font-size: 15px; line-height: 1;
+  }
+  .col-remove:hover { color: var(--ink); background: transparent; }
+  .num { font-variant-numeric: tabular-nums; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip {
+    display: inline-block; font-size: 11.5px; color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 9px; padding: 0 7px; line-height: 17px;
+    white-space: nowrap;
+  }
+  .chip.shared { border-color: var(--accent); color: var(--accent); }
+  .cell-note { color: var(--muted); font-size: 12px; }
+  .summary { font-size: 12.5px; color: var(--ink-2); }
+  a { color: var(--accent); }
+  .dash { color: var(--muted); }
+
+  .legend { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .footer input {
+    font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 8px; padding: 4px 8px; width: 180px;
+  }
+  .footer .err { font-size: 12.5px; color: var(--ink-2); }
+  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- host bridge ----------
+  // Abstracts the two widget host conventions over one interface:
+  //  - OpenAI Apps SDK (ChatGPT): window.openai globals + methods
+  //  - MCP Apps extension (Claude, ...): JSON-RPC 2.0 over postMessage (spec 2026-01-26)
+  var Host = (function () {
+    var h = {
+      mode: "none",       // "openai" | "mcp" | "none"
+      ready: false,       // becomes true once host data has arrived (mcp is async)
+      theme: null,
+      locale: null,
+      toolOutput: null,
+      widgetState: null,  // openai only; MCP Apps has no widget-state store
+      canCall: false,
+      onchange: null,
+      setState: function () {},
+      callTool: function () { return Promise.reject(new Error("no host")); },
+      sendMessage: function () {},
+      openLink: function (url) { window.open(url, "_blank", "noopener"); },
+      reportSize: function () {}
+    };
+    function notify() { if (h.onchange) h.onchange(); }
+
+    if (window.openai) {
+      var api = window.openai;
+      h.mode = "openai";
+      h.ready = true;
+      h.theme = api.theme || null;
+      h.locale = api.locale || null;
+      h.toolOutput = api.toolOutput || null;
+      h.widgetState = api.widgetState || null;
+      h.canCall = typeof api.callTool === "function";
+      h.setState = function (state) { if (typeof api.setWidgetState === "function") api.setWidgetState(state); };
+      h.callTool = function (name, args) { return api.callTool(name, args); };
+      h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
+      h.openLink = function (url) {
+        if (typeof api.openExternal === "function") api.openExternal({ href: url });
+        else window.open(url, "_blank", "noopener");
+      };
+      window.addEventListener("openai:set_globals", function () {
+        h.theme = api.theme || h.theme;
+        h.locale = api.locale || h.locale;
+        h.toolOutput = api.toolOutput || h.toolOutput;
+        h.widgetState = api.widgetState || h.widgetState;
+        notify();
+      });
+    } else if (window.parent && window.parent !== window) {
+      h.mode = "mcp";
+      h.canCall = true;
+      var nextId = 1, pending = {};
+      var post = function (msg) { window.parent.postMessage(msg, "*"); };
+      var request = function (method, params) {
+        return new Promise(function (resolve, reject) {
+          var id = nextId++;
+          pending[id] = { resolve: resolve, reject: reject };
+          post({ jsonrpc: "2.0", id: id, method: method, params: params });
+        });
+      };
+      window.addEventListener("message", function (ev) {
+        var m = ev.data;
+        if (!m || m.jsonrpc !== "2.0") return;
+        if (m.id !== undefined && m.method === undefined) {
+          var p = pending[m.id];
+          if (!p) return;
+          delete pending[m.id];
+          if (m.error) p.reject(new Error(m.error.message || "host error")); else p.resolve(m.result);
+          return;
+        }
+        if (m.method === "ui/notifications/tool-result") {
+          var pr = m.params || {};
+          if (pr.structuredContent) { h.toolOutput = pr.structuredContent; h.ready = true; notify(); }
+        } else if (m.method === "ui/notifications/host-context-changed") {
+          var c = m.params || {};
+          if (c.theme) h.theme = c.theme;
+          if (c.locale) h.locale = c.locale;
+          notify();
+        }
+      });
+      h.setState = function (state, summary) {
+        // Nearest MCP Apps equivalent of widget state: persist into the model
+        // context (each request overwrites the previous one).
+        request("ui/update-model-context", {
+          structuredContent: state,
+          content: summary ? [{ type: "text", text: summary }] : []
+        }).catch(function () {});
+      };
+      h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
+      h.sendMessage = function (text) {
+        request("ui/message", { role: "user", content: { type: "text", text: text } }).catch(function () {});
+      };
+      h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
+      h.reportSize = function () {
+        post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
+               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+      };
+      request("ui/initialize", {
+        protocolVersion: "2026-01-26",
+        clientInfo: { name: "module-catalog-widget", version: "1.0.0" },
+        capabilities: {},
+        appCapabilities: {}
+      }).then(function (res) {
+        var ctx = (res && res.hostContext) || {};
+        if (ctx.theme) h.theme = ctx.theme;
+        if (ctx.locale) h.locale = ctx.locale;
+        notify();
+      }).catch(function () { notify(); });
+    }
+    return h;
+  })();
+
+  // ---------- i18n ----------
+  function isDe() {
+    var loc = Host.locale || "de";
+    return String(loc).toLowerCase().indexOf("de") === 0;
+  }
+  var STR = {
+    de: {
+      title: "Modulvergleich",
+      ects: "ECTS",
+      level: "Stufe",
+      type: "Typ",
+      semesters: "Semester",
+      languages: "Sprachen",
+      weekdays: "Wochentage",
+      tags: "Tags",
+      prereqs: "Voraussetzungen",
+      prereqNotes: "Hinweise",
+      summary: "Kurzbeschreibung",
+      link: "Modulseite",
+      official: "öffnen ↗",
+      none: "keine",
+      sharedLegend: "◆ = Tag bei allen verglichenen Modulen",
+      notFound: function (codes) { return "⚠ Nicht im Katalog gefunden: " + codes; },
+      addPlaceholder: "Modulcode hinzufügen…",
+      add: "Vergleichen",
+      swapFailed: "Vergleich konnte nicht aktualisiert werden — Tabelle unverändert.",
+      removeTitle: "Aus dem Vergleich entfernen",
+      noData: "Keine Vergleichsdaten — bitte zuerst compare_modules aufrufen.",
+      maxCols: "Maximal 4 Module vergleichbar — zuerst eines entfernen."
+    },
+    en: {
+      title: "Module comparison",
+      ects: "ECTS",
+      level: "Level",
+      type: "Type",
+      semesters: "Semesters",
+      languages: "Languages",
+      weekdays: "Weekdays",
+      tags: "Tags",
+      prereqs: "Prerequisites",
+      prereqNotes: "Notes",
+      summary: "Summary",
+      link: "Module page",
+      official: "open ↗",
+      none: "none",
+      sharedLegend: "◆ = tag shared by all compared modules",
+      notFound: function (codes) { return "⚠ Not found in the catalog: " + codes; },
+      addPlaceholder: "Add module code…",
+      add: "Compare",
+      swapFailed: "Could not update the comparison — table unchanged.",
+      removeTitle: "Remove from comparison",
+      noData: "No comparison data — call compare_modules first.",
+      maxCols: "At most 4 modules can be compared — remove one first."
+    }
+  };
+  function t() { return isDe() ? STR.de : STR.en; }
+  var DAYS = {
+    de: { Monday: "Mo", Tuesday: "Di", Wednesday: "Mi", Thursday: "Do", Friday: "Fr", Saturday: "Sa", Sunday: "So" },
+    en: { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" }
+  };
+  function day(d) { return (isDe() ? DAYS.de : DAYS.en)[d] || d; }
+
+  // ---------- state ----------
+  var current = null;      // {modules:[], notFound:[]} — starts as toolOutput, updated via callTool
+  var busy = false;
+  var errorMsg = null;
+  var initialized = false;
+
+  function init() {
+    if (initialized) return;
+    var d = Host.toolOutput;
+    if (!d || !Array.isArray(d.modules)) return;
+    current = d;
+    initialized = true;
+    // Restore a column set changed in an earlier turn, if it differs from this call's output.
+    var ws = Host.widgetState;
+    var saved = ws && Array.isArray(ws.codes) ? ws.codes : null;
+    if (saved && saved.length >= 2 && saved.join("|") !== codes().join("|")) refresh(saved);
+  }
+
+  function codes() {
+    return current ? current.modules.map(function (m) { return m.code; }) : [];
+  }
+
+  function persistState() {
+    Host.setState({ codes: codes() }, "Modules currently compared in the widget: " + codes().join(", "));
+  }
+
+  // ---------- helpers ----------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
+  function locSummary(m) { return (!isDe() && m.summaryEn) ? m.summaryEn : m.summary; }
+  function semesters(m) {
+    if ((m.offerings || []).length > 0) return m.offerings.map(function (o) { return o.semesterId; });
+    return m.offeredIn || [];
+  }
+  // callTool result → structured payload: prefer structuredContent, fall back to
+  // parsing the JSON text block hosts emit when structured output is unavailable.
+  function extractStructured(res) {
+    if (!res) return null;
+    var sc = res.structuredContent || (res.result && res.result.structuredContent);
+    if (sc) return sc;
+    var content = res.content || (res.result && res.result.content);
+    if (Array.isArray(content)) {
+      var text = content.map(function (c) { return c && c.text ? c.text : ""; }).join("\n");
+      if (text) {
+        try { return JSON.parse(text); } catch (e) { return null; }
+      }
+    }
+    return null;
+  }
+  function sharedTags(mods) {
+    if (mods.length < 2) return {};
+    var counts = {};
+    mods.forEach(function (m) {
+      var seen = {};
+      (m.tags || []).forEach(function (tag) {
+        var k = tag.toLowerCase();
+        if (!seen[k]) { seen[k] = true; counts[k] = (counts[k] || 0) + 1; }
+      });
+    });
+    var shared = {};
+    Object.keys(counts).forEach(function (k) { if (counts[k] === mods.length) shared[k] = true; });
+    return shared;
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    init();
+    var root = document.getElementById("root");
+    var s = t();
+    if (!current) {
+      // In MCP Apps the tool result arrives asynchronously after ui/initialize —
+      // don't flash the "no data" message while waiting.
+      root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
+      Host.reportSize();
+      return;
+    }
+    var mods = current.modules;
+    var shared = sharedTags(mods);
+    var anyShared = Object.keys(shared).length > 0;
+
+    var html = "<h1>" + esc(s.title) + "</h1>";
+    if ((current.notFound || []).length > 0)
+      html += '<div class="notice">' + esc(s.notFound(current.notFound.join(", "))) + "</div>";
+
+    html += '<div class="table-wrap"><table>';
+
+    // Header row: module titles + remove buttons
+    html += '<thead><tr><th class="rowlabel"></th>';
+    mods.forEach(function (m) {
+      html += '<th><div class="col-head"><span class="col-title">' + esc(locTitle(m)) +
+        '<span class="code">' + esc(m.code) + "</span></span>" +
+        (mods.length > 2
+          ? '<button class="col-remove" data-remove="' + esc(m.code) + '" title="' + esc(s.removeTitle) + '">×</button>'
+          : "") +
+        "</div></th>";
+    });
+    html += "</tr></thead><tbody>";
+
+    html += row(s.ects, mods, function (m) { return '<span class="num">' + m.ects + "</span>"; });
+    html += row(s.level, mods, function (m) { return esc(m.level); });
+    html += row(s.type, mods, function (m) { return esc(m.moduleType); });
+    html += row(s.semesters, mods, function (m) { return esc(semesters(m).join(", ")); });
+    html += row(s.languages, mods, function (m) { return esc((m.languages || []).join(", ")); });
+    html += row(s.weekdays, mods, function (m) {
+      return chips((m.weekdays || []).map(function (w) { return { label: day(w) }; }));
+    });
+    html += row(s.tags, mods, function (m) {
+      return chips((m.tags || []).map(function (tag) {
+        var hit = shared[tag.toLowerCase()];
+        return { label: (hit ? "◆ " : "") + tag, cls: hit ? "shared" : "" };
+      }));
+    });
+    html += row(s.prereqs, mods, function (m) {
+      var codes = m.prerequisites || [];
+      return codes.length ? chips(codes.map(function (c) { return { label: c }; })) : '<span class="cell-note">' + esc(s.none) + "</span>";
+    });
+    html += row(s.prereqNotes, mods, function (m) {
+      return m.prerequisiteNotes ? '<span class="cell-note">' + esc(m.prerequisiteNotes) + "</span>" : "";
+    });
+    html += row(s.summary, mods, function (m) { return '<span class="summary">' + esc(locSummary(m)) + "</span>"; });
+    html += row(s.link, mods, function (m) {
+      return m.url ? '<a href="' + esc(m.url) + '" data-open="' + esc(m.url) + '">' + esc(s.official) + "</a>" : "";
+    });
+
+    html += "</tbody></table></div>";
+
+    if (anyShared) html += '<div class="legend">' + esc(s.sharedLegend) + "</div>";
+
+    html += '<div class="footer">' +
+      '<input id="add-code" placeholder="' + esc(s.addPlaceholder) + '"' + (busy ? " disabled" : "") + ">" +
+      '<button id="add"' + (busy ? " disabled" : "") + ">" + esc(s.add) + "</button>" +
+      (errorMsg ? '<span class="err">' + esc(errorMsg) + "</span>" : "") +
+      "</div>";
+
+    root.innerHTML = html;
+    Host.reportSize();
+  }
+
+  // A row is skipped entirely when no column has a value (sample catalogs
+  // lack e.g. weekdays and module types).
+  function row(label, mods, cell) {
+    var cells = mods.map(cell);
+    if (cells.every(function (c) { return !c; })) return "";
+    return '<tr><td class="rowlabel">' + esc(label) + "</td>" +
+      cells.map(function (c) { return "<td>" + (c || '<span class="dash">–</span>') + "</td>"; }).join("") +
+      "</tr>";
+  }
+  function chips(items) {
+    if (!items.length) return "";
+    return '<div class="chips">' + items.map(function (it) {
+      return '<span class="chip ' + (it.cls || "") + '">' + esc(it.label) + "</span>";
+    }).join("") + "</div>";
+  }
+
+  // ---------- actions ----------
+  function refresh(newCodes) {
+    if (!Host.canCall) { errorMsg = t().swapFailed; render(); return; }
+    busy = true;
+    errorMsg = null;
+    render();
+    Host.callTool("compare_modules", { codes: newCodes }).then(function (res) {
+      var sc = extractStructured(res);
+      busy = false;
+      if (sc && Array.isArray(sc.modules) && sc.modules.length >= 2) {
+        current = sc;
+        persistState();
+      } else {
+        errorMsg = t().swapFailed;
+      }
+      render();
+    }).catch(function () {
+      busy = false;
+      errorMsg = t().swapFailed;
+      render();
+    });
+  }
+
+  function addModule() {
+    var input = document.getElementById("add-code");
+    var code = (input && input.value || "").trim();
+    if (!code || busy) return;
+    if (codes().length >= 4) { errorMsg = t().maxCols; render(); return; }
+    if (codes().some(function (c) { return c.toLowerCase() === code.toLowerCase(); })) { input.value = ""; return; }
+    refresh(codes().concat([code]));
+  }
+
+  function removeModule(code) {
+    if (!current || current.modules.length <= 2) return;
+    // The data for the remaining columns is already local — no server call needed.
+    current = {
+      modules: current.modules.filter(function (m) { return m.code !== code; }),
+      notFound: current.notFound || []
+    };
+    errorMsg = null;
+    persistState();
+    render();
+  }
+
+  // ---------- events ----------
+  document.getElementById("root").addEventListener("click", function (ev) {
+    var el = ev.target.closest("[data-remove],[data-open],#add");
+    if (!el) return;
+    if (el.hasAttribute("data-remove")) removeModule(el.getAttribute("data-remove"));
+    else if (el.hasAttribute("data-open")) {
+      ev.preventDefault();
+      Host.openLink(el.getAttribute("data-open"));
+    }
+    else if (el.id === "add") addModule();
+  });
+  document.getElementById("root").addEventListener("keydown", function (ev) {
+    if (ev.target.id === "add-code" && ev.key === "Enter") addModule();
+  });
+
+  function applyTheme() {
+    var theme = Host.theme ||
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.dataset.theme = theme;
+  }
+
+  Host.onchange = function () { applyTheme(); render(); };
+
+  applyTheme();
+  render();
+})();
+</script>
+</body>
+</html>

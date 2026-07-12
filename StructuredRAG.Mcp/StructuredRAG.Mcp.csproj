@@ -15,4 +15,9 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.4.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- ChatGPT Apps-SDK widget templates, served via resources/read (see Resources/WidgetResources.cs) -->
+    <EmbeddedResource Include="Widgets\*.html" />
+  </ItemGroup>
+
 </Project>

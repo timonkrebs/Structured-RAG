@@ -41,11 +41,30 @@ var configuration = new ConfigurationBuilder()
 var services = new ServiceCollection();
 services.AddLogging(b => b.AddSimpleConsole(o => o.SingleLine = true));
 services.AddSingleton<IConfiguration>(configuration);
-services.AddHttpClient<DockerModelRunnerService>(client =>
+
+// LLM transport for compilation: an OpenAI-compatible HTTP endpoint (default) or the
+// official Codex CLI (`codex exec`), which reuses a ChatGPT login instead of an API key.
+var llmProvider = (configuration["Llm:Provider"] ?? "openai").ToLowerInvariant();
+switch (llmProvider)
 {
-    var timeoutSeconds = configuration.GetValue("DockerModelRunner:TimeoutSeconds", 300);
-    client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-});
+    case "openai":
+        services.AddHttpClient<DockerModelRunnerService>(client =>
+        {
+            var timeoutSeconds = configuration.GetValue("DockerModelRunner:TimeoutSeconds", 300);
+            client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        });
+        services.AddSingleton<ILlmClient>(sp => sp.GetRequiredService<DockerModelRunnerService>());
+        break;
+
+    case "codex-cli":
+        services.AddSingleton<ILlmClient, CodexCliService>();
+        break;
+
+    default:
+        throw new InvalidOperationException(
+            $"Unknown Llm:Provider '{llmProvider}'. Use 'openai' (OpenAI-compatible endpoint) or 'codex-cli' (Codex CLI via ChatGPT login).");
+}
+
 services.AddHttpClient<BariApiClient>(client => client.Timeout = TimeSpan.FromSeconds(60));
 services.AddSingleton<KnowledgeCompilationService>();
 services.AddSingleton<IngestCommand>();

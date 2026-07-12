@@ -1,0 +1,575 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Role tokens; dark mode is its own selected set, not an automatic flip. */
+  :root {
+    --surface: #fcfcfb;
+    --plane: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --ring: rgba(11, 11, 11, 0.10);
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+    --warn: #fab219;
+    --good-text: #006300;
+  }
+  :root[data-theme="dark"] {
+    --surface: #1a1a19;
+    --plane: #0d0d0d;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: #2c2c2a;
+    --ring: rgba(255, 255, 255, 0.10);
+    --accent: #3987e5;
+    --accent-soft: #184f95;
+    --warn: #fab219;
+    --good-text: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #root { padding: 14px 16px 12px; }
+  button {
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ring);
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--plane); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { filter: brightness(1.08); background: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  .header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .header h1 { font-size: 15px; font-weight: 650; margin: 0; }
+  .header .sub { color: var(--muted); font-size: 12px; }
+
+  .meter-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 10px 0 4px;
+  }
+  .meter { flex: 1 1 160px; height: 8px; border-radius: 4px; background: var(--hairline); overflow: hidden; display: flex; }
+  .meter .fill { background: var(--accent); border-radius: 4px 0 0 4px; }
+  .meter .over { background: var(--warn); border-left: 2px solid var(--surface); }
+  .meter-label { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .meter-label .of { color: var(--muted); font-weight: 400; }
+  .target-wrap { color: var(--ink-2); font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+  .target-wrap input {
+    width: 52px; font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 6px; padding: 2px 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .hint { font-size: 12.5px; color: var(--ink-2); margin: 3px 0; }
+  .hint.reached { color: var(--good-text); }
+
+  .legend { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
+
+  ul.modules { list-style: none; margin: 8px 0 0; padding: 0; }
+  ul.modules > li { border-top: 1px solid var(--hairline); padding: 9px 2px; }
+  ul.modules > li.selected { box-shadow: inset 3px 0 0 var(--accent); background: var(--plane); }
+  .mod-row { display: flex; align-items: flex-start; gap: 9px; }
+  .mod-row input[type="checkbox"] { margin-top: 3px; width: 15px; height: 15px; accent-color: var(--accent); flex: none; }
+  .mod-main { flex: 1 1 auto; min-width: 0; }
+  .mod-title { font-weight: 600; }
+  .mod-title .code { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .chip {
+    display: inline-block; font-size: 11.5px; color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 9px; padding: 0 7px; line-height: 17px;
+    white-space: nowrap;
+  }
+  .chip.ects { font-variant-numeric: tabular-nums; color: var(--ink); border-color: var(--ring); font-weight: 600; }
+  .chip.day { background: var(--plane); }
+  .chip.match { border-color: var(--accent); color: var(--accent); }
+  .mod-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .mod-note.warn-note::before { content: "△ "; }
+  .mod-summary { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+  .mod-actions { flex: none; }
+  .mod-actions button { font-size: 12px; padding: 3px 9px; }
+
+  .details-panel {
+    margin: 8px 0 0 24px; padding: 8px 10px; font-size: 12.5px;
+    border: 1px solid var(--hairline); border-radius: 8px; background: var(--plane);
+    white-space: pre-wrap; overflow-wrap: break-word; max-height: 260px; overflow-y: auto;
+  }
+  .details-panel a { color: var(--accent); }
+
+  details.blocked { margin-top: 12px; border-top: 1px solid var(--hairline); padding-top: 8px; }
+  details.blocked summary { cursor: pointer; color: var(--ink-2); font-weight: 600; font-size: 13px; }
+  details.blocked li { border: none; padding: 6px 2px 2px 8px; }
+  details.blocked .mod-title { color: var(--ink-2); font-weight: 500; }
+
+  .footer {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 10px;
+  }
+  .footer .spacer { flex: 1 1 auto; }
+  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- host bridge ----------
+  // Abstracts the two widget host conventions over one interface:
+  //  - OpenAI Apps SDK (ChatGPT): window.openai globals + methods
+  //  - MCP Apps extension (Claude, ...): JSON-RPC 2.0 over postMessage (spec 2026-01-26)
+  var Host = (function () {
+    var h = {
+      mode: "none",       // "openai" | "mcp" | "none"
+      ready: false,       // becomes true once host data has arrived (mcp is async)
+      theme: null,
+      locale: null,
+      toolOutput: null,
+      widgetState: null,  // openai only; MCP Apps has no widget-state store
+      canCall: false,
+      onchange: null,
+      setState: function () {},
+      callTool: function () { return Promise.reject(new Error("no host")); },
+      sendMessage: function () {},
+      openLink: function (url) { window.open(url, "_blank", "noopener"); },
+      reportSize: function () {}
+    };
+    function notify() { if (h.onchange) h.onchange(); }
+
+    if (window.openai) {
+      var api = window.openai;
+      h.mode = "openai";
+      h.ready = true;
+      h.theme = api.theme || null;
+      h.locale = api.locale || null;
+      h.toolOutput = api.toolOutput || null;
+      h.widgetState = api.widgetState || null;
+      h.canCall = typeof api.callTool === "function";
+      h.setState = function (state) { if (typeof api.setWidgetState === "function") api.setWidgetState(state); };
+      h.callTool = function (name, args) { return api.callTool(name, args); };
+      h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
+      h.openLink = function (url) {
+        if (typeof api.openExternal === "function") api.openExternal({ href: url });
+        else window.open(url, "_blank", "noopener");
+      };
+      window.addEventListener("openai:set_globals", function () {
+        h.theme = api.theme || h.theme;
+        h.locale = api.locale || h.locale;
+        h.toolOutput = api.toolOutput || h.toolOutput;
+        h.widgetState = api.widgetState || h.widgetState;
+        notify();
+      });
+    } else if (window.parent && window.parent !== window) {
+      h.mode = "mcp";
+      h.canCall = true;
+      var nextId = 1, pending = {};
+      var post = function (msg) { window.parent.postMessage(msg, "*"); };
+      var request = function (method, params) {
+        return new Promise(function (resolve, reject) {
+          var id = nextId++;
+          pending[id] = { resolve: resolve, reject: reject };
+          post({ jsonrpc: "2.0", id: id, method: method, params: params });
+        });
+      };
+      window.addEventListener("message", function (ev) {
+        var m = ev.data;
+        if (!m || m.jsonrpc !== "2.0") return;
+        if (m.id !== undefined && m.method === undefined) {
+          var p = pending[m.id];
+          if (!p) return;
+          delete pending[m.id];
+          if (m.error) p.reject(new Error(m.error.message || "host error")); else p.resolve(m.result);
+          return;
+        }
+        if (m.method === "ui/notifications/tool-result") {
+          var pr = m.params || {};
+          if (pr.structuredContent) { h.toolOutput = pr.structuredContent; h.ready = true; notify(); }
+        } else if (m.method === "ui/notifications/host-context-changed") {
+          var c = m.params || {};
+          if (c.theme) h.theme = c.theme;
+          if (c.locale) h.locale = c.locale;
+          notify();
+        }
+      });
+      h.setState = function (state, summary) {
+        // Nearest MCP Apps equivalent of widget state: persist the draft into the
+        // model context (each request overwrites the previous one), so the model
+        // sees the student's current selection in future turns.
+        request("ui/update-model-context", {
+          structuredContent: state,
+          content: summary ? [{ type: "text", text: summary }] : []
+        }).catch(function () {});
+      };
+      h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
+      h.sendMessage = function (text) {
+        request("ui/message", { role: "user", content: { type: "text", text: text } }).catch(function () {});
+      };
+      h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
+      h.reportSize = function () {
+        post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
+               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+      };
+      request("ui/initialize", {
+        protocolVersion: "2026-01-26",
+        clientInfo: { name: "module-catalog-widget", version: "1.0.0" },
+        capabilities: {},
+        appCapabilities: {}
+      }).then(function (res) {
+        var ctx = (res && res.hostContext) || {};
+        if (ctx.theme) h.theme = ctx.theme;
+        if (ctx.locale) h.locale = ctx.locale;
+        notify();
+      }).catch(function () { notify(); });
+    }
+    return h;
+  })();
+
+  // ---------- i18n ----------
+  function isDe() {
+    var loc = Host.locale || "de";
+    return String(loc).toLowerCase().indexOf("de") === 0;
+  }
+  var STR = {
+    de: {
+      title: function (s) { return "Semesterplan " + s; },
+      eligibleCount: function (n) { return n + " wählbare Module"; },
+      target: "Ziel",
+      ects: "ECTS",
+      overTarget: function (n) { return "⚠ " + n + " ECTS über dem Ziel"; },
+      reached: "✓ Ziel erreicht",
+      clash: function (day, titles) { return "⚠ Gleicher Wochentag (" + day + "): " + titles; },
+      matchLegend: "★ = passt zu deinen Interessen",
+      missingRec: function (codes) { return "Empfohlen, aber noch nicht absolviert: " + codes; },
+      prereqNotes: "Hinweis zu Voraussetzungen: ",
+      details: "Details",
+      hide: "Zuklappen",
+      loading: "Lade offizielle Beschreibung…",
+      loadError: "Details konnten nicht geladen werden.",
+      official: "Offizielle Modulseite ↗",
+      blocked: function (n) { return "Gesperrte Module (" + n + ")"; },
+      missing: "fehlt: ",
+      selectedSum: function (n, e) { return n + " Module · " + e + " ECTS gewählt"; },
+      send: "Plan in den Chat senden",
+      noData: "Keine Plandaten vorhanden — bitte zuerst plan_semester aufrufen.",
+      noEligible: "Keine wählbaren Module für dieses Semester gefunden.",
+      followUp: function (sem, lines, sum, target) {
+        return "Ich habe im Planungs-Widget folgenden Semesterplan für " + sem +
+          " zusammengestellt (" + sum + " von " + target + " ECTS):\n" + lines +
+          "\nBitte beurteile den Plan (Voraussetzungen, Arbeitslast, Kombination) und schlage konkrete Verbesserungen vor.";
+      }
+    },
+    en: {
+      title: function (s) { return "Semester plan " + s; },
+      eligibleCount: function (n) { return n + " eligible modules"; },
+      target: "Target",
+      ects: "ECTS",
+      overTarget: function (n) { return "⚠ " + n + " ECTS over target"; },
+      reached: "✓ Target reached",
+      clash: function (day, titles) { return "⚠ Same weekday (" + day + "): " + titles; },
+      matchLegend: "★ = matches your interests",
+      missingRec: function (codes) { return "Recommended but not yet completed: " + codes; },
+      prereqNotes: "Prerequisite note: ",
+      details: "Details",
+      hide: "Hide",
+      loading: "Loading official description…",
+      loadError: "Could not load details.",
+      official: "Official module page ↗",
+      blocked: function (n) { return "Blocked modules (" + n + ")"; },
+      missing: "missing: ",
+      selectedSum: function (n, e) { return n + " modules · " + e + " ECTS selected"; },
+      send: "Send plan to chat",
+      noData: "No planning data — call plan_semester first.",
+      noEligible: "No eligible modules found for this semester.",
+      followUp: function (sem, lines, sum, target) {
+        return "Using the planning widget I assembled this plan for " + sem +
+          " (" + sum + " of " + target + " ECTS):\n" + lines +
+          "\nPlease review the plan (prerequisites, workload, combination) and suggest concrete improvements.";
+      }
+    }
+  };
+  function t() { return isDe() ? STR.de : STR.en; }
+  var DAYS = {
+    de: { Monday: "Mo", Tuesday: "Di", Wednesday: "Mi", Thursday: "Do", Friday: "Fr", Saturday: "Sa", Sunday: "So" },
+    en: { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" }
+  };
+  function day(d) { return (isDe() ? DAYS.de : DAYS.en)[d] || d; }
+
+  // ---------- state ----------
+  var selected = {};          // code -> true
+  var expanded = {};          // code -> true (details panel open)
+  var details = {};           // code -> {loading|error|text,url}
+  var target = 30;
+  var targetTouched = false;
+  var stateRestored = false;
+
+  function data() { return Host.toolOutput; }
+
+  function restoreState() {
+    if (stateRestored) return;
+    var d = data();
+    if (d && typeof d.ectsTarget === "number" && d.ectsTarget > 0) target = d.ectsTarget;
+    var ws = Host.widgetState;
+    if (ws) {
+      (ws.selectedCodes || []).forEach(function (c) { selected[c] = true; });
+      if (typeof ws.ectsTarget === "number" && ws.ectsTarget > 0) { target = ws.ectsTarget; targetTouched = true; }
+    }
+    if (d) stateRestored = true;
+  }
+
+  function persistState() {
+    var state = { selectedCodes: Object.keys(selected) };
+    if (targetTouched) state.ectsTarget = target;
+    Host.setState(state, draftSummary());
+  }
+
+  // Model-facing summary of the current draft (used as MCP Apps model context).
+  function draftSummary() {
+    var mods = selectedModules();
+    if (mods.length === 0) return "";
+    var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
+    return "Student's current draft plan in the semester-planner widget (" + sum + "/" + target +
+      " ECTS): " + mods.map(function (m) { return m.code; }).join(", ");
+  }
+
+  // ---------- helpers ----------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
+  function locSummary(m) { return (!isDe() && m.summaryEn) ? m.summaryEn : m.summary; }
+  function selectedModules() {
+    var d = data();
+    if (!d) return [];
+    return (d.eligible || []).map(function (e) { return e.module; })
+      .filter(function (m) { return selected[m.code]; });
+  }
+  // callTool result → structured payload: prefer structuredContent, fall back to
+  // parsing the JSON text block hosts emit when structured output is unavailable.
+  function extractStructured(res) {
+    if (!res) return null;
+    var sc = res.structuredContent || (res.result && res.result.structuredContent);
+    if (sc) return sc;
+    var content = res.content || (res.result && res.result.content);
+    if (Array.isArray(content)) {
+      var text = content.map(function (c) { return c && c.text ? c.text : ""; }).join("\n");
+      if (text) {
+        try { return JSON.parse(text); } catch (e) { return { text: text }; }
+      }
+    }
+    return null;
+  }
+  function clashes(mods) {
+    var byDay = {};
+    mods.forEach(function (m) {
+      (m.weekdays || []).forEach(function (d) { (byDay[d] = byDay[d] || []).push(m); });
+    });
+    return Object.keys(byDay)
+      .filter(function (d) { return byDay[d].length > 1; })
+      .map(function (d) { return { day: d, modules: byDay[d] }; });
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    restoreState();
+    var root = document.getElementById("root");
+    var d = data();
+    var s = t();
+    if (!d || !Array.isArray(d.eligible)) {
+      // In MCP Apps the tool result arrives asynchronously after ui/initialize —
+      // don't flash the "no data" message while waiting.
+      root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
+      Host.reportSize();
+      return;
+    }
+
+    var mods = selectedModules();
+    var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
+    var anyMatches = (d.eligible || []).some(function (e) { return (e.interestMatches || []).length > 0; });
+
+    var html = "";
+
+    // Header + ECTS meter (single-value meter: accent fill, warning overflow segment;
+    // over/reached is always also said in text — never color alone).
+    html += '<div class="header"><h1>' + esc(s.title(d.semester)) + "</h1>" +
+      '<span class="sub">' + esc(s.eligibleCount((d.eligible || []).length)) + "</span></div>";
+
+    // Up to the target the bar tracks sum/target; over target the full bar
+    // represents `sum`, split into the target part (accent) and overflow (warning).
+    var basePct = sum <= target ? (target > 0 ? (sum / target) * 100 : 0) : (target / sum) * 100;
+    var overPct = sum > target ? ((sum - target) / sum) * 100 : 0;
+    html += '<div class="meter-row">' +
+      '<span class="meter-label">' + sum + ' <span class="of">/ ' + target + " " + esc(s.ects) + "</span></span>" +
+      '<div class="meter"><div class="fill" style="width:' + basePct.toFixed(1) + '%"></div>' +
+      (overPct > 0 ? '<div class="over" style="width:' + overPct.toFixed(1) + '%"></div>' : "") + "</div>" +
+      '<label class="target-wrap">' + esc(s.target) +
+      ' <input id="target" type="number" min="1" max="90" step="1" value="' + target + '"></label>' +
+      "</div>";
+    if (sum > target) html += '<div class="hint">' + esc(s.overTarget(sum - target)) + "</div>";
+    else if (sum === target && sum > 0) html += '<div class="hint reached">' + esc(s.reached) + "</div>";
+
+    clashes(mods).forEach(function (c) {
+      var titles = c.modules.map(function (m) { return locTitle(m); }).join(" + ");
+      html += '<div class="hint">' + esc(s.clash(day(c.day), titles)) + "</div>";
+    });
+
+    if (anyMatches) html += '<div class="legend">' + esc(s.matchLegend) + "</div>";
+
+    // Eligible modules
+    if ((d.eligible || []).length === 0) {
+      html += '<div class="empty">' + esc(s.noEligible) + "</div>";
+    } else {
+      html += '<ul class="modules">';
+      d.eligible.forEach(function (e) {
+        var m = e.module;
+        var isSel = !!selected[m.code];
+        var matches = {};
+        (e.interestMatches || []).forEach(function (tag) { matches[tag.toLowerCase()] = true; });
+
+        html += '<li class="' + (isSel ? "selected" : "") + '">' +
+          '<div class="mod-row">' +
+          '<input type="checkbox" data-toggle="' + esc(m.code) + '"' + (isSel ? " checked" : "") + ">" +
+          '<div class="mod-main">' +
+          '<div class="mod-title">' + esc(locTitle(m)) + '<span class="code">' + esc(m.code) + "</span></div>" +
+          '<div class="badges">' +
+          '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
+          (m.moduleType ? '<span class="chip">' + esc(m.moduleType) + "</span>" : "") +
+          (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("") +
+          (m.tags || []).map(function (tag) {
+            var hit = matches[tag.toLowerCase()];
+            return '<span class="chip' + (hit ? " match" : "") + '">' + (hit ? "★ " : "") + esc(tag) + "</span>";
+          }).join("") +
+          "</div>" +
+          '<div class="mod-summary">' + esc(locSummary(m)) + "</div>" +
+          ((e.missingRecommended || []).length
+            ? '<div class="mod-note warn-note">' + esc(s.missingRec(e.missingRecommended.join(", "))) + "</div>" : "") +
+          (m.prerequisiteNotes
+            ? '<div class="mod-note warn-note">' + esc(s.prereqNotes) + esc(m.prerequisiteNotes) + "</div>" : "") +
+          "</div>" +
+          '<div class="mod-actions"><button data-details="' + esc(m.code) + '">' +
+          esc(expanded[m.code] ? s.hide : s.details) + "</button></div>" +
+          "</div>" +
+          detailsPanel(m) +
+          "</li>";
+      });
+      html += "</ul>";
+    }
+
+    // Blocked modules
+    if ((d.blocked || []).length > 0) {
+      html += '<details class="blocked"><summary>' + esc(s.blocked(d.blocked.length)) + "</summary><ul class=\"modules\">";
+      d.blocked.forEach(function (b) {
+        html += '<li><div class="mod-title">' + esc(b.title) + '<span class="code">' + esc(b.code) + "</span></div>" +
+          '<div class="badges"><span class="chip ects">' + b.ects + " " + esc(s.ects) + "</span>" +
+          '<span class="chip">' + esc(s.missing) + esc((b.missingPrerequisites || []).join(", ")) + "</span></div></li>";
+      });
+      html += "</ul></details>";
+    }
+
+    // Footer
+    html += '<div class="footer">' +
+      '<span class="sub" style="color:var(--ink-2)">' + esc(s.selectedSum(mods.length, sum)) + "</span>" +
+      '<span class="spacer"></span>' +
+      '<button id="send" class="primary"' + (mods.length === 0 ? " disabled" : "") + ">" + esc(s.send) + "</button>" +
+      "</div>";
+
+    root.innerHTML = html;
+    Host.reportSize();
+  }
+
+  function detailsPanel(m) {
+    if (!expanded[m.code]) return "";
+    var s = t();
+    var st = details[m.code];
+    var body;
+    if (!st || st.loading) body = esc(s.loading);
+    else if (st.error) body = esc(s.loadError) + (m.url ? linkHtml(m.url, s.official) : "");
+    else body = esc(st.text) + (st.url || m.url ? "\n\n" + linkHtml(st.url || m.url, s.official) : "");
+    return '<div class="details-panel">' + body + "</div>";
+  }
+  function linkHtml(url, label) {
+    return '<a href="' + esc(url) + '" data-open="' + esc(url) + '">' + esc(label) + "</a>";
+  }
+
+  // ---------- actions ----------
+  function toggle(code) {
+    if (selected[code]) delete selected[code]; else selected[code] = true;
+    persistState();
+    render();
+  }
+
+  function toggleDetails(code) {
+    if (expanded[code]) { delete expanded[code]; render(); return; }
+    expanded[code] = true;
+    if (!details[code] && Host.canCall) {
+      details[code] = { loading: true };
+      Host.callTool("fetch", { id: code }).then(function (res) {
+        var sc = extractStructured(res);
+        details[code] = sc && sc.text ? { text: sc.text, url: sc.url || null } : { error: true };
+        render();
+      }).catch(function () {
+        details[code] = { error: true };
+        render();
+      });
+    } else if (!details[code]) {
+      details[code] = { error: true };
+    }
+    render();
+  }
+
+  function sendPlan() {
+    var s = t();
+    var mods = selectedModules();
+    if (mods.length === 0) return;
+    var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
+    var lines = mods.map(function (m) { return "- " + m.code + ": " + locTitle(m) + " (" + m.ects + " ECTS)"; }).join("\n");
+    Host.sendMessage(s.followUp(data().semester, lines, sum, target));
+  }
+
+  // ---------- events ----------
+  document.getElementById("root").addEventListener("click", function (ev) {
+    var el = ev.target.closest("[data-details],[data-open],#send");
+    if (!el) return;
+    if (el.hasAttribute("data-details")) { toggleDetails(el.getAttribute("data-details")); }
+    else if (el.hasAttribute("data-open")) {
+      ev.preventDefault();
+      Host.openLink(el.getAttribute("data-open"));
+    }
+    else if (el.id === "send") sendPlan();
+  });
+  document.getElementById("root").addEventListener("change", function (ev) {
+    var el = ev.target;
+    if (el.hasAttribute && el.hasAttribute("data-toggle")) toggle(el.getAttribute("data-toggle"));
+    else if (el.id === "target") {
+      var v = parseInt(el.value, 10);
+      if (v > 0) { target = v; targetTouched = true; persistState(); render(); }
+    }
+  });
+
+  function applyTheme() {
+    var theme = Host.theme ||
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.dataset.theme = theme;
+  }
+
+  Host.onchange = function () { applyTheme(); render(); };
+
+  applyTheme();
+  render();
+})();
+</script>
+</body>
+</html>

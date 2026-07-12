@@ -62,17 +62,32 @@ public class LiveModuleFetcher
 
     private async Task<ModuleDetailDto?> GetLiveDetailAsync(string planId, CancellationToken ct)
     {
-        if (_cache.TryGetValue(planId, out var cached) && DateTime.UtcNow - cached.FetchedAt < _ttl)
+        if (_cache.TryGetValue(planId, out var cached))
         {
-            return cached.Detail;
+            if (DateTime.UtcNow - cached.FetchedAt < _ttl)
+                return cached.Detail;
+            _cache.TryRemove(planId, out _);
         }
 
         var detail = await _client.GetModuleDetailAsync(planId, ct);
         if (detail != null)
         {
+            // Keys come from compiled offerings, so the cache is bounded by catalog size —
+            // but offerings change across recompiles over a long-lived process, so drop
+            // expired entries before adding. O(n) is fine next to the network fetch above.
+            PruneExpired();
             _cache[planId] = (DateTime.UtcNow, detail);
         }
         return detail;
+    }
+
+    private void PruneExpired()
+    {
+        var cutoff = DateTime.UtcNow - _ttl;
+        foreach (var entry in _cache)
+        {
+            if (entry.Value.FetchedAt < cutoff) _cache.TryRemove(entry.Key, out _);
+        }
     }
 
     private static FetchResult BuildResult(CompiledModule compiled, SourceModule? live, string source)

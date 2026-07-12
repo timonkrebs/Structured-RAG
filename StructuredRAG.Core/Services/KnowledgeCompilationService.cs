@@ -21,7 +21,7 @@ namespace StructuredRAG.Core.Services;
 /// </summary>
 public class KnowledgeCompilationService
 {
-    private readonly DockerModelRunnerService _llmService;
+    private readonly ILlmClient _llmService;
     private readonly ILogger<KnowledgeCompilationService> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -35,7 +35,7 @@ public class KnowledgeCompilationService
     };
 
     public KnowledgeCompilationService(
-        DockerModelRunnerService llmService,
+        ILlmClient llmService,
         ILogger<KnowledgeCompilationService> logger)
     {
         _llmService = llmService;
