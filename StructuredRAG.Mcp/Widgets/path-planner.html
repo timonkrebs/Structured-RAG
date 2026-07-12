@@ -1,0 +1,540 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Role tokens; dark mode is its own selected set, not an automatic flip. */
+  :root {
+    --surface: #fcfcfb;
+    --plane: #f9f9f7;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --ring: rgba(11, 11, 11, 0.10);
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+    --good-text: #006300;
+  }
+  :root[data-theme="dark"] {
+    --surface: #1a1a19;
+    --plane: #0d0d0d;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: #2c2c2a;
+    --ring: rgba(255, 255, 255, 0.10);
+    --accent: #3987e5;
+    --accent-soft: #184f95;
+    --good-text: #0ca30c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #root { padding: 14px 16px 12px; }
+  button {
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ring);
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--plane); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { filter: brightness(1.08); background: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  .header h1 { font-size: 15px; font-weight: 650; margin: 0; }
+  .header h1 .code { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+  .headline-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 2px; }
+  .chip {
+    display: inline-block; font-size: 11.5px; color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 9px; padding: 0 7px; line-height: 18px;
+    white-space: nowrap;
+  }
+  .chip.key { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .chip.ects { font-variant-numeric: tabular-nums; color: var(--ink); border-color: var(--ring); font-weight: 600; }
+  .chip.day { background: var(--plane); }
+  .done-line { font-size: 12.5px; color: var(--good-text); margin: 6px 0 0; }
+  .done-line .undo {
+    border: none; padding: 0 3px; color: var(--muted); font-size: 12px; cursor: pointer; background: none;
+  }
+  .done-line .undo:hover { color: var(--ink); background: none; }
+
+  .timeline { margin-top: 10px; }
+  .step { border-top: 1px solid var(--hairline); padding: 8px 0 4px; }
+  .step-head { display: flex; align-items: baseline; gap: 8px; }
+  .step-sem { font-weight: 650; }
+  .step-ects { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .gap {
+    border-top: 1px solid var(--hairline); color: var(--muted);
+    font-size: 12px; padding: 6px 0; text-align: center;
+  }
+  .card {
+    border: 1px solid var(--hairline); border-radius: 10px;
+    padding: 8px 10px; margin: 7px 0;
+  }
+  .card.target { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .card-row { display: flex; align-items: flex-start; gap: 8px; }
+  .card-main { flex: 1 1 auto; min-width: 0; }
+  .card-title { font-weight: 600; }
+  .card-title .code { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .card-summary { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+  .card-actions { flex: none; display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+  .card-actions button { font-size: 12px; padding: 3px 9px; white-space: nowrap; }
+
+  .details-panel {
+    margin-top: 8px; padding: 8px 10px; font-size: 12.5px;
+    border: 1px solid var(--hairline); border-radius: 8px; background: var(--plane);
+    white-space: pre-wrap; overflow-wrap: break-word; max-height: 260px; overflow-y: auto;
+  }
+  .details-panel a { color: var(--accent); }
+
+  details.notes { margin-top: 10px; border-top: 1px solid var(--hairline); padding-top: 8px; }
+  details.notes summary { cursor: pointer; color: var(--ink-2); font-weight: 600; font-size: 13px; }
+  details.notes li { font-size: 12.5px; color: var(--ink-2); margin: 4px 0; }
+
+  .footer {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 10px;
+  }
+  .footer .err { font-size: 12.5px; color: var(--ink-2); }
+  .footer .spacer { flex: 1 1 auto; }
+  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- host bridge ----------
+  // Abstracts the two widget host conventions over one interface:
+  //  - OpenAI Apps SDK (ChatGPT): window.openai globals + methods
+  //  - MCP Apps extension (Claude, ...): JSON-RPC 2.0 over postMessage (spec 2026-01-26)
+  var Host = (function () {
+    var h = {
+      mode: "none",       // "openai" | "mcp" | "none"
+      ready: false,       // becomes true once host data has arrived (mcp is async)
+      theme: null,
+      locale: null,
+      toolOutput: null,
+      widgetState: null,  // openai only; MCP Apps has no widget-state store
+      canCall: false,
+      onchange: null,
+      setState: function () {},
+      callTool: function () { return Promise.reject(new Error("no host")); },
+      sendMessage: function () {},
+      openLink: function (url) { window.open(url, "_blank", "noopener"); },
+      reportSize: function () {}
+    };
+    function notify() { if (h.onchange) h.onchange(); }
+
+    if (window.openai) {
+      var api = window.openai;
+      h.mode = "openai";
+      h.ready = true;
+      h.theme = api.theme || null;
+      h.locale = api.locale || null;
+      h.toolOutput = api.toolOutput || null;
+      h.widgetState = api.widgetState || null;
+      h.canCall = typeof api.callTool === "function";
+      h.setState = function (state) { if (typeof api.setWidgetState === "function") api.setWidgetState(state); };
+      h.callTool = function (name, args) { return api.callTool(name, args); };
+      h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
+      h.openLink = function (url) {
+        if (typeof api.openExternal === "function") api.openExternal({ href: url });
+        else window.open(url, "_blank", "noopener");
+      };
+      window.addEventListener("openai:set_globals", function () {
+        h.theme = api.theme || h.theme;
+        h.locale = api.locale || h.locale;
+        h.toolOutput = api.toolOutput || h.toolOutput;
+        h.widgetState = api.widgetState || h.widgetState;
+        notify();
+      });
+    } else if (window.parent && window.parent !== window) {
+      h.mode = "mcp";
+      h.canCall = true;
+      var nextId = 1, pending = {};
+      var post = function (msg) { window.parent.postMessage(msg, "*"); };
+      var request = function (method, params) {
+        return new Promise(function (resolve, reject) {
+          var id = nextId++;
+          pending[id] = { resolve: resolve, reject: reject };
+          post({ jsonrpc: "2.0", id: id, method: method, params: params });
+        });
+      };
+      window.addEventListener("message", function (ev) {
+        var m = ev.data;
+        if (!m || m.jsonrpc !== "2.0") return;
+        if (m.id !== undefined && m.method === undefined) {
+          var p = pending[m.id];
+          if (!p) return;
+          delete pending[m.id];
+          if (m.error) p.reject(new Error(m.error.message || "host error")); else p.resolve(m.result);
+          return;
+        }
+        if (m.method === "ui/notifications/tool-result") {
+          var pr = m.params || {};
+          if (pr.structuredContent) { h.toolOutput = pr.structuredContent; h.ready = true; notify(); }
+        } else if (m.method === "ui/notifications/host-context-changed") {
+          var c = m.params || {};
+          if (c.theme) h.theme = c.theme;
+          if (c.locale) h.locale = c.locale;
+          notify();
+        }
+      });
+      h.setState = function (state, summary) {
+        // Nearest MCP Apps equivalent of widget state: persist into the model
+        // context (each request overwrites the previous one).
+        request("ui/update-model-context", {
+          structuredContent: state,
+          content: summary ? [{ type: "text", text: summary }] : []
+        }).catch(function () {});
+      };
+      h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
+      h.sendMessage = function (text) {
+        request("ui/message", { role: "user", content: { type: "text", text: text } }).catch(function () {});
+      };
+      h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
+      h.reportSize = function () {
+        post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
+               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+      };
+      request("ui/initialize", {
+        protocolVersion: "2026-01-26",
+        clientInfo: { name: "module-catalog-widget", version: "1.0.0" },
+        capabilities: {},
+        appCapabilities: {}
+      }).then(function (res) {
+        var ctx = (res && res.hostContext) || {};
+        if (ctx.theme) h.theme = ctx.theme;
+        if (ctx.locale) h.locale = ctx.locale;
+        notify();
+      }).catch(function () { notify(); });
+    }
+    return h;
+  })();
+
+  // ---------- i18n ----------
+  function isDe() {
+    var loc = Host.locale || "de";
+    return String(loc).toLowerCase().indexOf("de") === 0;
+  }
+  var STR = {
+    de: {
+      title: function (t) { return "Weg zu: " + t; },
+      earliest: function (s) { return "frühestens " + s; },
+      semesters: function (n) { return n + (n === 1 ? " Semester" : " Semester"); },
+      ects: "ECTS",
+      alreadyDone: "✓ Bereits absolviert: ",
+      undoTitle: "Als nicht absolviert markieren und neu planen",
+      markDone: "✓ schon absolviert",
+      targetBadge: "🎯 Ziel",
+      details: "Details",
+      hide: "Zuklappen",
+      loading: "Lade offizielle Beschreibung…",
+      loadError: "Details konnten nicht geladen werden.",
+      official: "Offizielle Modulseite ↗",
+      gap: function (n) { return "⏳ " + n + (n === 1 ? " Wartesemester" : " Wartesemester") + " (kein passendes Angebot)"; },
+      notes: function (n) { return "Hinweise (" + n + ")"; },
+      send: "Pfad in den Chat senden",
+      noData: "Keine Pfaddaten — bitte zuerst plan_path aufrufen.",
+      replanFailed: "Neu planen fehlgeschlagen — Pfad unverändert.",
+      followUp: function (title, pathText, sem, ects) {
+        return "Mein schnellster Weg zu «" + title + "» laut Pfad-Widget:\n" + pathText +
+          "\nFrühester Abschluss: " + sem + " (" + ects + " ECTS insgesamt). " +
+          "Bitte prüfe den Pfad und hilf mir, das erste Semester konkret zu planen.";
+      }
+    },
+    en: {
+      title: function (t) { return "Path to: " + t; },
+      earliest: function (s) { return "earliest " + s; },
+      semesters: function (n) { return n + (n === 1 ? " semester" : " semesters"); },
+      ects: "ECTS",
+      alreadyDone: "✓ Already completed: ",
+      undoTitle: "Mark as not completed and re-plan",
+      markDone: "✓ already done",
+      targetBadge: "🎯 Target",
+      details: "Details",
+      hide: "Hide",
+      loading: "Loading official description…",
+      loadError: "Could not load details.",
+      official: "Official module page ↗",
+      gap: function (n) { return "⏳ " + n + (n === 1 ? " waiting semester" : " waiting semesters") + " (no matching offering)"; },
+      notes: function (n) { return "Notes (" + n + ")"; },
+      send: "Send path to chat",
+      noData: "No path data — call plan_path first.",
+      replanFailed: "Re-planning failed — path unchanged.",
+      followUp: function (title, pathText, sem, ects) {
+        return "My fastest path to \"" + title + "\" according to the path widget:\n" + pathText +
+          "\nEarliest completion: " + sem + " (" + ects + " ECTS total). " +
+          "Please review the path and help me plan the first semester concretely.";
+      }
+    }
+  };
+  function t() { return isDe() ? STR.de : STR.en; }
+  var DAYS = {
+    de: { Monday: "Mo", Tuesday: "Di", Wednesday: "Mi", Thursday: "Do", Friday: "Fr", Saturday: "Sa", Sunday: "So" },
+    en: { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" }
+  };
+  function day(d) { return (isDe() ? DAYS.de : DAYS.en)[d] || d; }
+
+  // ---------- state ----------
+  var current = null;      // PathPlanData — starts as toolOutput, replaced by re-plans
+  var busy = false;
+  var errorMsg = null;
+  var initialized = false;
+  var expanded = {};       // code -> details panel open
+  var details = {};        // code -> {loading|error|text,url}
+
+  function init() {
+    if (initialized) return;
+    var d = Host.toolOutput;
+    if (!d || !Array.isArray(d.steps)) return;
+    current = d;
+    initialized = true;
+    // Restore a completed-set changed in an earlier turn (openai widget state only).
+    var ws = Host.widgetState;
+    var saved = ws && Array.isArray(ws.completed) ? ws.completed : null;
+    if (saved && saved.join("|") !== (current.completedModules || []).join("|")) replan(saved);
+  }
+
+  function persistState() {
+    Host.setState({ completed: current.completedModules || [] }, pathSummary());
+  }
+
+  // Model-facing one-liner (used as MCP Apps model context).
+  function pathSummary() {
+    if (!current) return "";
+    var stepsText = current.steps.map(function (s) {
+      return s.semester + ": " + s.modules.map(function (m) { return m.code; }).join("+");
+    }).join(" -> ");
+    return "Fastest path to " + current.targetCode + " (widget): " + stepsText +
+      "; earliest " + current.earliestSemester + ", " + current.totalEcts + " ECTS total.";
+  }
+
+  // ---------- helpers ----------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
+  function locSummary(m) { return (!isDe() && m.summaryEn) ? m.summaryEn : m.summary; }
+  function extractStructured(res) {
+    if (!res) return null;
+    var sc = res.structuredContent || (res.result && res.result.structuredContent);
+    if (sc) return sc;
+    var content = res.content || (res.result && res.result.content);
+    if (Array.isArray(content)) {
+      var text = content.map(function (c) { return c && c.text ? c.text : ""; }).join("\n");
+      if (text) {
+        try { return JSON.parse(text); } catch (e) { return null; }
+      }
+    }
+    return null;
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    init();
+    var root = document.getElementById("root");
+    var s = t();
+    if (!current) {
+      root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
+      Host.reportSize();
+      return;
+    }
+
+    var targetTitle = (!isDe() && current.targetTitleEn) ? current.targetTitleEn : current.targetTitle;
+    var html = '<div class="header"><h1>' + esc(s.title(targetTitle)) +
+      '<span class="code">' + esc(current.targetCode) + "</span></h1></div>";
+
+    html += '<div class="headline-chips">' +
+      '<span class="chip key">' + esc(s.earliest(current.earliestSemester)) + "</span>" +
+      '<span class="chip">' + esc(s.semesters(current.semesterCount)) + "</span>" +
+      '<span class="chip ects">' + current.totalEcts + " " + esc(s.ects) + "</span>" +
+      "</div>";
+
+    if ((current.alreadyCompleted || []).length > 0) {
+      html += '<div class="done-line">' + esc(s.alreadyDone) +
+        current.alreadyCompleted.map(function (c) {
+          return esc(c) + '<button class="undo" data-undo="' + esc(c) + '" title="' + esc(s.undoTitle) + '">×</button>';
+        }).join(", ") + "</div>";
+    }
+
+    html += '<div class="timeline">';
+    var prevSlot = -1;
+    current.steps.forEach(function (step) {
+      if (prevSlot >= 0 && step.slot - prevSlot > 1) {
+        html += '<div class="gap">' + esc(t().gap(step.slot - prevSlot - 1)) + "</div>";
+      }
+      prevSlot = step.slot;
+
+      html += '<div class="step"><div class="step-head">' +
+        '<span class="step-sem">' + esc(step.semester) + "</span>" +
+        '<span class="step-ects">' + step.ects + " " + esc(s.ects) + "</span></div>";
+
+      step.modules.forEach(function (m) {
+        var isTarget = m.code === current.targetCode;
+        html += '<div class="card' + (isTarget ? " target" : "") + '">' +
+          '<div class="card-row"><div class="card-main">' +
+          '<div class="card-title">' + esc(locTitle(m)) + '<span class="code">' + esc(m.code) + "</span></div>" +
+          '<div class="badges">' +
+          (isTarget ? '<span class="chip key">' + esc(s.targetBadge) + "</span>" : "") +
+          '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
+          (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("") +
+          "</div>" +
+          '<div class="card-summary">' + esc(locSummary(m)) + "</div>" +
+          "</div>" +
+          '<div class="card-actions">' +
+          '<button data-details="' + esc(m.code) + '">' + esc(expanded[m.code] ? s.hide : s.details) + "</button>" +
+          (isTarget ? "" : '<button data-done="' + esc(m.code) + '"' + (busy ? " disabled" : "") + ">" + esc(s.markDone) + "</button>") +
+          "</div></div>" +
+          detailsPanel(m) +
+          "</div>";
+      });
+      html += "</div>";
+    });
+    html += "</div>";
+
+    if ((current.notes || []).length > 0) {
+      html += '<details class="notes"><summary>' + esc(s.notes(current.notes.length)) + "</summary><ul>" +
+        current.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul></details>";
+    }
+
+    html += '<div class="footer">' +
+      (errorMsg ? '<span class="err">' + esc(errorMsg) + "</span>" : "") +
+      '<span class="spacer"></span>' +
+      '<button id="send" class="primary"' + (busy ? " disabled" : "") + ">" + esc(s.send) + "</button>" +
+      "</div>";
+
+    root.innerHTML = html;
+    Host.reportSize();
+  }
+
+  function detailsPanel(m) {
+    if (!expanded[m.code]) return "";
+    var s = t();
+    var st = details[m.code];
+    var body;
+    if (!st || st.loading) body = esc(s.loading);
+    else if (st.error) body = esc(s.loadError) + (m.url ? linkHtml(m.url, s.official) : "");
+    else body = esc(st.text) + (st.url || m.url ? "\n\n" + linkHtml(st.url || m.url, s.official) : "");
+    return '<div class="details-panel">' + body + "</div>";
+  }
+  function linkHtml(url, label) {
+    return '<a href="' + esc(url) + '" data-open="' + esc(url) + '">' + esc(label) + "</a>";
+  }
+
+  // ---------- actions ----------
+  function replan(newCompleted) {
+    if (!Host.canCall || !current) { errorMsg = t().replanFailed; render(); return; }
+    busy = true;
+    errorMsg = null;
+    render();
+    Host.callTool("plan_path", {
+      targetModule: current.targetCode,
+      completedModules: newCompleted,
+      startSemester: current.startSemester
+    }).then(function (res) {
+      var sc = extractStructured(res);
+      busy = false;
+      if (sc && Array.isArray(sc.steps)) {
+        current = sc;
+        persistState();
+      } else {
+        errorMsg = t().replanFailed;
+      }
+      render();
+    }).catch(function () {
+      busy = false;
+      errorMsg = t().replanFailed;
+      render();
+    });
+  }
+
+  function markDone(code) {
+    if (busy) return;
+    var completed = (current.completedModules || []).slice();
+    if (completed.some(function (c) { return c.toLowerCase() === code.toLowerCase(); })) return;
+    completed.push(code);
+    replan(completed);
+  }
+
+  function unmarkDone(code) {
+    if (busy) return;
+    replan((current.completedModules || []).filter(function (c) {
+      return c.toLowerCase() !== code.toLowerCase();
+    }));
+  }
+
+  function toggleDetails(code) {
+    if (expanded[code]) { delete expanded[code]; render(); return; }
+    expanded[code] = true;
+    if (!details[code] && Host.canCall) {
+      details[code] = { loading: true };
+      Host.callTool("fetch", { id: code }).then(function (res) {
+        var sc = extractStructured(res);
+        details[code] = sc && sc.text ? { text: sc.text, url: sc.url || null } : { error: true };
+        render();
+      }).catch(function () {
+        details[code] = { error: true };
+        render();
+      });
+    } else if (!details[code]) {
+      details[code] = { error: true };
+    }
+    render();
+  }
+
+  function sendPath() {
+    if (!current) return;
+    var s = t();
+    var targetTitle = (!isDe() && current.targetTitleEn) ? current.targetTitleEn : current.targetTitle;
+    var lines = current.steps.map(function (step) {
+      return "- " + step.semester + ": " +
+        step.modules.map(function (m) { return m.code + " (" + m.ects + " ECTS)"; }).join(", ");
+    }).join("\n");
+    Host.sendMessage(s.followUp(targetTitle, lines, current.earliestSemester, current.totalEcts));
+  }
+
+  // ---------- events ----------
+  document.getElementById("root").addEventListener("click", function (ev) {
+    var el = ev.target.closest("[data-details],[data-done],[data-undo],[data-open],#send");
+    if (!el) return;
+    if (el.hasAttribute("data-details")) toggleDetails(el.getAttribute("data-details"));
+    else if (el.hasAttribute("data-done")) markDone(el.getAttribute("data-done"));
+    else if (el.hasAttribute("data-undo")) unmarkDone(el.getAttribute("data-undo"));
+    else if (el.hasAttribute("data-open")) {
+      ev.preventDefault();
+      Host.openLink(el.getAttribute("data-open"));
+    }
+    else if (el.id === "send") sendPath();
+  });
+
+  function applyTheme() {
+    var theme = Host.theme ||
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.dataset.theme = theme;
+  }
+
+  Host.onchange = function () { applyTheme(); render(); };
+
+  applyTheme();
+  render();
+})();
+</script>
+</body>
+</html>

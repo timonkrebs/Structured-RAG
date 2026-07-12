@@ -1,6 +1,7 @@
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using StructuredRAG.Core.Models.Catalog;
+using StructuredRAG.Fhnw;
 using StructuredRAG.Mcp.Services;
 using System.ComponentModel;
 
@@ -208,6 +209,148 @@ public static class ModuleCatalogTools
         return new ModuleComparisonData(modules, notFound);
     }
 
+    [McpServerTool(Name = "plan_path", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/outputTemplate", "ui://widget/path-planner.html")] // OpenAI Apps SDK (ChatGPT)
+    [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/path-planner"}""")] // MCP Apps (Claude, ...)
+    [McpMeta("openai/widgetAccessible", true)] // the path widget re-plans when the student marks modules as completed
+    [McpMeta("openai/toolInvocation/invoking", "Computing the fastest path…")]
+    [McpMeta("openai/toolInvocation/invoked", "Path to target module ready")]
+    [Description("Compute the fastest way to reach a target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
+    public static PathPlanData PlanPath(
+        CatalogStore store,
+        [Description("Target module code the student wants to reach, e.g. 'mldm'")] string targetModule,
+        [Description("Module codes the student has already completed")] string[]? completedModules = null,
+        [Description("First semester available for planning: concrete id like '26HS' (real semester labels) or type 'HS'/'FS' (generic labels). Default 'HS'.")] string? startSemester = null)
+    {
+        var target = store.GetModule(targetModule.Trim())
+            ?? throw new McpException($"No module with code '{targetModule}'. Use search or search_modules to find valid codes.");
+        var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        if (completed.Contains(target.Code))
+            throw new McpException($"'{target.Code}' is already in the completed modules — there is no path to plan.");
+
+        var start = ValidateSemester(startSemester ?? "HS");
+        var concrete = start.Length == 4;
+        var anchorIsHs = (concrete ? start[2..] : start).Equals("HS", StringComparison.OrdinalIgnoreCase);
+        string SlotType(int i) => (i % 2 == 0) == anchorIsHs ? "HS" : "FS";
+
+        var notes = new List<string>();
+        var alreadyCompleted = new List<string>();
+
+        // Missing-prerequisite closure of the target, in topological order (prereqs first).
+        // Completed modules cut the recursion — their own prerequisites are irrelevant.
+        var state = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase); // false = in progress, true = done
+        var path = new List<string>();
+        var topo = new List<CompiledModule>();
+        void Visit(CompiledModule m)
+        {
+            state[m.Code] = false;
+            path.Add(m.Code);
+            foreach (var p in m.Prerequisites)
+            {
+                if (completed.Contains(p))
+                {
+                    if (!alreadyCompleted.Contains(p, StringComparer.OrdinalIgnoreCase)) alreadyCompleted.Add(p);
+                    continue;
+                }
+                var pm = store.GetModule(p);
+                if (pm is null)
+                {
+                    notes.Add($"{m.Code}: prerequisite '{p}' is not in this catalog — verify it manually.");
+                    continue;
+                }
+                if (state.TryGetValue(pm.Code, out var done))
+                {
+                    if (!done)
+                        throw new McpException("Prerequisite cycle detected: " +
+                            string.Join(" -> ", path.SkipWhile(c => !c.Equals(pm.Code, StringComparison.OrdinalIgnoreCase))) +
+                            $" -> {pm.Code}. The catalog data needs fixing before a path can be planned.");
+                    continue;
+                }
+                Visit(pm);
+            }
+            path.RemoveAt(path.Count - 1);
+            state[m.Code] = true;
+            topo.Add(m);
+        }
+        Visit(target);
+
+        // Earliest-slot scheduling: a module goes into the first semester after all its
+        // missing prerequisites whose HS/FS type matches one of its offering types.
+        // Types alternate per slot, so the while loop advances at most one slot.
+        var slotOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var m in topo)
+        {
+            var slot = m.Prerequisites
+                .Where(p => slotOf.ContainsKey(p))
+                .Select(p => slotOf[p] + 1)
+                .DefaultIfEmpty(0)
+                .Max();
+            var types = m.OfferedIn.Count > 0
+                ? m.OfferedIn
+                : m.Offerings.Select(o => SourceModuleMapper.SemesterTypeOf(o.SemesterId))
+                    .Where(t => t != null).Select(t => t!).Distinct().ToList();
+            if (types.Count > 0)
+            {
+                while (!types.Contains(SlotType(slot), StringComparer.OrdinalIgnoreCase)) slot++;
+            }
+            else
+            {
+                notes.Add($"{m.Code}: no offering semester known — scheduled without the HS/FS constraint.");
+            }
+            slotOf[m.Code] = slot;
+
+            if (!string.IsNullOrWhiteSpace(m.PrerequisiteNotes))
+                notes.Add($"{m.Code}: {m.PrerequisiteNotes}");
+        }
+
+        var labels = new string[slotOf.Values.Max() + 1];
+        for (var i = 0; i < labels.Length; i++)
+            labels[i] = concrete ? NthSemesterId(start, i) : $"Semester {i + 1} ({SlotType(i)})";
+
+        var steps = slotOf
+            .GroupBy(kv => kv.Value)
+            .OrderBy(g => g.Key)
+            .Select(g =>
+            {
+                var modules = g
+                    .Select(kv => store.GetModule(kv.Key)!)
+                    .OrderBy(m => m.Code, StringComparer.OrdinalIgnoreCase)
+                    .Select(m => concrete ? ModuleSummary.From(m, labels[g.Key]) : ModuleSummary.From(m))
+                    .ToList();
+                return new PathStep(labels[g.Key], g.Key, modules, modules.Sum(m => m.Ects));
+            })
+            .ToList();
+
+        notes.Add("Modules are placed at their earliest possible semester; they can be moved later as long as the order is kept.");
+
+        return new PathPlanData(
+            TargetCode: target.Code,
+            TargetTitle: target.Title,
+            TargetTitleEn: target.TitleEn,
+            StartSemester: start,
+            EarliestSemester: labels[slotOf[target.Code]],
+            SemesterCount: slotOf[target.Code] + 1,
+            TotalEcts: topo.Sum(m => m.Ects),
+            CompletedModules: completed.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
+            AlreadyCompleted: alreadyCompleted.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
+            Steps: steps,
+            Notes: notes);
+    }
+
+    /// <summary>The i-th semester id starting at a concrete anchor: FS→HS is the same
+    /// year (spring precedes autumn), HS→FS rolls into the next year.</summary>
+    private static string NthSemesterId(string start, int i)
+    {
+        var year = int.Parse(start[..2]);
+        var isHs = start[2..].Equals("HS", StringComparison.OrdinalIgnoreCase);
+        for (var k = 0; k < i; k++)
+        {
+            if (isHs) { year++; isHs = false; }
+            else isHs = true;
+        }
+        return $"{year:00}{(isHs ? "HS" : "FS")}";
+    }
+
     /// <summary>Rejects malformed semester inputs early — silently returning an empty
     /// result for a typo like "Herbst" would mislead the client model.</summary>
     private static string ValidateSemester(string semester)
@@ -326,3 +469,18 @@ public record SemesterPlanData(
 public record ModuleComparisonData(
     IReadOnlyList<ModuleSummary> Modules,
     IReadOnlyList<string> NotFound);
+
+public record PathStep(string Semester, int Slot, IReadOnlyList<ModuleSummary> Modules, int Ects);
+
+public record PathPlanData(
+    string TargetCode,
+    string TargetTitle,
+    string? TargetTitleEn,
+    string StartSemester,
+    string EarliestSemester,
+    int SemesterCount,
+    int TotalEcts,
+    IReadOnlyList<string> CompletedModules,
+    IReadOnlyList<string> AlreadyCompleted,
+    IReadOnlyList<PathStep> Steps,
+    IReadOnlyList<string> Notes);

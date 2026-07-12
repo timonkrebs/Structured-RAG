@@ -27,10 +27,12 @@ builder.Services
                and the concrete semester (e.g. '26HS'). Combine eligible modules into a plan
                that fits the ECTS target, interests, weekday constraints — and mind each
                module's prerequisiteNotes (requirements that are free text, not module codes).
+               When the student asks how to reach a specific module ("when can I take X?"),
+               call plan_path with the target code and a concrete start semester.
             5. In widget-capable hosts (ChatGPT via the OpenAI Apps SDK; Claude and others
-               via the MCP Apps extension), plan_semester and compare_modules additionally
-               render interactive widgets (semester plan builder / comparison table);
-               other clients simply use the structured JSON results.
+               via the MCP Apps extension), plan_semester, compare_modules and plan_path
+               additionally render interactive widgets (semester plan builder / comparison
+               table / path timeline); other clients simply use the structured JSON results.
             The compiled catalog has a compilation date (see manifest / catalog info); for
             authoritative current details always rely on fetch results and the official URL.
             """;

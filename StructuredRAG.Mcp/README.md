@@ -29,6 +29,7 @@ milliseconds.
 | `get_catalog_overview` | Taxonomy + full module index as one markdown blob — ideal first call for clients without resource support (ChatGPT) |
 | `plan_semester` | Eligible vs. blocked modules for a semester, given completed modules; includes free-text prerequisite notes, weekdays and the ECTS target for the client's planning reasoning |
 | `compare_modules` | 2–4 modules side by side (ECTS, semesters, languages, weekdays, tags, prerequisites, summaries) |
+| `plan_path` | Fastest way to reach a target module: missing transitive prerequisites scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), earliest completion semester, total ECTS |
 
 ## Resources
 
@@ -40,8 +41,8 @@ milliseconds.
 
 ## Interactive widgets (ChatGPT Apps SDK + MCP Apps)
 
-`plan_semester` and `compare_modules` don't just return JSON — in hosts with widget
-support they render interactive UI:
+`plan_semester`, `compare_modules` and `plan_path` don't just return JSON — in hosts
+with widget support they render interactive UI:
 
 - **Semester plan builder** (on `plan_semester`): pick eligible modules via checkboxes,
   watch a live ECTS meter against the target (`ectsTarget` parameter, default 30), get
@@ -51,8 +52,12 @@ support they render interactive UI:
 - **Module comparer** (on `compare_modules`): side-by-side table with tags shared by
   all modules highlighted; columns can be removed or added (the widget re-calls
   `compare_modules`).
+- **Path planner** (on `plan_path`): semester-by-semester timeline to a target module —
+  "when can I take Machine Learning at the earliest?" Waiting semesters are shown when
+  the HS/FS offering rhythm forces a gap; marking a prerequisite as already completed
+  re-plans the path live (the widget re-calls `plan_path`).
 
-The same two self-contained HTML files (`Widgets/*.html`, embedded in the assembly)
+The same self-contained HTML files (`Widgets/*.html`, embedded in the assembly)
 serve **both host conventions** — each widget detects its host at runtime:
 
 | | OpenAI Apps SDK (ChatGPT) | [MCP Apps extension](https://modelcontextprotocol.io/extensions/apps/overview) (Claude, VS Code, …) |
@@ -64,10 +69,10 @@ serve **both host conventions** — each widget detects its host at runtime:
 
 The widgets are deterministic vanilla JS, bilingual (German/English from the host
 locale) and light/dark theme aware; all interaction (ECTS math, weekday hints, shared
-tags) runs client-side, so the server stays zero-inference. `fetch`, `search_modules`
-and `compare_modules` carry `_meta["openai/widgetAccessible"]` so the ChatGPT widgets
-may call them (MCP Apps tool calls need no extra flag; `visibility` defaults allow
-them). Hosts without widget support simply ignore the `_meta` keys and use the
+tags) runs client-side, so the server stays zero-inference. `fetch`, `search_modules`,
+`compare_modules` and `plan_path` carry `_meta["openai/widgetAccessible"]` so the
+ChatGPT widgets may call them (MCP Apps tool calls need no extra flag; `visibility`
+defaults allow them). Hosts without widget support simply ignore the `_meta` keys and use the
 structured JSON.
 
 Registration is the same as for the other developer-mode tools (see below). ChatGPT
@@ -114,18 +119,27 @@ dotnet run --project StructuredRAG.Compiler -- ingest \
   --Ingest:Semesters="26HS;27FS" \
   --Ingest:StudyPrograms="BSc in Wirtschaftsinformatik"
 
-# 2. Compile: source JSON -> compiled artifacts (bilingual, prerequisite extraction)
+# 2. Compile: source JSON -> compiled artifacts (bilingual, prerequisite extraction).
+#    Preferred LLM transport: the OpenAI Codex CLI in headless mode — it reuses a
+#    ChatGPT login instead of an API key (once: npm i -g @openai/codex && codex login)
+dotnet run --project StructuredRAG.Compiler -- compile --Llm:Provider=codex-cli
+
+#    Alternative: any OpenAI-compatible chat-completions endpoint
 DockerModelRunner__ApiKey=$LLM_API_KEY \
 dotnet run --project StructuredRAG.Compiler -- compile \
   --DockerModelRunner:Endpoint=https://<llm-endpoint>/v1 \
   --DockerModelRunner:SimpleModel=<model>
 
-# or both in one go:  dotnet run --project StructuredRAG.Compiler -- all
+# or ingest + compile in one go:  dotnet run --project StructuredRAG.Compiler -- all
 ```
 
-The compiler works with any OpenAI-compatible chat-completions endpoint (set
-`DockerModelRunner:ApiKey` for hosted APIs). Because compilation is offline and
-infrequent, this is the place to spend on a strong model — taxonomy quality determines
+The compiler talks to the LLM through the `ILlmClient` abstraction with two providers:
+`Llm:Provider=codex-cli` shells out to `codex exec` (configured via `CodexCli:Command`,
+`CodexCli:Model`, `CodexCli:ExtraArgs`, `CodexCli:TimeoutSeconds`; per-call latency is
+higher than a raw HTTP endpoint, which is fine for this offline path), and
+`Llm:Provider=openai` (the default) works with any OpenAI-compatible chat-completions
+endpoint (set `DockerModelRunner:ApiKey` for hosted APIs). Because compilation is
+offline and infrequent, this is the place to spend on a strong model — taxonomy quality determines
 how well the client can search. Repeat runs are cheap: the previous taxonomy is passed
 to the model to keep tag names stable, and modules whose source is unchanged
 (SourceHash) are reused without LLM calls. The compiler writes `manifest.json` last,

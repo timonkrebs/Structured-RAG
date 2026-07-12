@@ -35,6 +35,10 @@ public static class WidgetResources
         "Side-by-side comparison table for 2-4 modules: ECTS, semesters, languages, weekdays, " +
         "shared tags, prerequisites and summaries.";
 
+    private const string PathDescription =
+        "Fastest-path timeline to a target module: missing prerequisites scheduled into the " +
+        "earliest possible semesters, with waiting semesters, earliest completion and total ECTS.";
+
     // ---- OpenAI Apps SDK (ChatGPT) ----
 
     [McpServerResource(UriTemplate = "ui://widget/semester-planner.html", Name = "Semester plan builder widget (ChatGPT)", MimeType = SkybridgeMimeType)]
@@ -53,6 +57,14 @@ public static class WidgetResources
     public static TextResourceContents ModuleComparerSkybridge() =>
         WidgetContents("ui://widget/module-comparer.html", SkybridgeMimeType, "module-comparer.html", ComparerDescription);
 
+    [McpServerResource(UriTemplate = "ui://widget/path-planner.html", Name = "Path planner widget (ChatGPT)", MimeType = SkybridgeMimeType)]
+    [Description("ChatGPT widget template rendered for plan_path results.")]
+    [McpMeta("openai/widgetDescription", PathDescription)]
+    [McpMeta("openai/widgetPrefersBorder", true)]
+    [McpMeta("openai/widgetCSP", JsonValue = """{"connect_domains":[],"resource_domains":[]}""")]
+    public static TextResourceContents PathPlannerSkybridge() =>
+        WidgetContents("ui://widget/path-planner.html", SkybridgeMimeType, "path-planner.html", PathDescription);
+
     // ---- MCP Apps extension (Claude, VS Code, ...) ----
 
     [McpServerResource(UriTemplate = "ui://module-catalog/semester-planner", Name = "Semester plan builder widget (MCP Apps)", MimeType = McpAppMimeType)]
@@ -66,6 +78,12 @@ public static class WidgetResources
     [McpMeta("ui", JsonValue = """{"csp":{"connectDomains":[],"resourceDomains":[]}}""")]
     public static TextResourceContents ModuleComparerApp() =>
         WidgetContents("ui://module-catalog/module-comparer", McpAppMimeType, "module-comparer.html", ComparerDescription);
+
+    [McpServerResource(UriTemplate = "ui://module-catalog/path-planner", Name = "Path planner widget (MCP Apps)", MimeType = McpAppMimeType)]
+    [Description("MCP Apps view template rendered for plan_path results.")]
+    [McpMeta("ui", JsonValue = """{"csp":{"connectDomains":[],"resourceDomains":[]}}""")]
+    public static TextResourceContents PathPlannerApp() =>
+        WidgetContents("ui://module-catalog/path-planner", McpAppMimeType, "path-planner.html", PathDescription);
 
     // The [McpMeta] attributes cover resources/list; resources/read only carries
     // contents-level meta when the method returns TextResourceContents itself,
