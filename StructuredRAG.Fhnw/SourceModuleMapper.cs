@@ -1,4 +1,5 @@
 using StructuredRAG.Core.Models.Catalog;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -18,6 +19,7 @@ public static class SourceModuleMapper
         var semesterId = d.SemesterId ?? SemesterIdFromPlanId(d.PlanSemesterModulId);
         var languages = ExtractLanguages(d);
         var weekdays = ExtractWeekdays(d);
+        var lessons = ExtractLessons(d);
 
         // English-taught modules often have content only in the *EN fields — fall back
         // so Description is never empty when the catalog has any content at all.
@@ -46,7 +48,8 @@ public static class SourceModuleMapper
                     SemesterId = semesterId,
                     PlanSemesterModulId = d.PlanSemesterModulId,
                     Languages = languages,
-                    Weekdays = weekdays
+                    Weekdays = weekdays,
+                    Lessons = lessons
                 }
             },
             Languages = languages,
@@ -176,6 +179,26 @@ public static class SourceModuleMapper
         var i = Array.FindIndex(DayOrder, x => x.Equals(day, StringComparison.OrdinalIgnoreCase));
         return i < 0 ? int.MaxValue : i;
     }
+
+    /// <summary>Weekly lesson slots, one per class instance (Modulanlass). The times come
+    /// with a dummy date part — only the clock time is kept. Instances without any
+    /// schedule signal (no day, no times) carry nothing plannable and are skipped.</summary>
+    private static List<Lesson> ExtractLessons(ModuleDetailDto d) =>
+        (d.ModuleInstances ?? new List<ModuleInstanceDto>())
+            .Where(i => !string.IsNullOrWhiteSpace(i.Day) || i.StartTime != null || i.EndTime != null)
+            .Select(i => new Lesson
+            {
+                Number = NullIfEmpty(i.Number?.Trim()),
+                Day = NullIfEmpty(i.Day?.Trim()),
+                Start = i.StartTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
+                End = i.EndTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
+                Location = NullIfEmpty(i.Location?.Trim()),
+                Language = ParseLanguages(i.Language).FirstOrDefault(),
+                Periodicity = i.Periodicity
+            })
+            .OrderBy(l => DayIndex(l.Day ?? string.Empty))
+            .ThenBy(l => l.Start, StringComparer.Ordinal)
+            .ToList();
 
     private static List<string> ParseLanguages(string? language)
     {

@@ -112,6 +112,39 @@
   details.blocked li { border: none; padding: 6px 2px 2px 8px; }
   details.blocked .mod-title { color: var(--ink-2); font-weight: 500; }
 
+  .class-pick {
+    font: inherit; font-size: 12px; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 6px; padding: 2px 6px;
+    margin-top: 4px; max-width: 100%;
+  }
+
+  .timetable { border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 8px; }
+  .timetable h2 { font-size: 13px; font-weight: 650; margin: 0 0 6px; }
+  .tt { display: flex; gap: 4px; }
+  .tt-axis { flex: none; width: 36px; }
+  .tt-axis .tt-head { height: 20px; }
+  .tt-axis .tt-scale { position: relative; font-size: 10.5px; color: var(--muted); }
+  .tt-axis .tt-scale span {
+    position: absolute; right: 6px; transform: translateY(-50%);
+    font-variant-numeric: tabular-nums;
+  }
+  .tt-day { flex: 1 1 0; min-width: 0; }
+  .tt-day .tt-head {
+    height: 20px; text-align: center; font-size: 11.5px; color: var(--ink-2); font-weight: 600;
+  }
+  .tt-col {
+    position: relative; border: 1px solid var(--hairline); border-radius: 6px;
+    background: var(--plane);
+  }
+  .tt-block {
+    position: absolute; overflow: hidden;
+    background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 5px;
+    font-size: 10.5px; line-height: 1.3; padding: 1px 4px;
+  }
+  .tt-block .tt-time { font-variant-numeric: tabular-nums; color: var(--ink-2); display: block; }
+  /* Overlaps are also always reported as a text hint above the list — never color alone. */
+  .tt-block.clash { border-color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); }
+
   .footer {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 10px;
@@ -249,7 +282,11 @@
       ects: "ECTS",
       overTarget: function (n) { return "⚠ " + n + " ECTS über dem Ziel"; },
       reached: "✓ Ziel erreicht",
-      clash: function (day, titles) { return "⚠ Gleicher Wochentag (" + day + "): " + titles; },
+      clash: function (day, titles) { return "⚠ Zeitkonflikt (" + day + "): " + titles; },
+      clashSoft: function (day, titles) { return "△ Gleicher Wochentag (" + day + "), Zeiten unvollständig: " + titles; },
+      timetable: "Stundenplan",
+      chooseClass: "Anlass wählen",
+      everyNDays: function (n) { return "alle " + n + " Tage"; },
       matchLegend: "★ = passt zu deinen Interessen",
       missingRec: function (codes) { return "Empfohlen, aber noch nicht absolviert: " + codes; },
       prereqNotes: "Hinweis zu Voraussetzungen: ",
@@ -277,7 +314,11 @@
       ects: "ECTS",
       overTarget: function (n) { return "⚠ " + n + " ECTS over target"; },
       reached: "✓ Target reached",
-      clash: function (day, titles) { return "⚠ Same weekday (" + day + "): " + titles; },
+      clash: function (day, titles) { return "⚠ Time clash (" + day + "): " + titles; },
+      clashSoft: function (day, titles) { return "△ Same weekday (" + day + "), times incomplete: " + titles; },
+      timetable: "Timetable",
+      chooseClass: "Choose class",
+      everyNDays: function (n) { return "every " + n + " days"; },
       matchLegend: "★ = matches your interests",
       missingRec: function (codes) { return "Recommended but not yet completed: " + codes; },
       prereqNotes: "Prerequisite note: ",
@@ -310,6 +351,7 @@
   var selected = {};          // code -> true
   var expanded = {};          // code -> true (details panel open)
   var details = {};           // code -> {loading|error|text,url}
+  var chosenClass = {};       // code -> class number (when a module has parallel classes)
   var target = 30;
   var targetTouched = false;
   var stateRestored = false;
@@ -323,6 +365,10 @@
     var ws = Host.widgetState;
     if (ws) {
       (ws.selectedCodes || []).forEach(function (c) { selected[c] = true; });
+      // Older persisted drafts have no chosenClasses — modules then use their first class.
+      if (ws.chosenClasses && typeof ws.chosenClasses === "object") {
+        Object.keys(ws.chosenClasses).forEach(function (c) { chosenClass[c] = ws.chosenClasses[c]; });
+      }
       if (typeof ws.ectsTarget === "number" && ws.ectsTarget > 0) { target = ws.ectsTarget; targetTouched = true; }
     }
     if (d) stateRestored = true;
@@ -330,6 +376,7 @@
 
   function persistState() {
     var state = { selectedCodes: Object.keys(selected) };
+    if (Object.keys(chosenClass).length > 0) state.chosenClasses = chosenClass;
     if (targetTouched) state.ectsTarget = target;
     Host.setState(state, draftSummary());
   }
@@ -340,7 +387,11 @@
     if (mods.length === 0) return "";
     var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
     return "Student's current draft plan in the semester-planner widget (" + sum + "/" + target +
-      " ECTS): " + mods.map(function (m) { return m.code; }).join(", ");
+      " ECTS): " + mods.map(function (m) {
+        var slots = chosenLessons(m).filter(function (l) { return l.day; })
+          .map(function (l) { return l.day + (l.start ? " " + l.start + "-" + (l.end || "?") : ""); }).join(", ");
+        return m.code + (slots ? " (" + slots + ")" : "");
+      }).join(", ");
   }
 
   // ---------- helpers ----------
@@ -372,14 +423,76 @@
     }
     return null;
   }
-  function clashes(mods) {
-    var byDay = {};
-    mods.forEach(function (m) {
-      (m.weekdays || []).forEach(function (d) { (byDay[d] = byDay[d] || []).push(m); });
+  // ---------- lessons ----------
+  // A module's lessons come one entry per weekly class slot; slots sharing `number`
+  // belong to the same class (Modulanlass) and the student attends ONE class.
+  // Groups therefore are the student's alternatives for a module.
+  function lessonGroups(m) {
+    var groups = [], byNum = {};
+    (m.lessons || []).forEach(function (l) {
+      var key = l.number || ("~" + groups.length);
+      if (!byNum[key]) { byNum[key] = []; groups.push(byNum[key]); }
+      byNum[key].push(l);
     });
-    return Object.keys(byDay)
-      .filter(function (d) { return byDay[d].length > 1; })
-      .map(function (d) { return { day: d, modules: byDay[d] }; });
+    return groups;
+  }
+  // Stable key of a class group for state/select values; classes without an official
+  // number fall back to their position.
+  function groupKey(g, i) { return g[0].number || ("#" + i); }
+  function chosenLessons(m) {
+    var groups = lessonGroups(m);
+    if (groups.length === 0) return [];
+    var want = chosenClass[m.code];
+    for (var i = 0; want && i < groups.length; i++) {
+      if (groupKey(groups[i], i) === want) return groups[i];
+    }
+    return groups[0];
+  }
+  function toMin(hm) {
+    var p = /^(\d{1,2}):(\d{2})$/.exec(hm || "");
+    return p ? (+p[1]) * 60 + (+p[2]) : null;
+  }
+  function lessonLabel(l) {
+    var s = t();
+    var label = l.day ? day(l.day) : "?";
+    if (l.start) label += " " + l.start + "–" + (l.end || "?");
+    if (l.periodicity && l.periodicity !== 7) label += " · " + s.everyNDays(l.periodicity);
+    return label;
+  }
+
+  // The chosen class slots of the selected modules, flattened for clash/timetable use.
+  // Modules without lesson data fall back to bare weekday entries (times null).
+  function selectedSlots(mods) {
+    var slots = [];
+    mods.forEach(function (m) {
+      var ls = chosenLessons(m).filter(function (l) { return l.day; });
+      if (ls.length === 0) {
+        (m.weekdays || []).forEach(function (d) { slots.push({ m: m, day: d, s: null, e: null, l: null }); });
+      } else {
+        ls.forEach(function (l) { slots.push({ m: m, day: l.day, s: toMin(l.start), e: toMin(l.end), l: l }); });
+      }
+    });
+    return slots;
+  }
+
+  // Pairwise: a hard clash needs overlapping times on the same day; when either side
+  // has no times, same-day is only a soft "possible clash" hint.
+  function clashes(mods) {
+    var slots = selectedSlots(mods);
+    var out = [], seen = {};
+    for (var i = 0; i < slots.length; i++) {
+      for (var j = i + 1; j < slots.length; j++) {
+        var a = slots[i], b = slots[j];
+        if (a.m.code === b.m.code || a.day !== b.day) continue;
+        var timed = a.s != null && a.e != null && b.s != null && b.e != null;
+        if (timed && !(a.s < b.e && b.s < a.e)) continue;
+        var key = a.day + "|" + a.m.code + "|" + b.m.code + "|" + timed;
+        if (seen[key]) continue;
+        seen[key] = true;
+        out.push({ day: a.day, a: a, b: b, hard: timed });
+      }
+    }
+    return out;
   }
 
   // ---------- rendering ----------
@@ -422,8 +535,11 @@
     else if (sum === target && sum > 0) html += '<div class="hint reached">' + esc(s.reached) + "</div>";
 
     clashes(mods).forEach(function (c) {
-      var titles = c.modules.map(function (m) { return locTitle(m); }).join(" + ");
-      html += '<div class="hint">' + esc(s.clash(day(c.day), titles)) + "</div>";
+      var part = function (x) {
+        return locTitle(x.m) + (x.l && x.l.start ? " (" + x.l.start + "–" + (x.l.end || "?") + ")" : "");
+      };
+      var titles = part(c.a) + " + " + part(c.b);
+      html += '<div class="hint">' + esc((c.hard ? s.clash : s.clashSoft)(day(c.day), titles)) + "</div>";
     });
 
     if (anyMatches) html += '<div class="legend">' + esc(s.matchLegend) + "</div>";
@@ -447,12 +563,13 @@
           '<div class="badges">' +
           '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
           (m.moduleType ? '<span class="chip">' + esc(m.moduleType) + "</span>" : "") +
-          (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("") +
+          scheduleChips(m) +
           (m.tags || []).map(function (tag) {
             var hit = matches[tag.toLowerCase()];
             return '<span class="chip' + (hit ? " match" : "") + '">' + (hit ? "★ " : "") + esc(tag) + "</span>";
           }).join("") +
           "</div>" +
+          (isSel && lessonGroups(m).length > 1 ? classPicker(m) : "") +
           '<div class="mod-summary">' + esc(locSummary(m)) + "</div>" +
           ((e.missingRecommended || []).length
             ? '<div class="mod-note warn-note">' + esc(s.missingRec(e.missingRecommended.join(", "))) + "</div>" : "") +
@@ -467,6 +584,8 @@
       });
       html += "</ul>";
     }
+
+    html += timetableHtml(mods);
 
     // Blocked modules
     if ((d.blocked || []).length > 0) {
@@ -488,6 +607,89 @@
 
     root.innerHTML = html;
     Host.reportSize();
+  }
+
+  // Day/time chips: with lesson slots each class slot gets a chip incl. times;
+  // catalogs without lesson data keep the plain weekday chips.
+  function scheduleChips(m) {
+    var lessons = (m.lessons || []).filter(function (l) { return l.day || l.start; });
+    if (lessons.length === 0) {
+      return (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("");
+    }
+    return lessons.map(function (l) { return '<span class="chip day">' + esc(lessonLabel(l)) + "</span>"; }).join("");
+  }
+
+  // Selector between a module's parallel classes (only rendered when selected and
+  // there is a real choice); the chosen class is what occupies the timetable.
+  function classPicker(m) {
+    var s = t();
+    var groups = lessonGroups(m);
+    var current = chosenLessons(m);
+    var html = '<div><select class="class-pick" data-class="' + esc(m.code) + '" title="' + esc(s.chooseClass) + '">';
+    groups.forEach(function (g, i) {
+      var label = g.map(lessonLabel).join(", ") + (g[0].location ? " · " + g[0].location : "");
+      html += '<option value="' + esc(groupKey(g, i)) + '"' + (g === current ? " selected" : "") + ">" + esc(label) + "</option>";
+    });
+    return html + "</select></div>";
+  }
+
+  // Week grid of the selected modules' chosen classes. Only timed slots can be laid
+  // out; modules without published times stay list-only (their soft clash hints and
+  // day chips still cover them).
+  function timetableHtml(mods) {
+    var s = t();
+    var slots = selectedSlots(mods).filter(function (x) { return x.s != null && x.e != null && x.e > x.s; });
+    if (slots.length === 0) return "";
+
+    slots.forEach(function (a) {
+      a.clash = slots.some(function (b) {
+        return b !== a && b.m.code !== a.m.code && b.day === a.day && a.s < b.e && b.s < a.e;
+      });
+    });
+
+    var order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    var days = order.filter(function (d) { return slots.some(function (x) { return x.day === d; }); });
+    var min = Math.floor(Math.min.apply(null, slots.map(function (x) { return x.s; })) / 60) * 60;
+    var max = Math.ceil(Math.max.apply(null, slots.map(function (x) { return x.e; })) / 60) * 60;
+    var span = Math.max(60, max - min);
+    var height = Math.round(Math.max(160, Math.min(340, span * 0.5)));
+    var hourPx = height * 60 / span;
+
+    var html = '<div class="timetable"><h2>' + esc(s.timetable) + '</h2><div class="tt">';
+    html += '<div class="tt-axis"><div class="tt-head"></div><div class="tt-scale" style="height:' + height + 'px">';
+    for (var hm = min; hm <= max; hm += 60) {
+      html += '<span style="top:' + (((hm - min) / span) * 100).toFixed(2) + '%">' +
+        (hm < 600 ? "0" : "") + (hm / 60) + ":00</span>";
+    }
+    html += "</div></div>";
+    days.forEach(function (dName) {
+      // Greedy lane assignment: overlapping blocks share the column side by side
+      // instead of hiding each other (first free lane whose last block has ended).
+      var colSlots = slots.filter(function (x) { return x.day === dName; })
+        .sort(function (a, b) { return a.s - b.s || a.e - b.e; });
+      var laneEnds = [];
+      colSlots.forEach(function (x) {
+        var lane = 0;
+        while (lane < laneEnds.length && laneEnds[lane] > x.s) lane++;
+        laneEnds[lane] = x.e;
+        x.lane = lane;
+      });
+      var laneW = 100 / laneEnds.length;
+
+      html += '<div class="tt-day"><div class="tt-head">' + esc(day(dName)) + "</div>" +
+        '<div class="tt-col" style="height:' + height + 'px;background-image:repeating-linear-gradient(' +
+        "to bottom, var(--hairline) 0, var(--hairline) 1px, transparent 1px, transparent " + hourPx.toFixed(2) + 'px)">';
+      colSlots.forEach(function (x) {
+        html += '<div class="tt-block' + (x.clash ? " clash" : "") +
+          '" style="top:' + (((x.s - min) / span) * 100).toFixed(2) + "%;height:" + (((x.e - x.s) / span) * 100).toFixed(2) +
+          "%;left:calc(" + (x.lane * laneW).toFixed(2) + "% + 2px);width:calc(" + laneW.toFixed(2) + "% - 4px)" +
+          '" title="' + esc(locTitle(x.m) + " — " + lessonLabel(x.l)) + '">' +
+          "<strong>" + esc(x.m.code) + "</strong>" +
+          '<span class="tt-time">' + esc(x.l.start + "–" + (x.l.end || "")) + "</span></div>";
+      });
+      html += "</div></div>";
+    });
+    return html + "</div></div>";
   }
 
   function detailsPanel(m) {
@@ -535,7 +737,10 @@
     var mods = selectedModules();
     if (mods.length === 0) return;
     var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
-    var lines = mods.map(function (m) { return "- " + m.code + ": " + locTitle(m) + " (" + m.ects + " ECTS)"; }).join("\n");
+    var lines = mods.map(function (m) {
+      var slots = chosenLessons(m).filter(function (l) { return l.day; }).map(lessonLabel).join(", ");
+      return "- " + m.code + ": " + locTitle(m) + " (" + m.ects + " ECTS" + (slots ? ", " + slots : "") + ")";
+    }).join("\n");
     Host.sendMessage(s.followUp(data().semester, lines, sum, target));
   }
 
@@ -553,6 +758,11 @@
   document.getElementById("root").addEventListener("change", function (ev) {
     var el = ev.target;
     if (el.hasAttribute && el.hasAttribute("data-toggle")) toggle(el.getAttribute("data-toggle"));
+    else if (el.hasAttribute && el.hasAttribute("data-class")) {
+      chosenClass[el.getAttribute("data-class")] = el.value;
+      persistState();
+      render();
+    }
     else if (el.id === "target") {
       var v = parseInt(el.value, 10);
       if (v > 0) { target = v; targetTouched = true; persistState(); render(); }

@@ -222,7 +222,7 @@
       type: "Typ",
       semesters: "Semester",
       languages: "Sprachen",
-      weekdays: "Wochentage",
+      weekdays: "Lektionen",
       tags: "Tags",
       prereqs: "Voraussetzungen",
       prereqNotes: "Hinweise",
@@ -246,7 +246,7 @@
       type: "Type",
       semesters: "Semesters",
       languages: "Languages",
-      weekdays: "Weekdays",
+      weekdays: "Lessons",
       tags: "Tags",
       prereqs: "Prerequisites",
       prereqNotes: "Notes",
@@ -378,8 +378,18 @@
     html += row(s.type, mods, function (m) { return esc(m.moduleType); });
     html += row(s.semesters, mods, function (m) { return esc(semesters(m).join(", ")); });
     html += row(s.languages, mods, function (m) { return esc((m.languages || []).join(", ")); });
+    // Lesson slots (with times, one chip per parallel class) when published;
+    // otherwise the plain weekday names.
     html += row(s.weekdays, mods, function (m) {
-      return chips((m.weekdays || []).map(function (w) { return { label: day(w) }; }));
+      var lessons = (m.lessons || []).filter(function (l) { return l.day || l.start; });
+      if (lessons.length === 0) {
+        return chips((m.weekdays || []).map(function (w) { return { label: day(w) }; }));
+      }
+      return chips(lessons.map(function (l) {
+        var label = (l.day ? day(l.day) : "?") + (l.start ? " " + l.start + "–" + (l.end || "?") : "");
+        if (l.location) label += " · " + l.location;
+        return { label: label };
+      }));
     });
     html += row(s.tags, mods, function (m) {
       return chips((m.tags || []).map(function (tag) {

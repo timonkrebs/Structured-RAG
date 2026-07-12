@@ -106,6 +106,11 @@ public class LiveModuleFetcher
         var moduleType = live?.ModuleType ?? compiled.ModuleType;
         var languages = live is { Languages.Count: > 0 } ? live.Languages : compiled.Languages;
         var weekdays = live is { Weekdays.Count: > 0 } ? live.Weekdays : compiled.Weekdays;
+        // The live record covers one semester (one offering); compiled offerings are
+        // newest-first, and the newest one with published slots represents the schedule.
+        var lessons = live?.Offerings.FirstOrDefault()?.Lessons is { Count: > 0 } liveLessons
+            ? liveLessons
+            : compiled.Offerings.FirstOrDefault(o => o.Lessons.Count > 0)?.Lessons ?? new List<Lesson>();
 
         var sb = new StringBuilder();
         sb.AppendLine($"# {title} ({compiled.Code})");
@@ -119,6 +124,8 @@ public class LiveModuleFetcher
                       $"offered in {(compiled.Offerings.Count > 0 ? string.Join("/", compiled.Offerings.Select(o => o.SemesterId)) : string.Join("/", compiled.OfferedIn))} · " +
                       $"languages: {string.Join(", ", languages)}" +
                       (weekdays.Count > 0 ? $" · weekdays: {string.Join(", ", weekdays)}" : ""));
+        if (lessons.Count > 0)
+            sb.AppendLine($"**Lessons (one per parallel class):** {string.Join("; ", lessons.Select(FormatLesson))}");
         sb.AppendLine($"**Assessment:** {assessment}");
         sb.AppendLine($"**Tags:** {string.Join(", ", compiled.Tags)}");
         sb.AppendLine($"**Prerequisites (module codes):** {(compiled.Prerequisites.Count > 0 ? string.Join(", ", compiled.Prerequisites) : "none")}");
@@ -146,9 +153,17 @@ public class LiveModuleFetcher
                 ["level"] = level,
                 ["moduleType"] = moduleType,
                 ["offerings"] = compiled.Offerings.Select(o => o.SemesterId).ToList(),
+                ["lessons"] = lessons,
                 ["tags"] = compiled.Tags,
                 ["prerequisites"] = compiled.Prerequisites,
                 ["studyPrograms"] = live is { StudyPrograms.Count: > 0 } ? live.StudyPrograms : compiled.StudyPrograms
             });
+    }
+
+    private static string FormatLesson(Lesson l)
+    {
+        var time = string.IsNullOrEmpty(l.Start) ? "" : $" {l.Start}–{l.End}";
+        var location = string.IsNullOrEmpty(l.Location) ? "" : $" ({l.Location})";
+        return $"{l.Day ?? "day n/a"}{time}{location}";
     }
 }

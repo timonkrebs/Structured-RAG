@@ -124,7 +124,7 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes and weekdays — combine everything with the student's interests, ECTS target and schedule to propose a plan. In ChatGPT this also renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end, per parallel class) where published — combine everything with the student's interests and ECTS target to propose a clash-free timetable. In ChatGPT this also renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
@@ -179,7 +179,7 @@ public static class ModuleCatalogTools
     [McpMeta("openai/widgetAccessible", true)] // the comparer widget re-calls this to add/swap a column
     [McpMeta("openai/toolInvocation/invoking", "Comparing modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Module comparison ready")]
-    [Description("Compare 2-4 modules side by side: ECTS, level, module type, semesters, languages, weekdays, tags, prerequisites and summaries. In ChatGPT this renders an interactive comparison-table widget.")]
+    [Description("Compare 2-4 modules side by side: ECTS, level, module type, semesters, languages, weekdays, lesson times, tags, prerequisites and summaries. In ChatGPT this renders an interactive comparison-table widget.")]
     public static ModuleComparisonData CompareModules(
         CatalogStore store,
         [Description("2-4 module codes to compare, e.g. from search or search_modules")] string[] codes)
@@ -419,21 +419,23 @@ public record ModuleSummary(
     string Code, string Title, string? TitleEn, int Ects, string Level, string? ModuleType,
     IReadOnlyList<string> OfferedIn, IReadOnlyList<ModuleOffering> Offerings,
     IReadOnlyList<string> Languages, IReadOnlyList<string> Weekdays,
+    IReadOnlyList<Lesson> Lessons,
     IReadOnlyList<string> Tags, string Summary, string? SummaryEn, string Audience,
     IReadOnlyList<string> Prerequisites, string? PrerequisiteNotes, string? Url)
 {
     public static ModuleSummary From(CompiledModule m) => new(
         m.Code, m.Title, m.TitleEn, m.Ects, m.Level, m.ModuleType,
         m.OfferedIn, m.Offerings, m.Languages, m.Weekdays,
+        NewestLessons(m.Offerings),
         m.Tags, m.Summary, m.SummaryEn, m.Audience,
         m.Prerequisites, m.PrerequisiteNotes, m.Url);
 
     /// <summary>Summary narrowed to the offerings matching the given semester: a module can
     /// meet on different weekdays in HS vs FS, and the module-level union would produce wrong
-    /// clash hints in the planner widget. Weekdays come strictly from the matched offerings
-    /// (empty is accurate — the widget hides the chips); languages fall back to the module
-    /// union when the matched offerings carry none. Without a semester, or for catalogs
-    /// without concrete offerings, the module-level fields are used unchanged.</summary>
+    /// clash hints in the planner widget. Weekdays and lesson slots come strictly from the
+    /// matched offerings (empty is accurate — the widget hides the chips); languages fall
+    /// back to the module union when the matched offerings carry none. Without a semester,
+    /// or for catalogs without concrete offerings, the module-level fields are used unchanged.</summary>
     public static ModuleSummary From(CompiledModule m, string? semester)
     {
         var matched = string.IsNullOrWhiteSpace(semester)
@@ -447,8 +449,15 @@ public record ModuleSummary(
         {
             Languages = languages.Count > 0 ? languages : m.Languages,
             Weekdays = weekdays,
+            Lessons = NewestLessons(matched),
         };
     }
+
+    /// <summary>Offerings are ordered newest-first; the newest one with published lesson
+    /// slots represents the schedule — a cross-semester union would mix HS and FS times
+    /// (or the same semester type of different years) into one bogus timetable.</summary>
+    private static IReadOnlyList<Lesson> NewestLessons(IReadOnlyList<ModuleOffering> offerings) =>
+        offerings.FirstOrDefault(o => o.Lessons.Count > 0)?.Lessons ?? (IReadOnlyList<Lesson>)Array.Empty<Lesson>();
 }
 
 public record PlannableModule(

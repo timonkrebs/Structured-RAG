@@ -25,8 +25,12 @@ builder.Services
                enrichments; check metadata.source ('live' vs 'compiled').
             4. For semester planning call plan_semester with the student's completed modules
                and the concrete semester (e.g. '26HS'). Combine eligible modules into a plan
-               that fits the ECTS target, interests, weekday constraints — and mind each
-               module's prerequisiteNotes (requirements that are free text, not module codes).
+               that fits the ECTS target and interests — and mind each module's
+               prerequisiteNotes (requirements that are free text, not module codes).
+               Eligible modules carry lesson time slots where published (lessons: day,
+               start-end, one entry per parallel class — the student attends ONE class,
+               entries sharing the same number belong together); use them to propose a
+               clash-free weekly timetable.
                When the student asks how to reach a specific module ("when can I take X?"),
                call plan_path with the target code and a concrete start semester.
             5. In widget-capable hosts (ChatGPT via the OpenAI Apps SDK; Claude and others

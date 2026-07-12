@@ -5,15 +5,48 @@
     "description": "Introduction to programming with an object-oriented language. Variables, control flow, methods, classes, objects, encapsulation and basic testing. Weekly hands-on exercises in small groups.",
     "ects": 6,
     "level": "Bachelor",
-    "offeredIn": ["HS"],
-    "languages": ["de"],
+    "offeredIn": [
+      "HS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "26HS",
+        "planSemesterModulId": "26HS_sample-oop1",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday"
+        ],
+        "lessons": [
+          {
+            "number": "26HS-oop1/a",
+            "day": "Monday",
+            "start": "08:15",
+            "end": "12:00",
+            "location": "Brugg-Windisch",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Monday"
+    ],
+    "languages": [
+      "de"
+    ],
     "prerequisites": [],
     "recommended": [],
     "assessment": "written exam",
     "url": "https://example.edu/modules/oop1",
     "summary": "Teaches programming from zero using an object-oriented language: control flow, classes, encapsulation and basic testing. Afterwards students can independently write, structure and test small programs — the entry ticket to almost every later informatics module.",
     "audience": "First-semester students and anyone without prior programming experience; mandatory foundation for students aiming at any software-related specialization.",
-    "tags": ["Programming Foundations", "Career Foundations"],
+    "tags": [
+      "Programming Foundations",
+      "Career Foundations"
+    ],
     "typicalQuestions": [
       "I have never programmed before — where do I start?",
       "Which module do I need before I can take web development or algorithms?",
@@ -26,15 +59,51 @@
     "description": "Fundamental algorithms and data structures: lists, trees, hash tables, graphs, sorting and searching, complexity analysis with Big-O notation. Implementation exercises deepen the theory.",
     "ects": 6,
     "level": "Bachelor",
-    "offeredIn": ["FS"],
-    "languages": ["de"],
-    "prerequisites": ["oop1"],
+    "offeredIn": [
+      "FS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "27FS",
+        "planSemesterModulId": "27FS_sample-algd",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ],
+        "lessons": [
+          {
+            "number": "27FS-algd/a",
+            "day": "Tuesday",
+            "start": "08:15",
+            "end": "12:00",
+            "location": "Brugg-Windisch",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Tuesday"
+    ],
+    "languages": [
+      "de"
+    ],
+    "prerequisites": [
+      "oop1"
+    ],
     "recommended": [],
     "assessment": "written exam",
     "url": "https://example.edu/modules/algd",
     "summary": "Covers the classic toolbox of computer science — lists, trees, hash tables, graphs, sorting and Big-O analysis — with implementation exercises. Afterwards students can choose and justify efficient solutions to computational problems, a prerequisite for machine learning and technical interviews.",
     "audience": "Students who completed programming basics and want a solid computer-science core; essential for anyone heading towards AI, backend engineering or competitive job interviews.",
-    "tags": ["Algorithms", "Programming Foundations", "Career Foundations"],
+    "tags": [
+      "Algorithms",
+      "Programming Foundations",
+      "Career Foundations"
+    ],
     "typicalQuestions": [
       "How do I prepare for technical coding interviews?",
       "What do I need before taking machine learning?",
@@ -47,15 +116,51 @@
     "description": "Relational data modeling, SQL, normalization, transactions and an outlook on NoSQL systems. Students design and implement a database for a realistic case study.",
     "ects": 6,
     "level": "Bachelor",
-    "offeredIn": ["HS"],
-    "languages": ["de"],
-    "prerequisites": ["oop1"],
+    "offeredIn": [
+      "HS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "26HS",
+        "planSemesterModulId": "26HS_sample-dbsy",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Tuesday"
+        ],
+        "lessons": [
+          {
+            "number": "26HS-dbsy/a",
+            "day": "Tuesday",
+            "start": "13:15",
+            "end": "17:00",
+            "location": "Brugg-Windisch",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Tuesday"
+    ],
+    "languages": [
+      "de"
+    ],
+    "prerequisites": [
+      "oop1"
+    ],
     "recommended": [],
     "assessment": "written exam and project",
     "url": "https://example.edu/modules/dbsy",
     "summary": "Teaches relational data modeling, SQL, normalization and transactions, with an outlook on NoSQL, applied in a realistic case-study project. Afterwards students can design and query production-grade database schemas — a skill nearly every application project depends on.",
     "audience": "Students interested in backend development, data engineering or any role that touches persistent data; pairs well with Web Engineering.",
-    "tags": ["Data Engineering", "Career Foundations", "Hands-on Project"],
+    "tags": [
+      "Data Engineering",
+      "Career Foundations",
+      "Hands-on Project"
+    ],
     "typicalQuestions": [
       "How do I design a database for my application?",
       "Which module teaches SQL?",
@@ -68,15 +173,74 @@
     "description": "Descriptive statistics, probability theory, distributions, hypothesis testing and regression. Applied with R and Python on real datasets.",
     "ects": 4,
     "level": "Bachelor",
-    "offeredIn": ["HS", "FS"],
-    "languages": ["de", "en"],
+    "offeredIn": [
+      "HS",
+      "FS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "27FS",
+        "planSemesterModulId": "27FS_sample-stat",
+        "languages": [
+          "de",
+          "en"
+        ],
+        "weekdays": [
+          "Friday"
+        ],
+        "lessons": [
+          {
+            "number": "27FS-stat/a",
+            "day": "Friday",
+            "start": "13:15",
+            "end": "17:00",
+            "location": "Olten",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      },
+      {
+        "semesterId": "26HS",
+        "planSemesterModulId": "26HS_sample-stat",
+        "languages": [
+          "de",
+          "en"
+        ],
+        "weekdays": [
+          "Friday"
+        ],
+        "lessons": [
+          {
+            "number": "26HS-stat/a",
+            "day": "Friday",
+            "start": "13:15",
+            "end": "17:00",
+            "location": "Olten",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Friday"
+    ],
+    "languages": [
+      "de",
+      "en"
+    ],
     "prerequisites": [],
     "recommended": [],
     "assessment": "written exam",
     "url": "https://example.edu/modules/stat",
     "summary": "Covers probability, distributions, hypothesis testing and regression, applied to real datasets with R and Python. Afterwards students can analyze data rigorously and interpret statistical claims — the mathematical foundation required for machine learning.",
     "audience": "Students aiming at data science, machine learning or research-oriented work; also valuable for anyone who wants to reason quantitatively. Offered every semester, so it fits flexibly into study plans.",
-    "tags": ["Data Science", "Career Foundations", "English Instruction"],
+    "tags": [
+      "Data Science",
+      "Career Foundations",
+      "English Instruction"
+    ],
     "typicalQuestions": [
       "What math do I need for machine learning?",
       "How do I analyze survey or experiment data correctly?",
@@ -89,15 +253,63 @@
     "description": "Modern web application development: HTTP, REST APIs, frontend frameworks, server-side rendering, authentication and deployment. Semester project building a full-stack web application.",
     "ects": 6,
     "level": "Bachelor",
-    "offeredIn": ["FS"],
-    "languages": ["de"],
-    "prerequisites": ["oop1"],
-    "recommended": ["dbsy"],
+    "offeredIn": [
+      "FS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "27FS",
+        "planSemesterModulId": "27FS_sample-webec",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Wednesday",
+          "Thursday"
+        ],
+        "lessons": [
+          {
+            "number": "27FS-webec/a",
+            "day": "Wednesday",
+            "start": "08:15",
+            "end": "12:00",
+            "location": "Brugg-Windisch",
+            "language": "de",
+            "periodicity": 7
+          },
+          {
+            "number": "27FS-webec/b",
+            "day": "Thursday",
+            "start": "13:15",
+            "end": "17:00",
+            "location": "Brugg-Windisch",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Wednesday",
+      "Thursday"
+    ],
+    "languages": [
+      "de"
+    ],
+    "prerequisites": [
+      "oop1"
+    ],
+    "recommended": [
+      "dbsy"
+    ],
     "assessment": "project work",
     "url": "https://example.edu/modules/webec",
     "summary": "Full-stack web development from HTTP and REST APIs to frontend frameworks, authentication and deployment, culminating in a semester project. Afterwards students can build and ship a complete web application — the gateway module for cloud and security specializations.",
     "audience": "Students who enjoy building visible, usable software and want a project-based module; recommended after Database Systems for the smoothest experience.",
-    "tags": ["Web Development", "Hands-on Project"],
+    "tags": [
+      "Web Development",
+      "Hands-on Project"
+    ],
     "typicalQuestions": [
       "How do I learn to build real web applications?",
       "Which project-based modules are there instead of exam-heavy ones?",
@@ -110,15 +322,54 @@
     "description": "Supervised and unsupervised learning: linear models, decision trees, ensembles, neural networks, clustering and model evaluation. Practical work with scikit-learn and PyTorch.",
     "ects": 6,
     "level": "Bachelor",
-    "offeredIn": ["HS"],
-    "languages": ["en"],
-    "prerequisites": ["algd", "stat"],
+    "offeredIn": [
+      "HS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "26HS",
+        "planSemesterModulId": "26HS_sample-mldm",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Wednesday"
+        ],
+        "lessons": [
+          {
+            "number": "26HS-mldm/a",
+            "day": "Wednesday",
+            "start": "08:15",
+            "end": "12:00",
+            "location": "Brugg-Windisch",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Wednesday"
+    ],
+    "languages": [
+      "en"
+    ],
+    "prerequisites": [
+      "algd",
+      "stat"
+    ],
     "recommended": [],
     "assessment": "project work and oral exam",
     "url": "https://example.edu/modules/mldm",
     "summary": "Hands-on machine learning: linear models, trees, ensembles, neural networks, clustering and rigorous model evaluation using scikit-learn and PyTorch. Afterwards students can train, evaluate and defend ML models on real data and continue into NLP/LLM topics.",
     "audience": "Students passionate about AI who have completed algorithms and statistics; taught in English and a prerequisite for the NLP and LLMs module.",
-    "tags": ["Machine Learning", "Data Science", "Artificial Intelligence", "English Instruction", "Hands-on Project"],
+    "tags": [
+      "Machine Learning",
+      "Data Science",
+      "Artificial Intelligence",
+      "English Instruction",
+      "Hands-on Project"
+    ],
     "typicalQuestions": [
       "I want to get into AI — which module should I take?",
       "How do I learn PyTorch and scikit-learn properly?",
@@ -131,15 +382,38 @@
     "description": "Hands-on security: threat modeling, common vulnerabilities (OWASP Top 10), secure coding, penetration testing basics in an isolated lab environment, and defensive hardening.",
     "ects": 3,
     "level": "Bachelor",
-    "offeredIn": ["FS"],
-    "languages": ["en"],
-    "prerequisites": ["webec"],
+    "offeredIn": [
+      "FS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "27FS",
+        "planSemesterModulId": "27FS_sample-cysl",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [],
+        "lessons": []
+      }
+    ],
+    "weekdays": [],
+    "languages": [
+      "en"
+    ],
+    "prerequisites": [
+      "webec"
+    ],
     "recommended": [],
     "assessment": "lab reports",
     "url": "https://example.edu/modules/cysl",
     "summary": "A practical security lab covering threat modeling, the OWASP Top 10, secure coding and basic penetration testing in an isolated environment. Afterwards students can find and fix common vulnerabilities in web applications and argue security trade-offs.",
     "audience": "Students who built web applications and want to attack and defend them hands-on; ideal for those considering security engineering roles.",
-    "tags": ["Security", "Web Development", "English Instruction", "Hands-on Project"],
+    "tags": [
+      "Security",
+      "Web Development",
+      "English Instruction",
+      "Hands-on Project"
+    ],
     "typicalQuestions": [
       "How do I get into cyber security?",
       "Which module teaches penetration testing?",
@@ -152,15 +426,52 @@
     "description": "Cloud architectures, containers and orchestration, serverless computing, infrastructure as code and cost/reliability trade-offs. Deployments on a public cloud platform.",
     "ects": 3,
     "level": "Bachelor",
-    "offeredIn": ["HS"],
-    "languages": ["en"],
-    "prerequisites": ["webec"],
+    "offeredIn": [
+      "HS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "26HS",
+        "planSemesterModulId": "26HS_sample-clco",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ],
+        "lessons": [
+          {
+            "number": "26HS-clco/a",
+            "day": "Thursday",
+            "start": "17:15",
+            "end": "21:00",
+            "location": "Olten",
+            "language": "en",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Thursday"
+    ],
+    "languages": [
+      "en"
+    ],
+    "prerequisites": [
+      "webec"
+    ],
     "recommended": [],
     "assessment": "project work",
     "url": "https://example.edu/modules/clco",
     "summary": "Covers cloud architectures, containers, serverless and infrastructure as code with real deployments on a public cloud. Afterwards students can deploy and operate applications in the cloud and reason about cost and reliability trade-offs.",
     "audience": "Students heading towards DevOps, platform or backend engineering who already build web applications and want to run them professionally.",
-    "tags": ["Cloud & DevOps", "Web Development", "English Instruction", "Hands-on Project"],
+    "tags": [
+      "Cloud & DevOps",
+      "Web Development",
+      "English Instruction",
+      "Hands-on Project"
+    ],
     "typicalQuestions": [
       "How do I learn Docker, Kubernetes and serverless?",
       "Which module teaches deploying applications to the cloud?",
@@ -173,15 +484,71 @@
     "description": "Classic and agile project management: Scrum, Kanban, estimation, risk management, stakeholder communication and team dynamics. Case-study driven with role-play workshops.",
     "ects": 3,
     "level": "Bachelor",
-    "offeredIn": ["HS", "FS"],
-    "languages": ["de"],
+    "offeredIn": [
+      "HS",
+      "FS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "27FS",
+        "planSemesterModulId": "27FS_sample-pmgt",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Monday"
+        ],
+        "lessons": [
+          {
+            "number": "27FS-pmgt/a",
+            "day": "Monday",
+            "start": "17:15",
+            "end": "20:00",
+            "location": "Olten",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      },
+      {
+        "semesterId": "26HS",
+        "planSemesterModulId": "26HS_sample-pmgt",
+        "languages": [
+          "de"
+        ],
+        "weekdays": [
+          "Friday"
+        ],
+        "lessons": [
+          {
+            "number": "26HS-pmgt/a",
+            "day": "Friday",
+            "start": "15:15",
+            "end": "18:00",
+            "location": "Olten",
+            "language": "de",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Monday",
+      "Friday"
+    ],
+    "languages": [
+      "de"
+    ],
     "prerequisites": [],
     "recommended": [],
     "assessment": "written exam and presentation",
     "url": "https://example.edu/modules/pmgt",
     "summary": "Teaches classic and agile project management — Scrum, Kanban, estimation, risk and stakeholder management — through case studies and role-play workshops. Afterwards students can plan and coordinate IT projects and communicate with non-technical stakeholders.",
     "audience": "Students aiming at team-lead, product or consulting roles, or anyone wanting soft-skill balance next to technical modules. No prerequisites and offered every semester, so it fills plan gaps well.",
-    "tags": ["Project & Teamwork", "Career Foundations"],
+    "tags": [
+      "Project & Teamwork",
+      "Career Foundations"
+    ],
     "typicalQuestions": [
       "Which module has no prerequisites and fits any semester?",
       "How do I learn Scrum and agile methods?",
@@ -194,15 +561,52 @@
     "description": "Text processing, embeddings, transformer architectures, fine-tuning, retrieval-augmented generation and responsible AI. Students build an end-to-end NLP application.",
     "ects": 6,
     "level": "Bachelor",
-    "offeredIn": ["FS"],
-    "languages": ["en"],
-    "prerequisites": ["mldm"],
+    "offeredIn": [
+      "FS"
+    ],
+    "offerings": [
+      {
+        "semesterId": "27FS",
+        "planSemesterModulId": "27FS_sample-nlpai",
+        "languages": [
+          "en"
+        ],
+        "weekdays": [
+          "Thursday"
+        ],
+        "lessons": [
+          {
+            "number": "27FS-nlpai/a",
+            "day": "Thursday",
+            "start": "08:15",
+            "end": "12:00",
+            "location": "Brugg-Windisch",
+            "language": "en",
+            "periodicity": 7
+          }
+        ]
+      }
+    ],
+    "weekdays": [
+      "Thursday"
+    ],
+    "languages": [
+      "en"
+    ],
+    "prerequisites": [
+      "mldm"
+    ],
     "recommended": [],
     "assessment": "project work",
     "url": "https://example.edu/modules/nlpai",
     "summary": "Covers modern NLP end to end: embeddings, transformers, fine-tuning, retrieval-augmented generation and responsible AI, with a full application project. Afterwards students can design and build LLM-powered applications — the capstone of the AI track.",
     "audience": "Students who completed Machine Learning and want to specialize in language models and generative AI; taught in English with a strong project focus.",
-    "tags": ["Artificial Intelligence", "Machine Learning", "English Instruction", "Hands-on Project"],
+    "tags": [
+      "Artificial Intelligence",
+      "Machine Learning",
+      "English Instruction",
+      "Hands-on Project"
+    ],
     "typicalQuestions": [
       "How do I learn to build applications with LLMs?",
       "Which module covers RAG and fine-tuning?",

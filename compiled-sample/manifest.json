@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "compiledAt": "2026-07-10T06:00:00Z",
+  "compiledAt": "2026-07-12T09:00:00Z",
   "source": "modules.sample.json (hand-compiled sample; regenerate with StructuredRAG.Compiler)",
   "moduleCount": 10,
   "tagCount": 13
