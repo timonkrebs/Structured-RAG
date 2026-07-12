@@ -333,7 +333,11 @@ Output JSON:";
     /// <see cref="CompileModuleAsync"/>. Deterministic pass-through data (offerings,
     /// lessons, locations, assessment, ...) is deliberately excluded — it changes
     /// between catalog publications without affecting what the LLM would produce,
-    /// and is refreshed on reuse instead.
+    /// and is refreshed on reuse instead. Structured source prerequisites are the
+    /// one exception: they don't feed the prompt, but they gate whether the
+    /// LLM-extracted prerequisites are used, so a change (especially a removal)
+    /// must invalidate reuse — otherwise <see cref="RefreshPassThrough"/> would keep
+    /// a prerequisite the source no longer states.
     /// </summary>
     public static string ComputeSourceHash(SourceModule module)
     {
@@ -349,7 +353,8 @@ Output JSON:";
             module.OfferedIn,
             module.StudyPrograms,
             module.RequirementsText,
-            module.RequirementsTextEn
+            module.RequirementsTextEn,
+            module.Prerequisites
         };
         var json = JsonSerializer.Serialize(llmInputs, HashOptions);
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
@@ -376,7 +381,8 @@ Output JSON:";
         Languages = module.Languages,
         Weekdays = module.Weekdays,
         // Same rule as a fresh compile: structured source prerequisites win; otherwise
-        // keep the previously extracted (and validated) ones.
+        // keep the previously extracted (and validated) ones. Safe, because the source
+        // prerequisites are part of SourceHash — any change skips this reuse path.
         Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : prev.Prerequisites,
         PrerequisiteNotes = prev.PrerequisiteNotes,
         Recommended = module.Recommended,

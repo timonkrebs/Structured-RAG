@@ -153,11 +153,19 @@ public static class SourceModuleMapper
         return Key(a).CompareTo(Key(b));
     }
 
+    /// <summary>Class instances that actually take place. The API has no dedicated
+    /// cancellation field — a cancelled class is only signalled by an "… Abgesagt"
+    /// suffix glued onto the location (e.g. "Basel- Abgesagt"). Cancelled instances
+    /// must not surface as plannable lessons, weekdays or languages.</summary>
+    private static IEnumerable<ModuleInstanceDto> ActiveInstances(ModuleDetailDto d) =>
+        (d.ModuleInstances ?? new List<ModuleInstanceDto>())
+            .Where(i => i.Location?.Contains("abgesagt", StringComparison.OrdinalIgnoreCase) != true);
+
     /// <summary>Language lives per course instance; the top-level field is usually null.</summary>
     private static List<string> ExtractLanguages(ModuleDetailDto d)
     {
         var texts = new List<string?> { d.Language };
-        if (d.ModuleInstances != null) texts.AddRange(d.ModuleInstances.Select(i => i.Language));
+        texts.AddRange(ActiveInstances(d).Select(i => i.Language));
         return texts.SelectMany(ParseLanguages).Distinct().ToList();
     }
 
@@ -165,7 +173,7 @@ public static class SourceModuleMapper
         { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
     private static List<string> ExtractWeekdays(ModuleDetailDto d) =>
-        (d.ModuleInstances ?? new List<ModuleInstanceDto>())
+        ActiveInstances(d)
             .Select(i => i.Day)
             .Where(day => !string.IsNullOrWhiteSpace(day))
             .Select(day => day!)
@@ -184,7 +192,7 @@ public static class SourceModuleMapper
     /// with a dummy date part — only the clock time is kept. Instances without any
     /// schedule signal (no day, no times) carry nothing plannable and are skipped.</summary>
     private static List<Lesson> ExtractLessons(ModuleDetailDto d) =>
-        (d.ModuleInstances ?? new List<ModuleInstanceDto>())
+        ActiveInstances(d)
             .Where(i => !string.IsNullOrWhiteSpace(i.Day) || i.StartTime != null || i.EndTime != null)
             .Select(i => new Lesson
             {

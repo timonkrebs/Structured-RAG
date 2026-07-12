@@ -624,11 +624,15 @@
   function classPicker(m) {
     var s = t();
     var groups = lessonGroups(m);
-    var current = chosenLessons(m);
+    // Match the persisted choice by group key — lessonGroups builds fresh arrays on
+    // every call, so identity comparison against chosenLessons() would never mark an
+    // option selected and the picker would fall back visually to the first class.
+    var chosen = groups.map(groupKey).indexOf(chosenClass[m.code]);
+    if (chosen < 0) chosen = 0; // no/stale choice -> first class, like chosenLessons()
     var html = '<div><select class="class-pick" data-class="' + esc(m.code) + '" title="' + esc(s.chooseClass) + '">';
     groups.forEach(function (g, i) {
       var label = g.map(lessonLabel).join(", ") + (g[0].location ? " · " + g[0].location : "");
-      html += '<option value="' + esc(groupKey(g, i)) + '"' + (g === current ? " selected" : "") + ">" + esc(label) + "</option>";
+      html += '<option value="' + esc(groupKey(g, i)) + '"' + (i === chosen ? " selected" : "") + ">" + esc(label) + "</option>";
     });
     return html + "</select></div>";
   }

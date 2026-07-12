@@ -125,7 +125,7 @@ public class LiveModuleFetcher
                       $"languages: {string.Join(", ", languages)}" +
                       (weekdays.Count > 0 ? $" · weekdays: {string.Join(", ", weekdays)}" : ""));
         if (lessons.Count > 0)
-            sb.AppendLine($"**Lessons (one per parallel class):** {string.Join("; ", lessons.Select(FormatLesson))}");
+            sb.AppendLine($"**Lessons (weekly slots; slots sharing a class number belong to the same parallel class):** {string.Join("; ", lessons.Select(FormatLesson))}");
         sb.AppendLine($"**Assessment:** {assessment}");
         sb.AppendLine($"**Tags:** {string.Join(", ", compiled.Tags)}");
         sb.AppendLine($"**Prerequisites (module codes):** {(compiled.Prerequisites.Count > 0 ? string.Join(", ", compiled.Prerequisites) : "none")}");
@@ -162,7 +162,8 @@ public class LiveModuleFetcher
 
     private static string FormatLesson(Lesson l)
     {
-        var time = string.IsNullOrEmpty(l.Start) ? "" : $" {l.Start}–{l.End}";
+        // "?" for a missing end matches the widgets — a dangling "08:15–" reads ambiguous.
+        var time = string.IsNullOrEmpty(l.Start) ? "" : $" {l.Start}–{(string.IsNullOrEmpty(l.End) ? "?" : l.End)}";
         var location = string.IsNullOrEmpty(l.Location) ? "" : $" ({l.Location})";
         return $"{l.Day ?? "day n/a"}{time}{location}";
     }

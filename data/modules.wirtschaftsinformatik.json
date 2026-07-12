@@ -340,15 +340,6 @@
             "periodicity": 7
           },
           {
-            "number": "2-26HS.W-B-B\u00D6K-Mat1.EN/TZA26a",
-            "day": "Wednesday",
-            "start": "15:15",
-            "end": "17:00",
-            "location": "Basel- Abgesagt",
-            "language": "de",
-            "periodicity": 7
-          },
-          {
             "number": "2-26HS.W-B-B\u00D6K-Mat1.EN/VZ26b",
             "day": "Wednesday",
             "start": "15:15",
@@ -3853,15 +3844,6 @@
             "location": "Olten, Windisch, Vor Ort/Online",
             "language": "de",
             "periodicity": 7
-          },
-          {
-            "number": "3-26HS.W-B-B\u00D6K-IntB.EN/VZ25",
-            "day": "Thursday",
-            "start": "10:15",
-            "end": "12:00",
-            "location": "Basel, Olten, Windisch- Abgesagt",
-            "language": "de",
-            "periodicity": 7
           }
         ]
       }
@@ -4406,15 +4388,6 @@
             "periodicity": 7
           },
           {
-            "number": "2-26HS.W-B-B\u00D6K-KDWS.EN/TZA26a",
-            "day": "Monday",
-            "start": "17:15",
-            "end": "21:00",
-            "location": "Basel- Abgesagt",
-            "language": "de",
-            "periodicity": 7
-          },
-          {
             "number": "1-26HS.W-B-B\u00D6K-KDWS_de.EN/TZF26a",
             "day": "Tuesday",
             "start": "08:15",
@@ -4666,31 +4639,13 @@
       {
         "semesterId": "26HS",
         "planSemesterModulId": "26HS_9853148",
-        "languages": [
-          "en"
-        ],
-        "weekdays": [
-          "Monday"
-        ],
-        "lessons": [
-          {
-            "number": "1-26HS.W-B-WIBIT-MasLea_en.EN/WM",
-            "day": "Monday",
-            "start": null,
-            "end": null,
-            "location": "Windisch- Abgesagt",
-            "language": "en",
-            "periodicity": -2
-          }
-        ]
+        "languages": [],
+        "weekdays": [],
+        "lessons": []
       }
     ],
-    "languages": [
-      "en"
-    ],
-    "weekdays": [
-      "Monday"
-    ],
+    "languages": [],
+    "weekdays": [],
     "prerequisites": [],
     "recommended": [],
     "studyPrograms": [
@@ -4857,15 +4812,6 @@
             "start": "15:15",
             "end": "17:00",
             "location": "Olten",
-            "language": "de",
-            "periodicity": 7
-          },
-          {
-            "number": "2-26HS.W-B-B\u00D6K-OB.EN/TZA26a",
-            "day": "Wednesday",
-            "start": "13:15",
-            "end": "15:00",
-            "location": "Basel- Abgesagt",
             "language": "de",
             "periodicity": 7
           },
@@ -5160,15 +5106,6 @@
             "start": "08:15",
             "end": "12:00",
             "location": "Basel",
-            "language": "de",
-            "periodicity": 7
-          },
-          {
-            "number": "2-26HS.W-B-B\u00D6K-Mgt.EN/TZA26a",
-            "day": "Wednesday",
-            "start": "17:15",
-            "end": "21:00",
-            "location": "Basel- Abgesagt",
             "language": "de",
             "periodicity": 7
           },
@@ -5860,16 +5797,12 @@
       {
         "semesterId": "26HS",
         "planSemesterModulId": "26HS_9897620",
-        "languages": [
-          "de"
-        ],
+        "languages": [],
         "weekdays": [],
         "lessons": []
       }
     ],
-    "languages": [
-      "de"
-    ],
+    "languages": [],
     "weekdays": [],
     "prerequisites": [],
     "recommended": [],
@@ -6115,16 +6048,12 @@
       {
         "semesterId": "26HS",
         "planSemesterModulId": "26HS_9903479",
-        "languages": [
-          "de"
-        ],
+        "languages": [],
         "weekdays": [],
         "lessons": []
       }
     ],
-    "languages": [
-      "de"
-    ],
+    "languages": [],
     "weekdays": [],
     "prerequisites": [],
     "recommended": [],
@@ -7334,16 +7263,12 @@
       {
         "semesterId": "26HS",
         "planSemesterModulId": "26HS_9903775",
-        "languages": [
-          "de"
-        ],
+        "languages": [],
         "weekdays": [],
         "lessons": []
       }
     ],
-    "languages": [
-      "de"
-    ],
+    "languages": [],
     "weekdays": [],
     "prerequisites": [],
     "recommended": [],
