@@ -54,10 +54,12 @@ public static class ModuleCatalogTools
 
     [McpServerTool(Name = "search_modules", ReadOnly = true)]
     [McpMeta("openai/widgetAccessible", true)]
-    [Description("Filter modules by structured criteria (tags from the taxonomy, semester, level, module type, study program, ECTS range, language) plus optional free text. Read the catalog://taxonomy resource, call list_tags or get_catalog_overview first to see valid tags.")]
-    public static IReadOnlyList<ModuleSummary> SearchModules(
+    [Description("Filter modules by boolean tag criteria (allOfTags/anyOfTags/noneOfTags) plus semester, level, module type, study program, ECTS range, language and optional free text. Returns the total match count, the modules in the requested format and — with includeFacets — per-tag counts of the result set to pick the next filter from. Search WIDE: tags are compiled and approximate, so prefer anyOfTags with many tags over stacking allOfTags — missing a relevant module is worse than reviewing extras, and the compact format keeps wide results cheap. The tag vocabulary is in the server instructions; list_tags has the tag descriptions.")]
+    public static ModuleSearchResults SearchModules(
         CatalogStore store,
-        [Description("Tags to match (module must have at least one). Canonical German names or English aliases from the taxonomy")] string[]? tags = null,
+        [Description("Modules must carry ALL of these tags (AND). Use sparingly — every added tag silently drops relevant modules whose compiled tags are incomplete; prefer anyOfTags plus your own shortlisting")] string[]? allOfTags = null,
+        [Description("Modules must carry AT LEAST ONE of these tags (OR). Cast a wide net: include every plausibly relevant tag. Canonical German names or English aliases from the taxonomy")] string[]? anyOfTags = null,
+        [Description("Modules must carry NONE of these tags (exclusion)")] string[]? noneOfTags = null,
         [Description("Semester the module must be offered in: type 'HS'/'FS' or concrete id like '26HS'")] string? semester = null,
         [Description("Study level, e.g. 'Bachelor' or 'Master'")] string? level = null,
         [Description("Module type, e.g. 'Pflichtmodul', 'Wahlpflichtmodul', 'Wahlmodul'")] string? moduleType = null,
@@ -65,7 +67,10 @@ public static class ModuleCatalogTools
         [Description("Minimum ECTS credits")] int? minEcts = null,
         [Description("Maximum ECTS credits")] int? maxEcts = null,
         [Description("Language of instruction, e.g. 'de' or 'en'")] string? language = null,
-        [Description("Optional free-text query applied on top of the filters")] string? query = null)
+        [Description("Optional free-text query applied on top of the filters (results are relevance-ranked)")] string? query = null,
+        [Description("Response shape: 'compact' (default) core facts per module; 'full' complete summaries incl. offerings, lesson slots and prerequisites; 'codes' module codes only")] string? format = null,
+        [Description("Maximum number of modules to return; omit for all. 'total' in the result is counted before this cut")] int? limit = null,
+        [Description("Set true to also return facets: how many matching modules carry each tag — pick the next narrowing filter from these counts instead of guessing")] bool includeFacets = false)
     {
         IEnumerable<CompiledModule> candidates = store.Modules;
 
@@ -73,13 +78,21 @@ public static class ModuleCatalogTools
         // narrowing must see the same semester value the semester filter used.
         var validatedSemester = string.IsNullOrWhiteSpace(semester) ? null : ValidateSemester(semester);
 
-        if (tags is { Length: > 0 })
-        {
-            var canonical = tags.Select(store.ResolveTagName).Where(t => t != null).Select(t => t!).ToList();
-            if (canonical.Count == 0)
-                throw new McpException($"None of the given tags exist in the taxonomy: {string.Join(", ", tags)}. Call list_tags for valid tags.");
-            candidates = candidates.Where(m => m.Tags.Intersect(canonical, StringComparer.OrdinalIgnoreCase).Any());
-        }
+        var resultFormat = (format ?? "compact").Trim().ToLowerInvariant();
+        if (resultFormat is not ("compact" or "full" or "codes"))
+            throw new McpException($"Invalid format '{format}'. Use 'compact', 'full' or 'codes'.");
+        if (limit is < 1)
+            throw new McpException($"Invalid limit {limit} — it must be at least 1 (omit it to get all matches).");
+
+        var allOf = ResolveTags(store, allOfTags, "allOfTags");
+        var anyOf = ResolveTags(store, anyOfTags, "anyOfTags");
+        var noneOf = ResolveTags(store, noneOfTags, "noneOfTags");
+        if (allOf.Count > 0)
+            candidates = candidates.Where(m => allOf.All(t => m.Tags.Contains(t, StringComparer.OrdinalIgnoreCase)));
+        if (anyOf.Count > 0)
+            candidates = candidates.Where(m => m.Tags.Intersect(anyOf, StringComparer.OrdinalIgnoreCase).Any());
+        if (noneOf.Count > 0)
+            candidates = candidates.Where(m => !m.Tags.Intersect(noneOf, StringComparer.OrdinalIgnoreCase).Any());
         if (validatedSemester != null)
             candidates = candidates.Where(m => MatchesSemester(m, validatedSemester));
         if (!string.IsNullOrWhiteSpace(level))
@@ -104,7 +117,52 @@ public static class ModuleCatalogTools
                 .ToList();
         }
 
-        return filtered.Select(m => ModuleSummary.From(m, validatedSemester)).ToList();
+        // Facets are computed over the full filtered set (before the limit cut) —
+        // they describe the match set, not the returned page.
+        IReadOnlyList<TagFacet>? facets = null;
+        if (includeFacets)
+        {
+            facets = filtered
+                .SelectMany(m => m.Tags)
+                .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new TagFacet(g.Key, g.Count()))
+                .OrderByDescending(f => f.Count)
+                .ThenBy(f => f.Tag, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        var returned = limit.HasValue && limit.Value < filtered.Count
+            ? filtered.Take(limit.Value).ToList()
+            : filtered;
+        IReadOnlyList<object> modules = resultFormat switch
+        {
+            "codes" => returned.Select(m => (object)m.Code).ToList(),
+            "compact" => returned.Select(m => (object)CompactModule.From(m)).ToList(),
+            _ => returned.Select(m => (object)ModuleSummary.From(m, validatedSemester)).ToList()
+        };
+
+        return new ModuleSearchResults(filtered.Count, resultFormat, modules, facets);
+    }
+
+    /// <summary>Resolves tag inputs (German canonical or English alias) strictly: any
+    /// unknown tag is an error — silently dropping one would widen an allOf filter or
+    /// narrow an anyOf filter without the client noticing.</summary>
+    private static List<string> ResolveTags(CatalogStore store, string[]? tags, string parameterName)
+    {
+        if (tags is not { Length: > 0 }) return new List<string>();
+
+        var resolved = new List<string>();
+        var unknown = new List<string>();
+        foreach (var tag in tags)
+        {
+            var canonical = store.ResolveTagName(tag);
+            if (canonical is null) unknown.Add(tag);
+            else if (!resolved.Contains(canonical, StringComparer.OrdinalIgnoreCase)) resolved.Add(canonical);
+        }
+        if (unknown.Count > 0)
+            throw new McpException(
+                $"Unknown tags in {parameterName}: {string.Join(", ", unknown)}. Call list_tags for the valid vocabulary.");
+        return resolved;
     }
 
     [McpServerTool(Name = "list_tags", ReadOnly = true)]
@@ -403,13 +461,36 @@ public static class ModuleCatalogTools
         return m.Languages.Contains(language, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static string OfferedText(CompiledModule m) =>
+    internal static string OfferedText(CompiledModule m) =>
         m.Offerings.Count > 0
             ? string.Join("/", m.Offerings.Select(o => o.SemesterId))
             : string.Join("/", m.OfferedIn);
 }
 
 public record SearchResults(IReadOnlyList<SearchResultItem> Results);
+
+/// <summary>Result of search_modules: Total counts all matches (before any limit cut),
+/// Modules holds the matches shaped per the requested format, Facets the per-tag counts
+/// of the full match set when requested.</summary>
+public record ModuleSearchResults(
+    int Total,
+    string Format,
+    IReadOnlyList<object> Modules,
+    IReadOnlyList<TagFacet>? Facets);
+
+public record TagFacet(string Tag, int Count);
+
+/// <summary>Index-row-sized module facts for the 'compact' search format: enough to
+/// shortlist and count, cheap enough to return in bulk. Details come from the 'full'
+/// format or fetch.</summary>
+public record CompactModule(
+    string Code, string Title, string? TitleEn, int Ects, string Level, string? ModuleType,
+    string Offered, IReadOnlyList<string> Languages, IReadOnlyList<string> Tags)
+{
+    public static CompactModule From(CompiledModule m) => new(
+        m.Code, m.Title, m.TitleEn, m.Ects, m.Level, m.ModuleType,
+        ModuleCatalogTools.OfferedText(m), m.Languages, m.Tags);
+}
 
 public record SearchResultItem(string Id, string Title, string Text, string? Url);
 

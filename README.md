@@ -26,7 +26,8 @@ client model does the reasoning over them.
   endpoint works as the alternative. Spend on a strong model here — compilation runs
   rarely.
 - **`StructuredRAG.Mcp`** — stateless MCP server over the compiled artifacts:
-  ChatGPT-connector-compatible `search`/`fetch`, structured `search_modules`,
+  ChatGPT-connector-compatible `search`/`fetch`, structured `search_modules` (boolean
+  tag filters, facet counts, compact/full/codes formats),
   `list_tags`, a deterministic `plan_semester` (prerequisite/semester eligibility),
   `compare_modules`, `plan_path` (fastest route to a target module), and MCP resources
   (`catalog://index`, `catalog://taxonomy`) clients can load into context.

@@ -10,9 +10,14 @@ milliseconds.
 
 ## How the client model works with it
 
-1. Read the `catalog://taxonomy` resource (or call `list_tags`) — the closed tag
-   vocabulary with descriptions. The client maps the student's interests onto tags itself.
-2. Call `search_modules` (structured filters) or `search` (free text) to find candidates.
+1. Map the student's interests onto the tag vocabulary that arrives with the MCP
+   initialize instructions (tag names + module counts); `catalog://taxonomy` or
+   `list_tags` add the tag descriptions.
+2. Call `search_modules` (boolean tag filters + structured criteria; `includeFacets`
+   returns per-tag counts of the match set for the next narrowing step) or `search`
+   (free text) to find candidates. The server instructions steer the client
+   recall-first: wide `anyOfTags` sweeps over stacked `allOfTags` intersections,
+   since compiled tags are approximate and the compact format makes wide results cheap.
 3. Call `fetch` for full module details.
 4. For semester planning, call `plan_semester` with the student's completed modules —
    the server computes eligibility deterministically (prerequisites, offering semester);
@@ -24,7 +29,7 @@ milliseconds.
 |------|---------|
 | `search` | Free-text search, German or English (ChatGPT-connector-compatible shape) |
 | `fetch` | One module in full: **current official description fetched live** from the FHNW module directory (TTL-cached, deterministic HTTP — still no inference) plus compiled enrichments; falls back to the compiled record when the API is unreachable (`metadata.source`: `live`/`compiled`) |
-| `search_modules` | Structured filtering: tags (German canonical or English alias), semester (`HS`/`FS` or concrete `26HS`), level, module type, study program, ECTS range, language |
+| `search_modules` | Boolean tag filtering (`allOfTags`/`anyOfTags`/`noneOfTags`; German canonical or English alias) plus semester (`HS`/`FS` or concrete `26HS`), level, module type, study program, ECTS range, language and free text. Returns `total`, the matches as `compact` (default) / `full` / `codes` with optional `limit`, and per-tag counts of the match set via `includeFacets` (faceted drill-down) |
 | `list_tags` | The closed bilingual tag taxonomy with descriptions and module counts |
 | `get_catalog_overview` | Taxonomy + full module index as one markdown blob — ideal first call for clients without resource support (ChatGPT) |
 | `plan_semester` | Eligible vs. blocked modules for a semester, given completed modules; includes free-text prerequisite notes, weekdays and the ECTS target for the client's planning reasoning |
