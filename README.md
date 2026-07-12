@@ -53,8 +53,9 @@ docker run -p 8080:8080 structured-rag-mcp   # MCP endpoint at http://localhost:
 
 ## Using it from ChatGPT or Claude
 
-Hosted clients need the server reachable over public HTTPS — deploy it, or tunnel for
-testing (e.g. `ngrok http 5210`). Then register it:
+Hosted clients need the server reachable over public HTTPS — deploy it (free options
+in [DEPLOYMENT.md](DEPLOYMENT.md)), or tunnel for testing (e.g. `ngrok http 5210`).
+Then register it:
 
 - **ChatGPT (web)**: Settings → Connectors → Advanced → *Developer mode* → add a
   custom connector with URL `https://<your-host>/mcp`.
