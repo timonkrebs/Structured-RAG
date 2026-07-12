@@ -13,7 +13,7 @@ namespace StructuredRAG.Core.Services;
 /// llama.cpp, OpenAI, Azure OpenAI, OpenRouter, ... Configure via
 /// DockerModelRunner:Endpoint, :SimpleModel and (for hosted APIs) :ApiKey.
 /// </summary>
-public class DockerModelRunnerService
+public class DockerModelRunnerService : ILlmClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<DockerModelRunnerService> _logger;
