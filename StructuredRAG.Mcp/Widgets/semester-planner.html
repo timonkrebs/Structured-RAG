@@ -456,7 +456,10 @@
     var s = t();
     var label = l.day ? day(l.day) : "?";
     if (l.start) label += " " + l.start + "–" + (l.end || "?");
-    if (l.periodicity && l.periodicity !== 7) label += " · " + s.everyNDays(l.periodicity);
+    // Only annotate a real non-weekly rhythm. 7 = weekly (the default, no annotation);
+    // FHNW also emits sentinel values (0, -2, …) that are not day intervals — never
+    // render "every -2 days".
+    if (l.periodicity > 0 && l.periodicity !== 7) label += " · " + s.everyNDays(l.periodicity);
     return label;
   }
 
