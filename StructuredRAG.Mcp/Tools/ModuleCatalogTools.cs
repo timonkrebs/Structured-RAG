@@ -118,7 +118,8 @@ public static class ModuleCatalogTools
     // UseStructuredContent: the ChatGPT widget is hydrated from structuredContent
     // (window.openai.toolOutput); the SDK still emits the JSON text block alongside.
     [McpServerTool(Name = "plan_semester", ReadOnly = true, UseStructuredContent = true)]
-    [McpMeta("openai/outputTemplate", "ui://widget/semester-planner.html")]
+    [McpMeta("openai/outputTemplate", "ui://widget/semester-planner.html")] // OpenAI Apps SDK (ChatGPT)
+    [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
     [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes and weekdays — combine everything with the student's interests, ECTS target and schedule to propose a plan. In ChatGPT this also renders an interactive plan-builder widget.")]
@@ -171,7 +172,8 @@ public static class ModuleCatalogTools
     }
 
     [McpServerTool(Name = "compare_modules", ReadOnly = true, UseStructuredContent = true)]
-    [McpMeta("openai/outputTemplate", "ui://widget/module-comparer.html")]
+    [McpMeta("openai/outputTemplate", "ui://widget/module-comparer.html")] // OpenAI Apps SDK (ChatGPT)
+    [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/module-comparer"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/widgetAccessible", true)] // the comparer widget re-calls this to add/swap a column
     [McpMeta("openai/toolInvocation/invoking", "Comparing modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Module comparison ready")]

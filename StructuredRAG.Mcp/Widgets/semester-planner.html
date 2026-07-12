@@ -126,11 +126,119 @@
 (function () {
   "use strict";
 
-  var api = window.openai || null;
+  // ---------- host bridge ----------
+  // Abstracts the two widget host conventions over one interface:
+  //  - OpenAI Apps SDK (ChatGPT): window.openai globals + methods
+  //  - MCP Apps extension (Claude, ...): JSON-RPC 2.0 over postMessage (spec 2026-01-26)
+  var Host = (function () {
+    var h = {
+      mode: "none",       // "openai" | "mcp" | "none"
+      ready: false,       // becomes true once host data has arrived (mcp is async)
+      theme: null,
+      locale: null,
+      toolOutput: null,
+      widgetState: null,  // openai only; MCP Apps has no widget-state store
+      canCall: false,
+      onchange: null,
+      setState: function () {},
+      callTool: function () { return Promise.reject(new Error("no host")); },
+      sendMessage: function () {},
+      openLink: function (url) { window.open(url, "_blank", "noopener"); },
+      reportSize: function () {}
+    };
+    function notify() { if (h.onchange) h.onchange(); }
+
+    if (window.openai) {
+      var api = window.openai;
+      h.mode = "openai";
+      h.ready = true;
+      h.theme = api.theme || null;
+      h.locale = api.locale || null;
+      h.toolOutput = api.toolOutput || null;
+      h.widgetState = api.widgetState || null;
+      h.canCall = typeof api.callTool === "function";
+      h.setState = function (state) { if (typeof api.setWidgetState === "function") api.setWidgetState(state); };
+      h.callTool = function (name, args) { return api.callTool(name, args); };
+      h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
+      h.openLink = function (url) {
+        if (typeof api.openExternal === "function") api.openExternal({ href: url });
+        else window.open(url, "_blank", "noopener");
+      };
+      window.addEventListener("openai:set_globals", function () {
+        h.theme = api.theme || h.theme;
+        h.locale = api.locale || h.locale;
+        h.toolOutput = api.toolOutput || h.toolOutput;
+        h.widgetState = api.widgetState || h.widgetState;
+        notify();
+      });
+    } else if (window.parent && window.parent !== window) {
+      h.mode = "mcp";
+      h.canCall = true;
+      var nextId = 1, pending = {};
+      var post = function (msg) { window.parent.postMessage(msg, "*"); };
+      var request = function (method, params) {
+        return new Promise(function (resolve, reject) {
+          var id = nextId++;
+          pending[id] = { resolve: resolve, reject: reject };
+          post({ jsonrpc: "2.0", id: id, method: method, params: params });
+        });
+      };
+      window.addEventListener("message", function (ev) {
+        var m = ev.data;
+        if (!m || m.jsonrpc !== "2.0") return;
+        if (m.id !== undefined && m.method === undefined) {
+          var p = pending[m.id];
+          if (!p) return;
+          delete pending[m.id];
+          if (m.error) p.reject(new Error(m.error.message || "host error")); else p.resolve(m.result);
+          return;
+        }
+        if (m.method === "ui/notifications/tool-result") {
+          var pr = m.params || {};
+          if (pr.structuredContent) { h.toolOutput = pr.structuredContent; h.ready = true; notify(); }
+        } else if (m.method === "ui/notifications/host-context-changed") {
+          var c = m.params || {};
+          if (c.theme) h.theme = c.theme;
+          if (c.locale) h.locale = c.locale;
+          notify();
+        }
+      });
+      h.setState = function (state, summary) {
+        // Nearest MCP Apps equivalent of widget state: persist the draft into the
+        // model context (each request overwrites the previous one), so the model
+        // sees the student's current selection in future turns.
+        request("ui/update-model-context", {
+          structuredContent: state,
+          content: summary ? [{ type: "text", text: summary }] : []
+        }).catch(function () {});
+      };
+      h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
+      h.sendMessage = function (text) {
+        request("ui/message", { role: "user", content: { type: "text", text: text } }).catch(function () {});
+      };
+      h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
+      h.reportSize = function () {
+        post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
+               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+      };
+      request("ui/initialize", {
+        protocolVersion: "2026-01-26",
+        clientInfo: { name: "module-catalog-widget", version: "1.0.0" },
+        capabilities: {},
+        appCapabilities: {}
+      }).then(function (res) {
+        var ctx = (res && res.hostContext) || {};
+        if (ctx.theme) h.theme = ctx.theme;
+        if (ctx.locale) h.locale = ctx.locale;
+        notify();
+      }).catch(function () { notify(); });
+    }
+    return h;
+  })();
 
   // ---------- i18n ----------
   function isDe() {
-    var loc = (api && api.locale) || "de";
+    var loc = Host.locale || "de";
     return String(loc).toLowerCase().indexOf("de") === 0;
   }
   var STR = {
@@ -206,13 +314,13 @@
   var targetTouched = false;
   var stateRestored = false;
 
-  function data() { return (api && api.toolOutput) || null; }
+  function data() { return Host.toolOutput; }
 
   function restoreState() {
     if (stateRestored) return;
     var d = data();
     if (d && typeof d.ectsTarget === "number" && d.ectsTarget > 0) target = d.ectsTarget;
-    var ws = api && api.widgetState;
+    var ws = Host.widgetState;
     if (ws) {
       (ws.selectedCodes || []).forEach(function (c) { selected[c] = true; });
       if (typeof ws.ectsTarget === "number" && ws.ectsTarget > 0) { target = ws.ectsTarget; targetTouched = true; }
@@ -221,10 +329,18 @@
   }
 
   function persistState() {
-    if (!api || typeof api.setWidgetState !== "function") return;
     var state = { selectedCodes: Object.keys(selected) };
     if (targetTouched) state.ectsTarget = target;
-    api.setWidgetState(state);
+    Host.setState(state, draftSummary());
+  }
+
+  // Model-facing summary of the current draft (used as MCP Apps model context).
+  function draftSummary() {
+    var mods = selectedModules();
+    if (mods.length === 0) return "";
+    var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
+    return "Student's current draft plan in the semester-planner widget (" + sum + "/" + target +
+      " ECTS): " + mods.map(function (m) { return m.code; }).join(", ");
   }
 
   // ---------- helpers ----------
@@ -273,7 +389,10 @@
     var d = data();
     var s = t();
     if (!d || !Array.isArray(d.eligible)) {
-      root.innerHTML = '<div class="empty">' + esc(s.noData) + "</div>";
+      // In MCP Apps the tool result arrives asynchronously after ui/initialize —
+      // don't flash the "no data" message while waiting.
+      root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
+      Host.reportSize();
       return;
     }
 
@@ -368,6 +487,7 @@
       "</div>";
 
     root.innerHTML = html;
+    Host.reportSize();
   }
 
   function detailsPanel(m) {
@@ -394,9 +514,9 @@
   function toggleDetails(code) {
     if (expanded[code]) { delete expanded[code]; render(); return; }
     expanded[code] = true;
-    if (!details[code] && api && typeof api.callTool === "function") {
+    if (!details[code] && Host.canCall) {
       details[code] = { loading: true };
-      api.callTool("fetch", { id: code }).then(function (res) {
+      Host.callTool("fetch", { id: code }).then(function (res) {
         var sc = extractStructured(res);
         details[code] = sc && sc.text ? { text: sc.text, url: sc.url || null } : { error: true };
         render();
@@ -411,13 +531,12 @@
   }
 
   function sendPlan() {
-    if (!api || typeof api.sendFollowUpMessage !== "function") return;
     var s = t();
     var mods = selectedModules();
     if (mods.length === 0) return;
     var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
     var lines = mods.map(function (m) { return "- " + m.code + ": " + locTitle(m) + " (" + m.ects + " ECTS)"; }).join("\n");
-    api.sendFollowUpMessage({ prompt: s.followUp(data().semester, lines, sum, target) });
+    Host.sendMessage(s.followUp(data().semester, lines, sum, target));
   }
 
   // ---------- events ----------
@@ -427,9 +546,7 @@
     if (el.hasAttribute("data-details")) { toggleDetails(el.getAttribute("data-details")); }
     else if (el.hasAttribute("data-open")) {
       ev.preventDefault();
-      var href = el.getAttribute("data-open");
-      if (api && typeof api.openExternal === "function") api.openExternal({ href: href });
-      else window.open(href, "_blank", "noopener");
+      Host.openLink(el.getAttribute("data-open"));
     }
     else if (el.id === "send") sendPlan();
   });
@@ -443,12 +560,12 @@
   });
 
   function applyTheme() {
-    var theme = (api && api.theme) ||
+    var theme = Host.theme ||
       (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     document.documentElement.dataset.theme = theme;
   }
 
-  window.addEventListener("openai:set_globals", function () { applyTheme(); render(); });
+  Host.onchange = function () { applyTheme(); render(); };
 
   applyTheme();
   render();

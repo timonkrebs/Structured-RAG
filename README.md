@@ -28,10 +28,11 @@ offline at compile time or on the client at query time — the serving layer doe
   ChatGPT-connector-compatible `search`/`fetch`, structured `search_modules`,
   `list_tags`, a deterministic `plan_semester` (prerequisite/semester eligibility),
   `compare_modules`, and MCP resources (`catalog://index`, `catalog://taxonomy`)
-  clients can load into context. In ChatGPT, `plan_semester` and `compare_modules`
-  render interactive Apps-SDK widgets (semester plan builder / module comparison
-  table) — self-contained HTML served as MCP resources, still zero server-side
-  inference.
+  clients can load into context. In widget-capable hosts, `plan_semester` and
+  `compare_modules` render interactive widgets (semester plan builder / module
+  comparison table) via both the OpenAI Apps SDK (ChatGPT) and the standardized
+  MCP Apps extension (Claude, VS Code, …) — self-contained HTML served as MCP
+  resources, still zero server-side inference.
 
 Quick start (uses the hand-compiled sample catalog in `compiled-sample/`):
 

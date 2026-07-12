@@ -38,34 +38,41 @@ milliseconds.
 | `catalog://taxonomy` | Tag vocabulary with descriptions |
 | `catalog://module/{code}` | Full compiled record of one module (JSON) |
 
-## ChatGPT widgets (Apps SDK)
+## Interactive widgets (ChatGPT Apps SDK + MCP Apps)
 
-In ChatGPT, `plan_semester` and `compare_modules` don't just return JSON — they render
-interactive widgets via the [Apps SDK](https://developers.openai.com/apps-sdk):
+`plan_semester` and `compare_modules` don't just return JSON — in hosts with widget
+support they render interactive UI:
 
-- **Semester plan builder** (`ui://widget/semester-planner.html`, on `plan_semester`):
-  pick eligible modules via checkboxes, watch a live ECTS meter against the target
-  (`ectsTarget` parameter, default 30), get same-weekday hints and see why blocked
-  modules are blocked. "Details" fetches the current official description through the
-  `fetch` tool; "Send plan to chat" hands the draft back to the model for review.
-- **Module comparer** (`ui://widget/module-comparer.html`, on `compare_modules`):
-  side-by-side table with tags shared by all modules highlighted; columns can be
-  removed or added (the widget re-calls `compare_modules`).
+- **Semester plan builder** (on `plan_semester`): pick eligible modules via checkboxes,
+  watch a live ECTS meter against the target (`ectsTarget` parameter, default 30), get
+  same-weekday hints and see why blocked modules are blocked. "Details" fetches the
+  current official description through the `fetch` tool; "Send plan to chat" hands the
+  draft back to the model for review.
+- **Module comparer** (on `compare_modules`): side-by-side table with tags shared by
+  all modules highlighted; columns can be removed or added (the widget re-calls
+  `compare_modules`).
 
-Mechanics: the widget templates are MCP resources with mime type `text/html+skybridge`;
-the tools reference them via `_meta["openai/outputTemplate"]`, and `fetch`,
-`search_modules` and `compare_modules` carry `_meta["openai/widgetAccessible"]` so the
-widgets may call them. Both widgets are single self-contained HTML files
-(`Widgets/*.html`, embedded in the assembly) — deterministic vanilla JS, bilingual
-(German/English from the client locale), light/dark theme aware, and they persist their
-state (selected modules / compared codes) across chat turns. The interaction itself
-(ECTS math, weekday hints, shared tags) runs client-side, so the server stays
-zero-inference. Clients without Apps-SDK support simply ignore the `_meta` keys and use
-the structured JSON.
+The same two self-contained HTML files (`Widgets/*.html`, embedded in the assembly)
+serve **both host conventions** — each widget detects its host at runtime:
 
-Registration is the same as for the other developer-mode tools (see below); widgets
-require the connector to be added in ChatGPT's developer mode. After changing widget
-`_meta`, refresh the connector — ChatGPT caches tool descriptors.
+| | OpenAI Apps SDK (ChatGPT) | [MCP Apps extension](https://modelcontextprotocol.io/extensions/apps/overview) (Claude, VS Code, …) |
+|---|---|---|
+| Template resource | `ui://widget/*.html`, mime `text/html+skybridge` | `ui://module-catalog/*`, mime `text/html;profile=mcp-app` |
+| Tool link | `_meta["openai/outputTemplate"]` | `_meta.ui.resourceUri` |
+| Widget ↔ host | `window.openai` | JSON-RPC 2.0 over `postMessage` (`ui/initialize`, `tools/call`, `ui/message`, `ui/open-link`, …) |
+| Draft persistence | `setWidgetState` across turns | `ui/update-model-context` — the model sees the student's current draft |
+
+The widgets are deterministic vanilla JS, bilingual (German/English from the host
+locale) and light/dark theme aware; all interaction (ECTS math, weekday hints, shared
+tags) runs client-side, so the server stays zero-inference. `fetch`, `search_modules`
+and `compare_modules` carry `_meta["openai/widgetAccessible"]` so the ChatGPT widgets
+may call them (MCP Apps tool calls need no extra flag; `visibility` defaults allow
+them). Hosts without widget support simply ignore the `_meta` keys and use the
+structured JSON.
+
+Registration is the same as for the other developer-mode tools (see below). ChatGPT
+requires developer mode and caches tool descriptors — refresh the connector after
+changing widget `_meta`.
 
 ## Running
 
