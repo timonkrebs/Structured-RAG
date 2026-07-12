@@ -84,6 +84,11 @@ public static class SourceModuleMapper
         // per-semester truth lives on each ModuleOffering (Languages/Weekdays).
         newer.Languages = newer.Languages.Union(older.Languages).ToList();
         newer.Weekdays = newer.Weekdays.Union(older.Weekdays, StringComparer.OrdinalIgnoreCase).ToList();
+        // Same for programs/locations: with multiple configured study programs the same
+        // module appears in several facet slices — dropping the older slice's lists would
+        // make search_modules(studyProgram: ...) miss modules that are in that program.
+        newer.StudyPrograms = newer.StudyPrograms.Union(older.StudyPrograms).ToList();
+        newer.Locations = newer.Locations.Union(older.Locations).ToList();
         return newer;
     }
 
@@ -162,8 +167,15 @@ public static class SourceModuleMapper
             .Where(day => !string.IsNullOrWhiteSpace(day))
             .Select(day => day!)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(day => Array.FindIndex(DayOrder, x => x.Equals(day, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(DayIndex)
             .ToList();
+
+    /// <summary>Monday-first sort key; unexpected day strings sort last, not before Monday.</summary>
+    private static int DayIndex(string day)
+    {
+        var i = Array.FindIndex(DayOrder, x => x.Equals(day, StringComparison.OrdinalIgnoreCase));
+        return i < 0 ? int.MaxValue : i;
+    }
 
     private static List<string> ParseLanguages(string? language)
     {

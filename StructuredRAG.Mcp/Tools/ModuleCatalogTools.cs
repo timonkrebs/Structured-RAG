@@ -68,6 +68,10 @@ public static class ModuleCatalogTools
     {
         IEnumerable<CompiledModule> candidates = store.Modules;
 
+        // Validate/normalize once and reuse — the language filter and the result
+        // narrowing must see the same semester value the semester filter used.
+        var validatedSemester = string.IsNullOrWhiteSpace(semester) ? null : ValidateSemester(semester);
+
         if (tags is { Length: > 0 })
         {
             var canonical = tags.Select(store.ResolveTagName).Where(t => t != null).Select(t => t!).ToList();
@@ -75,11 +79,8 @@ public static class ModuleCatalogTools
                 throw new McpException($"None of the given tags exist in the taxonomy: {string.Join(", ", tags)}. Call list_tags for valid tags.");
             candidates = candidates.Where(m => m.Tags.Intersect(canonical, StringComparer.OrdinalIgnoreCase).Any());
         }
-        if (!string.IsNullOrWhiteSpace(semester))
-        {
-            var validated = ValidateSemester(semester);
-            candidates = candidates.Where(m => MatchesSemester(m, validated));
-        }
+        if (validatedSemester != null)
+            candidates = candidates.Where(m => MatchesSemester(m, validatedSemester));
         if (!string.IsNullOrWhiteSpace(level))
             candidates = candidates.Where(m => m.Level.Equals(level, StringComparison.OrdinalIgnoreCase));
         if (!string.IsNullOrWhiteSpace(moduleType))
@@ -89,7 +90,7 @@ public static class ModuleCatalogTools
         if (minEcts.HasValue) candidates = candidates.Where(m => m.Ects >= minEcts.Value);
         if (maxEcts.HasValue) candidates = candidates.Where(m => m.Ects <= maxEcts.Value);
         if (!string.IsNullOrWhiteSpace(language))
-            candidates = candidates.Where(m => MatchesLanguage(m, language, semester));
+            candidates = candidates.Where(m => MatchesLanguage(m, language, validatedSemester));
 
         var filtered = candidates.ToList();
 
@@ -102,7 +103,7 @@ public static class ModuleCatalogTools
                 .ToList();
         }
 
-        return filtered.Select(ModuleSummary.From).ToList();
+        return filtered.Select(m => ModuleSummary.From(m, validatedSemester)).ToList();
     }
 
     [McpServerTool(Name = "list_tags", ReadOnly = true)]
@@ -149,7 +150,7 @@ public static class ModuleCatalogTools
             if (missing.Count == 0)
             {
                 var recommendedMissing = m.Recommended.Where(r => !completed.Contains(r)).ToList();
-                eligible.Add(new PlannableModule(ModuleSummary.From(m), interestMatches, recommendedMissing));
+                eligible.Add(new PlannableModule(ModuleSummary.From(m, semester), interestMatches, recommendedMissing));
             }
             else
             {
@@ -221,29 +222,40 @@ public static class ModuleCatalogTools
         return s;
     }
 
+    /// <summary>Offerings matching a validated semester: a type ("HS"/"FS") matches by
+    /// suffix, a concrete id ("26HS") matches exactly.</summary>
+    internal static List<ModuleOffering> MatchingOfferings(CompiledModule m, string semester)
+    {
+        var isConcrete = semester.Length == 4;
+        return m.Offerings
+            .Where(o => isConcrete
+                ? o.SemesterId.Equals(semester, StringComparison.OrdinalIgnoreCase)
+                : o.SemesterId.EndsWith(semester, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
     /// <summary>Semester matching: "HS"/"FS" match the offering type; "26HS" matches a concrete offering.
     /// Falls back to OfferedIn for catalogs without concrete offerings (e.g. sample data).</summary>
     private static bool MatchesSemester(CompiledModule m, string semester)
     {
-        var isConcrete = semester.Length == 4;
-        if (isConcrete && m.Offerings.Count > 0)
-            return m.Offerings.Any(o => o.SemesterId.Equals(semester, StringComparison.OrdinalIgnoreCase));
+        if (semester.Length == 4 && m.Offerings.Count > 0)
+            return MatchingOfferings(m, semester).Count > 0;
 
-        var type = isConcrete ? semester[2..] : semester;
+        var type = semester.Length == 4 ? semester[2..] : semester;
         return m.OfferedIn.Contains(type, StringComparer.OrdinalIgnoreCase)
-               || m.Offerings.Any(o => o.SemesterId.EndsWith(type, StringComparison.OrdinalIgnoreCase));
+               || MatchingOfferings(m, type).Count > 0;
     }
 
-    /// <summary>Language filtering: when a concrete semester is given and that offering
-    /// carries its own language list, use it — languages can differ between semesters.</summary>
+    /// <summary>Language filtering: prefer the language lists of the offerings matching the
+    /// requested semester (type or concrete id) — languages can differ between semesters.
+    /// Falls back to the module-level union when no matched offering carries languages.</summary>
     private static bool MatchesLanguage(CompiledModule m, string language, string? semester)
     {
-        if (semester is { Length: 4 })
+        if (!string.IsNullOrWhiteSpace(semester))
         {
-            var offering = m.Offerings.FirstOrDefault(o =>
-                o.SemesterId.Equals(semester, StringComparison.OrdinalIgnoreCase));
-            if (offering is { Languages.Count: > 0 })
-                return offering.Languages.Contains(language, StringComparer.OrdinalIgnoreCase);
+            var withLanguages = MatchingOfferings(m, semester).Where(o => o.Languages.Count > 0).ToList();
+            if (withLanguages.Count > 0)
+                return withLanguages.Any(o => o.Languages.Contains(language, StringComparer.OrdinalIgnoreCase));
         }
         return m.Languages.Contains(language, StringComparer.OrdinalIgnoreCase);
     }
@@ -272,6 +284,28 @@ public record ModuleSummary(
         m.OfferedIn, m.Offerings, m.Languages, m.Weekdays,
         m.Tags, m.Summary, m.SummaryEn, m.Audience,
         m.Prerequisites, m.PrerequisiteNotes, m.Url);
+
+    /// <summary>Summary narrowed to the offerings matching the given semester: a module can
+    /// meet on different weekdays in HS vs FS, and the module-level union would produce wrong
+    /// clash hints in the planner widget. Weekdays come strictly from the matched offerings
+    /// (empty is accurate — the widget hides the chips); languages fall back to the module
+    /// union when the matched offerings carry none. Without a semester, or for catalogs
+    /// without concrete offerings, the module-level fields are used unchanged.</summary>
+    public static ModuleSummary From(CompiledModule m, string? semester)
+    {
+        var matched = string.IsNullOrWhiteSpace(semester)
+            ? new List<ModuleOffering>()
+            : ModuleCatalogTools.MatchingOfferings(m, semester);
+        if (matched.Count == 0) return From(m);
+
+        var languages = matched.SelectMany(o => o.Languages).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var weekdays = matched.SelectMany(o => o.Weekdays).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return From(m) with
+        {
+            Languages = languages.Count > 0 ? languages : m.Languages,
+            Weekdays = weekdays,
+        };
+    }
 }
 
 public record PlannableModule(
