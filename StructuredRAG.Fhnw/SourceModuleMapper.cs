@@ -196,7 +196,7 @@ public static class SourceModuleMapper
             .Where(i => !string.IsNullOrWhiteSpace(i.Day) || i.StartTime != null || i.EndTime != null)
             .Select(i => new Lesson
             {
-                Number = NullIfEmpty(i.Number?.Trim()),
+                Number = NormalizeClassNumber(i.Number),
                 Day = NullIfEmpty(i.Day?.Trim()),
                 Start = i.StartTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
                 End = i.EndTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
@@ -207,6 +207,19 @@ public static class SourceModuleMapper
             .OrderBy(l => DayIndex(l.Day ?? string.Empty))
             .ThenBy(l => l.Start, StringComparer.Ordinal)
             .ToList();
+
+    // FHNW prefixes each class number with a per-meeting index, e.g. "2-26HS.…/TZT26a".
+    // A class that meets several times a week therefore appears as "2-…/TZT26a",
+    // "3-…/TZT26a", … — same class, different slots. Strip that leading index so the
+    // slots of one class share Number and group as a single class (not as alternatives
+    // the student picks between); genuinely different classes keep distinct trailing ids.
+    private static readonly Regex MeetingIndexRegex = new(@"^\d+-", RegexOptions.Compiled);
+
+    private static string? NormalizeClassNumber(string? number)
+    {
+        if (string.IsNullOrWhiteSpace(number)) return null;
+        return NullIfEmpty(MeetingIndexRegex.Replace(number.Trim(), ""));
+    }
 
     private static List<string> ParseLanguages(string? language)
     {

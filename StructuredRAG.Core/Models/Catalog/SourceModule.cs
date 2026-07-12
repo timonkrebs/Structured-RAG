@@ -93,7 +93,9 @@ public class ModuleOffering
 /// </summary>
 public class Lesson
 {
-    /// <summary>Official class number (e.g. "0-26HS.W-B-…/a") — groups parallel classes.</summary>
+    /// <summary>Class identity used to group weekly slots into one class (e.g.
+    /// "26HS.W-B-…/TZT26a"). Normalized from the raw FHNW number by stripping its
+    /// leading per-meeting index, so every slot of the same class shares this value.</summary>
     public string? Number { get; set; }
 
     /// <summary>English day name, e.g. "Thursday".</summary>

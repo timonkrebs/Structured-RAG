@@ -137,7 +137,7 @@ public static class ModuleCatalogTools
         IReadOnlyList<object> modules = resultFormat switch
         {
             "codes" => returned.Select(m => (object)m.Code).ToList(),
-            "compact" => returned.Select(m => (object)CompactModule.From(m)).ToList(),
+            "compact" => returned.Select(m => (object)CompactModule.From(m, validatedSemester)).ToList(),
             _ => returned.Select(m => (object)ModuleSummary.From(m, validatedSemester)).ToList()
         };
 
@@ -490,6 +490,19 @@ public record CompactModule(
     public static CompactModule From(CompiledModule m) => new(
         m.Code, m.Title, m.TitleEn, m.Ects, m.Level, m.ModuleType,
         ModuleCatalogTools.OfferedText(m), m.Languages, m.Tags);
+
+    /// <summary>Narrowed to a semester: languages can differ between HS and FS, so a
+    /// semester-filtered compact row must advertise the matched offerings' languages
+    /// (clients shortlist from these rows) — not the module-level union. Falls back to
+    /// the union when the semester has no offering or none carry languages.</summary>
+    public static CompactModule From(CompiledModule m, string? semester)
+    {
+        var matched = string.IsNullOrWhiteSpace(semester)
+            ? new List<ModuleOffering>()
+            : ModuleCatalogTools.MatchingOfferings(m, semester);
+        var languages = matched.SelectMany(o => o.Languages).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return languages.Count > 0 ? From(m) with { Languages = languages } : From(m);
+    }
 }
 
 public record SearchResultItem(string Id, string Title, string Text, string? Url);
