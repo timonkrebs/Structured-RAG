@@ -27,6 +27,9 @@ builder.Services
                and the concrete semester (e.g. '26HS'). Combine eligible modules into a plan
                that fits the ECTS target, interests, weekday constraints — and mind each
                module's prerequisiteNotes (requirements that are free text, not module codes).
+            5. In ChatGPT, plan_semester and compare_modules additionally render interactive
+               Apps-SDK widgets (semester plan builder / comparison table); other clients
+               simply use the structured JSON results.
             The compiled catalog has a compilation date (see manifest / catalog info); for
             authoritative current details always rely on fetch results and the official URL.
             """;

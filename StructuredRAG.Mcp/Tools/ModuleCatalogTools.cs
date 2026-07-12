@@ -36,7 +36,8 @@ public static class ModuleCatalogTools
         return new SearchResults(results);
     }
 
-    [McpServerTool(Name = "fetch", ReadOnly = true)]
+    [McpServerTool(Name = "fetch", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/widgetAccessible", true)] // the plan-builder widget loads module details through this
     [Description("Fetch the full record of one module by its id/code: the current official catalog description (fetched live from the FHNW module directory) plus the compiled enrichments (summary, audience, tags, prerequisites, typical questions).")]
     public static async Task<FetchResult> Fetch(
         CatalogStore store,
@@ -51,6 +52,7 @@ public static class ModuleCatalogTools
     }
 
     [McpServerTool(Name = "search_modules", ReadOnly = true)]
+    [McpMeta("openai/widgetAccessible", true)]
     [Description("Filter modules by structured criteria (tags from the taxonomy, semester, level, module type, study program, ECTS range, language) plus optional free text. Read the catalog://taxonomy resource, call list_tags or get_catalog_overview first to see valid tags.")]
     public static IReadOnlyList<ModuleSummary> SearchModules(
         CatalogStore store,
@@ -113,13 +115,19 @@ public static class ModuleCatalogTools
     public static string GetCatalogOverview(CatalogStore store) =>
         store.TaxonomyMarkdown() + "\n\n" + store.IndexMarkdown();
 
-    [McpServerTool(Name = "plan_semester", ReadOnly = true)]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes and weekdays — combine everything with the student's interests, ECTS target and schedule to propose a plan.")]
+    // UseStructuredContent: the ChatGPT widget is hydrated from structuredContent
+    // (window.openai.toolOutput); the SDK still emits the JSON text block alongside.
+    [McpServerTool(Name = "plan_semester", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/outputTemplate", "ui://widget/semester-planner.html")]
+    [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
+    [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes and weekdays — combine everything with the student's interests, ECTS target and schedule to propose a plan. In ChatGPT this also renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
         [Description("Module codes the student has already completed")] string[]? completedModules = null,
-        [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null)
+        [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null,
+        [Description("The student's target ECTS for the semester; echoed into the result and used to initialize the plan-builder widget (default 30)")] int? ectsTarget = null)
     {
         semester = ValidateSemester(semester);
         var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
@@ -156,9 +164,45 @@ public static class ModuleCatalogTools
                 .ToList(),
             Blocked: blocked.OrderBy(b => b.Code).ToList(),
             TotalEligibleEcts: eligible.Sum(e => e.Module.Ects),
+            EctsTarget: ectsTarget is > 0 ? ectsTarget.Value : 30,
             Note: "Structured prerequisites are LLM-extracted from the official requirement texts and validated against " +
                   "this catalog; per-module 'prerequisiteNotes' may contain additional requirements that could not be " +
                   "resolved to module codes — take them into account when planning.");
+    }
+
+    [McpServerTool(Name = "compare_modules", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/outputTemplate", "ui://widget/module-comparer.html")]
+    [McpMeta("openai/widgetAccessible", true)] // the comparer widget re-calls this to add/swap a column
+    [McpMeta("openai/toolInvocation/invoking", "Comparing modules…")]
+    [McpMeta("openai/toolInvocation/invoked", "Module comparison ready")]
+    [Description("Compare 2-4 modules side by side: ECTS, level, module type, semesters, languages, weekdays, tags, prerequisites and summaries. In ChatGPT this renders an interactive comparison-table widget.")]
+    public static ModuleComparisonData CompareModules(
+        CatalogStore store,
+        [Description("2-4 module codes to compare, e.g. from search or search_modules")] string[] codes)
+    {
+        var distinct = (codes ?? [])
+            .Select(c => c?.Trim())
+            .Where(c => !string.IsNullOrEmpty(c))
+            .Select(c => c!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (distinct.Count is < 2 or > 4)
+            throw new McpException($"compare_modules needs 2-4 distinct module codes, got {distinct.Count}.");
+
+        var modules = new List<ModuleSummary>();
+        var notFound = new List<string>();
+        foreach (var code in distinct)
+        {
+            var m = store.GetModule(code);
+            if (m is null) notFound.Add(code);
+            else modules.Add(ModuleSummary.From(m));
+        }
+        if (modules.Count < 2)
+            throw new McpException(
+                $"Fewer than two of the given codes exist in the catalog (unknown: {string.Join(", ", notFound)}). " +
+                "Use search or search_modules to find valid codes.");
+
+        return new ModuleComparisonData(modules, notFound);
     }
 
     /// <summary>Rejects malformed semester inputs early — silently returning an empty
@@ -240,4 +284,9 @@ public record SemesterPlanData(
     IReadOnlyList<PlannableModule> Eligible,
     IReadOnlyList<BlockedModule> Blocked,
     int TotalEligibleEcts,
+    int EctsTarget,
     string Note);
+
+public record ModuleComparisonData(
+    IReadOnlyList<ModuleSummary> Modules,
+    IReadOnlyList<string> NotFound);
