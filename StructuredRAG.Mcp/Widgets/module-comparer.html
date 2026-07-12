@@ -378,7 +378,7 @@
     html += row(s.type, mods, function (m) { return esc(m.moduleType); });
     html += row(s.semesters, mods, function (m) { return esc(semesters(m).join(", ")); });
     html += row(s.languages, mods, function (m) { return esc((m.languages || []).join(", ")); });
-    // Lesson slots (with times, one chip per parallel class) when published;
+    // Lesson-slot chips (one per weekly slot, incl. times) when published;
     // otherwise the plain weekday names.
     html += row(s.weekdays, mods, function (m) {
       var lessons = (m.lessons || []).filter(function (l) { return l.day || l.start; });

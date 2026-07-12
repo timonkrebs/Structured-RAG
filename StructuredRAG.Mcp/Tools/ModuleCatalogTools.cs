@@ -182,7 +182,7 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end, per parallel class) where published — combine everything with the student's interests and ECTS target to propose a clash-free timetable. In ChatGPT this also renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published — combine everything with the student's interests and ECTS target to propose a clash-free timetable. In ChatGPT this also renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
