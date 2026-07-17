@@ -1,6 +1,7 @@
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using StructuredRAG.Core.Models.Catalog;
+using StructuredRAG.Fhnw;
 using StructuredRAG.Mcp.Services;
 using System.ComponentModel;
 
@@ -53,10 +54,12 @@ public static class ModuleCatalogTools
 
     [McpServerTool(Name = "search_modules", ReadOnly = true)]
     [McpMeta("openai/widgetAccessible", true)]
-    [Description("Filter modules by structured criteria (tags from the taxonomy, semester, level, module type, study program, ECTS range, language) plus optional free text. Read the catalog://taxonomy resource, call list_tags or get_catalog_overview first to see valid tags.")]
-    public static IReadOnlyList<ModuleSummary> SearchModules(
+    [Description("Filter modules by boolean tag criteria (allOfTags/anyOfTags/noneOfTags) plus semester, level, module type, study program, ECTS range, language and optional free text. Returns the total match count, the modules in the requested format and — with includeFacets — per-tag counts of the result set to pick the next filter from. Search WIDE: tags are compiled and approximate, so prefer anyOfTags with many tags over stacking allOfTags — missing a relevant module is worse than reviewing extras, and the compact format keeps wide results cheap. The tag vocabulary is in the server instructions; list_tags has the tag descriptions.")]
+    public static ModuleSearchResults SearchModules(
         CatalogStore store,
-        [Description("Tags to match (module must have at least one). Canonical German names or English aliases from the taxonomy")] string[]? tags = null,
+        [Description("Modules must carry ALL of these tags (AND). Use sparingly — every added tag silently drops relevant modules whose compiled tags are incomplete; prefer anyOfTags plus your own shortlisting")] string[]? allOfTags = null,
+        [Description("Modules must carry AT LEAST ONE of these tags (OR). Cast a wide net: include every plausibly relevant tag. Canonical German names or English aliases from the taxonomy")] string[]? anyOfTags = null,
+        [Description("Modules must carry NONE of these tags (exclusion)")] string[]? noneOfTags = null,
         [Description("Semester the module must be offered in: type 'HS'/'FS' or concrete id like '26HS'")] string? semester = null,
         [Description("Study level, e.g. 'Bachelor' or 'Master'")] string? level = null,
         [Description("Module type, e.g. 'Pflichtmodul', 'Wahlpflichtmodul', 'Wahlmodul'")] string? moduleType = null,
@@ -64,7 +67,10 @@ public static class ModuleCatalogTools
         [Description("Minimum ECTS credits")] int? minEcts = null,
         [Description("Maximum ECTS credits")] int? maxEcts = null,
         [Description("Language of instruction, e.g. 'de' or 'en'")] string? language = null,
-        [Description("Optional free-text query applied on top of the filters")] string? query = null)
+        [Description("Optional free-text query applied on top of the filters (results are relevance-ranked)")] string? query = null,
+        [Description("Response shape: 'compact' (default) core facts per module; 'full' complete summaries incl. offerings, lesson slots and prerequisites; 'codes' module codes only")] string? format = null,
+        [Description("Maximum number of modules to return; omit for all. 'total' in the result is counted before this cut")] int? limit = null,
+        [Description("Set true to also return facets: how many matching modules carry each tag — pick the next narrowing filter from these counts instead of guessing")] bool includeFacets = false)
     {
         IEnumerable<CompiledModule> candidates = store.Modules;
 
@@ -72,13 +78,21 @@ public static class ModuleCatalogTools
         // narrowing must see the same semester value the semester filter used.
         var validatedSemester = string.IsNullOrWhiteSpace(semester) ? null : ValidateSemester(semester);
 
-        if (tags is { Length: > 0 })
-        {
-            var canonical = tags.Select(store.ResolveTagName).Where(t => t != null).Select(t => t!).ToList();
-            if (canonical.Count == 0)
-                throw new McpException($"None of the given tags exist in the taxonomy: {string.Join(", ", tags)}. Call list_tags for valid tags.");
-            candidates = candidates.Where(m => m.Tags.Intersect(canonical, StringComparer.OrdinalIgnoreCase).Any());
-        }
+        var resultFormat = (format ?? "compact").Trim().ToLowerInvariant();
+        if (resultFormat is not ("compact" or "full" or "codes"))
+            throw new McpException($"Invalid format '{format}'. Use 'compact', 'full' or 'codes'.");
+        if (limit is < 1)
+            throw new McpException($"Invalid limit {limit} — it must be at least 1 (omit it to get all matches).");
+
+        var allOf = ResolveTags(store, allOfTags, "allOfTags");
+        var anyOf = ResolveTags(store, anyOfTags, "anyOfTags");
+        var noneOf = ResolveTags(store, noneOfTags, "noneOfTags");
+        if (allOf.Count > 0)
+            candidates = candidates.Where(m => allOf.All(t => m.Tags.Contains(t, StringComparer.OrdinalIgnoreCase)));
+        if (anyOf.Count > 0)
+            candidates = candidates.Where(m => m.Tags.Intersect(anyOf, StringComparer.OrdinalIgnoreCase).Any());
+        if (noneOf.Count > 0)
+            candidates = candidates.Where(m => !m.Tags.Intersect(noneOf, StringComparer.OrdinalIgnoreCase).Any());
         if (validatedSemester != null)
             candidates = candidates.Where(m => MatchesSemester(m, validatedSemester));
         if (!string.IsNullOrWhiteSpace(level))
@@ -103,7 +117,52 @@ public static class ModuleCatalogTools
                 .ToList();
         }
 
-        return filtered.Select(m => ModuleSummary.From(m, validatedSemester)).ToList();
+        // Facets are computed over the full filtered set (before the limit cut) —
+        // they describe the match set, not the returned page.
+        IReadOnlyList<TagFacet>? facets = null;
+        if (includeFacets)
+        {
+            facets = filtered
+                .SelectMany(m => m.Tags)
+                .GroupBy(t => t, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new TagFacet(g.Key, g.Count()))
+                .OrderByDescending(f => f.Count)
+                .ThenBy(f => f.Tag, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        var returned = limit.HasValue && limit.Value < filtered.Count
+            ? filtered.Take(limit.Value).ToList()
+            : filtered;
+        IReadOnlyList<object> modules = resultFormat switch
+        {
+            "codes" => returned.Select(m => (object)m.Code).ToList(),
+            "compact" => returned.Select(m => (object)CompactModule.From(m, validatedSemester)).ToList(),
+            _ => returned.Select(m => (object)ModuleSummary.From(m, validatedSemester)).ToList()
+        };
+
+        return new ModuleSearchResults(filtered.Count, resultFormat, modules, facets);
+    }
+
+    /// <summary>Resolves tag inputs (German canonical or English alias) strictly: any
+    /// unknown tag is an error — silently dropping one would widen an allOf filter or
+    /// narrow an anyOf filter without the client noticing.</summary>
+    private static List<string> ResolveTags(CatalogStore store, string[]? tags, string parameterName)
+    {
+        if (tags is not { Length: > 0 }) return new List<string>();
+
+        var resolved = new List<string>();
+        var unknown = new List<string>();
+        foreach (var tag in tags)
+        {
+            var canonical = store.ResolveTagName(tag);
+            if (canonical is null) unknown.Add(tag);
+            else if (!resolved.Contains(canonical, StringComparer.OrdinalIgnoreCase)) resolved.Add(canonical);
+        }
+        if (unknown.Count > 0)
+            throw new McpException(
+                $"Unknown tags in {parameterName}: {string.Join(", ", unknown)}. Call list_tags for the valid vocabulary.");
+        return resolved;
     }
 
     [McpServerTool(Name = "list_tags", ReadOnly = true)]
@@ -123,7 +182,7 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes and weekdays — combine everything with the student's interests, ECTS target and schedule to propose a plan. In ChatGPT this also renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published — combine everything with the student's interests and ECTS target to propose a clash-free timetable. In ChatGPT this also renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
@@ -178,7 +237,7 @@ public static class ModuleCatalogTools
     [McpMeta("openai/widgetAccessible", true)] // the comparer widget re-calls this to add/swap a column
     [McpMeta("openai/toolInvocation/invoking", "Comparing modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Module comparison ready")]
-    [Description("Compare 2-4 modules side by side: ECTS, level, module type, semesters, languages, weekdays, tags, prerequisites and summaries. In ChatGPT this renders an interactive comparison-table widget.")]
+    [Description("Compare 2-4 modules side by side: ECTS, level, module type, semesters, languages, weekdays, lesson times, tags, prerequisites and summaries. In ChatGPT this renders an interactive comparison-table widget.")]
     public static ModuleComparisonData CompareModules(
         CatalogStore store,
         [Description("2-4 module codes to compare, e.g. from search or search_modules")] string[] codes)
@@ -206,6 +265,148 @@ public static class ModuleCatalogTools
                 "Use search or search_modules to find valid codes.");
 
         return new ModuleComparisonData(modules, notFound);
+    }
+
+    [McpServerTool(Name = "plan_path", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/outputTemplate", "ui://widget/path-planner.html")] // OpenAI Apps SDK (ChatGPT)
+    [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/path-planner"}""")] // MCP Apps (Claude, ...)
+    [McpMeta("openai/widgetAccessible", true)] // the path widget re-plans when the student marks modules as completed
+    [McpMeta("openai/toolInvocation/invoking", "Computing the fastest path…")]
+    [McpMeta("openai/toolInvocation/invoked", "Path to target module ready")]
+    [Description("Compute the fastest way to reach a target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
+    public static PathPlanData PlanPath(
+        CatalogStore store,
+        [Description("Target module code the student wants to reach, e.g. 'mldm'")] string targetModule,
+        [Description("Module codes the student has already completed")] string[]? completedModules = null,
+        [Description("First semester available for planning: concrete id like '26HS' (real semester labels) or type 'HS'/'FS' (generic labels). Default 'HS'.")] string? startSemester = null)
+    {
+        var target = store.GetModule(targetModule.Trim())
+            ?? throw new McpException($"No module with code '{targetModule}'. Use search or search_modules to find valid codes.");
+        var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        if (completed.Contains(target.Code))
+            throw new McpException($"'{target.Code}' is already in the completed modules — there is no path to plan.");
+
+        var start = ValidateSemester(startSemester ?? "HS");
+        var concrete = start.Length == 4;
+        var anchorIsHs = (concrete ? start[2..] : start).Equals("HS", StringComparison.OrdinalIgnoreCase);
+        string SlotType(int i) => (i % 2 == 0) == anchorIsHs ? "HS" : "FS";
+
+        var notes = new List<string>();
+        var alreadyCompleted = new List<string>();
+
+        // Missing-prerequisite closure of the target, in topological order (prereqs first).
+        // Completed modules cut the recursion — their own prerequisites are irrelevant.
+        var state = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase); // false = in progress, true = done
+        var path = new List<string>();
+        var topo = new List<CompiledModule>();
+        void Visit(CompiledModule m)
+        {
+            state[m.Code] = false;
+            path.Add(m.Code);
+            foreach (var p in m.Prerequisites)
+            {
+                if (completed.Contains(p))
+                {
+                    if (!alreadyCompleted.Contains(p, StringComparer.OrdinalIgnoreCase)) alreadyCompleted.Add(p);
+                    continue;
+                }
+                var pm = store.GetModule(p);
+                if (pm is null)
+                {
+                    notes.Add($"{m.Code}: prerequisite '{p}' is not in this catalog — verify it manually.");
+                    continue;
+                }
+                if (state.TryGetValue(pm.Code, out var done))
+                {
+                    if (!done)
+                        throw new McpException("Prerequisite cycle detected: " +
+                            string.Join(" -> ", path.SkipWhile(c => !c.Equals(pm.Code, StringComparison.OrdinalIgnoreCase))) +
+                            $" -> {pm.Code}. The catalog data needs fixing before a path can be planned.");
+                    continue;
+                }
+                Visit(pm);
+            }
+            path.RemoveAt(path.Count - 1);
+            state[m.Code] = true;
+            topo.Add(m);
+        }
+        Visit(target);
+
+        // Earliest-slot scheduling: a module goes into the first semester after all its
+        // missing prerequisites whose HS/FS type matches one of its offering types.
+        // Types alternate per slot, so the while loop advances at most one slot.
+        var slotOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var m in topo)
+        {
+            var slot = m.Prerequisites
+                .Where(p => slotOf.ContainsKey(p))
+                .Select(p => slotOf[p] + 1)
+                .DefaultIfEmpty(0)
+                .Max();
+            var types = m.OfferedIn.Count > 0
+                ? m.OfferedIn
+                : m.Offerings.Select(o => SourceModuleMapper.SemesterTypeOf(o.SemesterId))
+                    .Where(t => t != null).Select(t => t!).Distinct().ToList();
+            if (types.Count > 0)
+            {
+                while (!types.Contains(SlotType(slot), StringComparer.OrdinalIgnoreCase)) slot++;
+            }
+            else
+            {
+                notes.Add($"{m.Code}: no offering semester known — scheduled without the HS/FS constraint.");
+            }
+            slotOf[m.Code] = slot;
+
+            if (!string.IsNullOrWhiteSpace(m.PrerequisiteNotes))
+                notes.Add($"{m.Code}: {m.PrerequisiteNotes}");
+        }
+
+        var labels = new string[slotOf.Values.Max() + 1];
+        for (var i = 0; i < labels.Length; i++)
+            labels[i] = concrete ? NthSemesterId(start, i) : $"Semester {i + 1} ({SlotType(i)})";
+
+        var steps = slotOf
+            .GroupBy(kv => kv.Value)
+            .OrderBy(g => g.Key)
+            .Select(g =>
+            {
+                var modules = g
+                    .Select(kv => store.GetModule(kv.Key)!)
+                    .OrderBy(m => m.Code, StringComparer.OrdinalIgnoreCase)
+                    .Select(m => concrete ? ModuleSummary.From(m, labels[g.Key]) : ModuleSummary.From(m))
+                    .ToList();
+                return new PathStep(labels[g.Key], g.Key, modules, modules.Sum(m => m.Ects));
+            })
+            .ToList();
+
+        notes.Add("Modules are placed at their earliest possible semester; they can be moved later as long as the order is kept.");
+
+        return new PathPlanData(
+            TargetCode: target.Code,
+            TargetTitle: target.Title,
+            TargetTitleEn: target.TitleEn,
+            StartSemester: start,
+            EarliestSemester: labels[slotOf[target.Code]],
+            SemesterCount: slotOf[target.Code] + 1,
+            TotalEcts: topo.Sum(m => m.Ects),
+            CompletedModules: completed.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
+            AlreadyCompleted: alreadyCompleted.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
+            Steps: steps,
+            Notes: notes);
+    }
+
+    /// <summary>The i-th semester id starting at a concrete anchor: FS→HS is the same
+    /// year (spring precedes autumn), HS→FS rolls into the next year.</summary>
+    private static string NthSemesterId(string start, int i)
+    {
+        var year = int.Parse(start[..2]);
+        var isHs = start[2..].Equals("HS", StringComparison.OrdinalIgnoreCase);
+        for (var k = 0; k < i; k++)
+        {
+            if (isHs) { year++; isHs = false; }
+            else isHs = true;
+        }
+        return $"{year:00}{(isHs ? "HS" : "FS")}";
     }
 
     /// <summary>Rejects malformed semester inputs early — silently returning an empty
@@ -260,13 +461,49 @@ public static class ModuleCatalogTools
         return m.Languages.Contains(language, StringComparer.OrdinalIgnoreCase);
     }
 
-    private static string OfferedText(CompiledModule m) =>
+    internal static string OfferedText(CompiledModule m) =>
         m.Offerings.Count > 0
             ? string.Join("/", m.Offerings.Select(o => o.SemesterId))
             : string.Join("/", m.OfferedIn);
 }
 
 public record SearchResults(IReadOnlyList<SearchResultItem> Results);
+
+/// <summary>Result of search_modules: Total counts all matches (before any limit cut),
+/// Modules holds the matches shaped per the requested format, Facets the per-tag counts
+/// of the full match set when requested.</summary>
+public record ModuleSearchResults(
+    int Total,
+    string Format,
+    IReadOnlyList<object> Modules,
+    IReadOnlyList<TagFacet>? Facets);
+
+public record TagFacet(string Tag, int Count);
+
+/// <summary>Index-row-sized module facts for the 'compact' search format: enough to
+/// shortlist and count, cheap enough to return in bulk. Details come from the 'full'
+/// format or fetch.</summary>
+public record CompactModule(
+    string Code, string Title, string? TitleEn, int Ects, string Level, string? ModuleType,
+    string Offered, IReadOnlyList<string> Languages, IReadOnlyList<string> Tags)
+{
+    public static CompactModule From(CompiledModule m) => new(
+        m.Code, m.Title, m.TitleEn, m.Ects, m.Level, m.ModuleType,
+        ModuleCatalogTools.OfferedText(m), m.Languages, m.Tags);
+
+    /// <summary>Narrowed to a semester: languages can differ between HS and FS, so a
+    /// semester-filtered compact row must advertise the matched offerings' languages
+    /// (clients shortlist from these rows) — not the module-level union. Falls back to
+    /// the union when the semester has no offering or none carry languages.</summary>
+    public static CompactModule From(CompiledModule m, string? semester)
+    {
+        var matched = string.IsNullOrWhiteSpace(semester)
+            ? new List<ModuleOffering>()
+            : ModuleCatalogTools.MatchingOfferings(m, semester);
+        var languages = matched.SelectMany(o => o.Languages).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return languages.Count > 0 ? From(m) with { Languages = languages } : From(m);
+    }
+}
 
 public record SearchResultItem(string Id, string Title, string Text, string? Url);
 
@@ -276,21 +513,23 @@ public record ModuleSummary(
     string Code, string Title, string? TitleEn, int Ects, string Level, string? ModuleType,
     IReadOnlyList<string> OfferedIn, IReadOnlyList<ModuleOffering> Offerings,
     IReadOnlyList<string> Languages, IReadOnlyList<string> Weekdays,
+    IReadOnlyList<Lesson> Lessons,
     IReadOnlyList<string> Tags, string Summary, string? SummaryEn, string Audience,
     IReadOnlyList<string> Prerequisites, string? PrerequisiteNotes, string? Url)
 {
     public static ModuleSummary From(CompiledModule m) => new(
         m.Code, m.Title, m.TitleEn, m.Ects, m.Level, m.ModuleType,
         m.OfferedIn, m.Offerings, m.Languages, m.Weekdays,
+        NewestLessons(m.Offerings),
         m.Tags, m.Summary, m.SummaryEn, m.Audience,
         m.Prerequisites, m.PrerequisiteNotes, m.Url);
 
     /// <summary>Summary narrowed to the offerings matching the given semester: a module can
     /// meet on different weekdays in HS vs FS, and the module-level union would produce wrong
-    /// clash hints in the planner widget. Weekdays come strictly from the matched offerings
-    /// (empty is accurate — the widget hides the chips); languages fall back to the module
-    /// union when the matched offerings carry none. Without a semester, or for catalogs
-    /// without concrete offerings, the module-level fields are used unchanged.</summary>
+    /// clash hints in the planner widget. Weekdays and lesson slots come strictly from the
+    /// matched offerings (empty is accurate — the widget hides the chips); languages fall
+    /// back to the module union when the matched offerings carry none. Without a semester,
+    /// or for catalogs without concrete offerings, the module-level fields are used unchanged.</summary>
     public static ModuleSummary From(CompiledModule m, string? semester)
     {
         var matched = string.IsNullOrWhiteSpace(semester)
@@ -304,8 +543,15 @@ public record ModuleSummary(
         {
             Languages = languages.Count > 0 ? languages : m.Languages,
             Weekdays = weekdays,
+            Lessons = NewestLessons(matched),
         };
     }
+
+    /// <summary>Offerings are ordered newest-first; the newest one with published lesson
+    /// slots represents the schedule — a cross-semester union would mix HS and FS times
+    /// (or the same semester type of different years) into one bogus timetable.</summary>
+    private static IReadOnlyList<Lesson> NewestLessons(IReadOnlyList<ModuleOffering> offerings) =>
+        offerings.FirstOrDefault(o => o.Lessons.Count > 0)?.Lessons ?? (IReadOnlyList<Lesson>)Array.Empty<Lesson>();
 }
 
 public record PlannableModule(
@@ -326,3 +572,18 @@ public record SemesterPlanData(
 public record ModuleComparisonData(
     IReadOnlyList<ModuleSummary> Modules,
     IReadOnlyList<string> NotFound);
+
+public record PathStep(string Semester, int Slot, IReadOnlyList<ModuleSummary> Modules, int Ects);
+
+public record PathPlanData(
+    string TargetCode,
+    string TargetTitle,
+    string? TargetTitleEn,
+    string StartSemester,
+    string EarliestSemester,
+    int SemesterCount,
+    int TotalEcts,
+    IReadOnlyList<string> CompletedModules,
+    IReadOnlyList<string> AlreadyCompleted,
+    IReadOnlyList<PathStep> Steps,
+    IReadOnlyList<string> Notes);

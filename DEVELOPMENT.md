@@ -1,270 +1,129 @@
 # Development Guide
 
-## Architecture Overview
+The solution implements one pipeline: offline knowledge compilation feeding a
+zero-inference MCP server for FHNW study-module search and semester planning.
 
-### Components
-
-1. **SQL Server Database**
-   - Stores entities and their tags
-   - Uses EF Core for ORM
-   - Connection managed via Entity Framework
-
-2. **Docker Model Runner (Gemma 3)**
-   - Provides LLM capabilities
-   - Runs as a Docker service (Model Runner)
-
-3. **.NET Application**
-   - Console application orchestrating the RAG pipeline
-   - Contains services for tag generation and RAG queries
-   - Runs migrations and seeds data on startup
-
-### Data Flow
+## Solution Layout
 
 ```
-1. Application starts
-   ↓
-2. Database initialization (EF Core)
-   ↓
-3. Sample data seeding
-   ↓
-4. Tag generation for entities
-   ↓
-5. RAG query processing demo
+StructuredRAG.sln
+├── StructuredRAG.Core/        # Shared library
+│   ├── Models/Catalog/        #   SourceModule, CompiledModule, TagDefinition, manifest
+│   └── Services/
+│       ├── ILlmClient.cs                  # LLM transport abstraction used by the compiler
+│       ├── CodexCliService.cs             # ILlmClient: OpenAI Codex CLI (`codex exec`) — preferred
+│       ├── DockerModelRunnerService.cs    # ILlmClient: OpenAI-compatible HTTP endpoint
+│       └── KnowledgeCompilationService.cs # Taxonomy design + module enrichment (offline)
+├── StructuredRAG.Compiler/    # Offline pipeline CLI: ingest | compile | all
+├── StructuredRAG.Fhnw/        # FHNW Modulbeschreibungen API (bariapi) client + mapping
+└── StructuredRAG.Mcp/         # Stateless MCP server (tools, resources, widgets)
 ```
 
-## Project Structure
+## Data Flow
 
 ```
-StructuredRAG.Api/
-├── Models/               # Domain models
-│   ├── Entity.cs        # Main entity with content
-│   └── Tag.cs           # Tag for RAG optimization
-├── Data/                # Database context
-│   └── ApplicationDbContext.cs
-├── Services/            # Business logic
-│   ├── DockerModelRunnerService.cs      # LLM communication
-│   ├── TagGenerationService.cs # Tag generation logic
-│   └── RagQueryService.cs      # RAG query processing
-├── Program.cs           # Entry point and configuration
-└── appsettings.json     # Configuration settings
+1. ingest   StructuredRAG.Compiler -- ingest
+            FHNW bariapi -> data/modules.wirtschaftsinformatik.json (raw cache in data/raw/)
+   ↓
+2. compile  StructuredRAG.Compiler -- compile
+            LLM designs a closed tag taxonomy, enriches each module bilingually (DE/EN),
+            extracts prerequisite links -> compiled/{taxonomy,modules,manifest}.json
+   ↓
+3. serve    StructuredRAG.Mcp
+            Zero-inference MCP server over the compiled artifacts; watches manifest.json
+            and reloads automatically; `fetch` passes through live to bariapi (TTL cache)
 ```
 
 ## Key Services
 
-### DockerModelRunnerService
+- **`BariApiClient`** (`StructuredRAG.Fhnw`): typed, throttled client for the public
+  FHNW Modulbeschreibungen API; `SourceModuleMapper` converts detail records to
+  `SourceModule` (HTML stripped, personal data dropped except the responsible's name).
+- **`KnowledgeCompilationService`** (`StructuredRAG.Core`): two LLM phases — taxonomy
+  design over the whole catalog, then per-module enrichment (summary, audience,
+  typical questions, prerequisite extraction; DE + EN in one call). Keeps tag names
+  stable across runs by feeding the previous taxonomy back in, and skips modules with
+  an unchanged `SourceHash`.
+- **`CatalogStore`** (`StructuredRAG.Mcp`): in-memory catalog with free-text scoring
+  over DE/EN fields; reloads when `manifest.json` changes.
+- **Tools/Resources/Widgets** (`StructuredRAG.Mcp`): see
+  [StructuredRAG.Mcp/README.md](StructuredRAG.Mcp/README.md) for the tool reference.
+  The widget HTML files in `Widgets/` are embedded in the assembly and served as MCP
+  resources for both the OpenAI Apps SDK (ChatGPT) and the MCP Apps extension.
 
-Handles communication with the Gemma LLM via Docker Model Runner.
+## LLM Transport (`ILlmClient`)
 
-**Key Methods:**
-- `GenerateAsync(string prompt)`: Sends a prompt to the LLM and returns the response
+The compiler is the only component that calls an LLM, via the `ILlmClient`
+abstraction. Select the provider with `Llm:Provider`:
 
-### TagGenerationService
-
-Manages tag generation for entities.
-
-**Key Methods:**
-- `GenerateTagsForEntityAsync(int entityId)`: Generates tags for a specific entity
-- `GenerateTagsForAllEntitiesAsync()`: Generates tags for all untagged entities
-
-**Tag Generation Logic:**
-1. Retrieves entity content
-2. Fetches existing tags from the database
-3. Constructs a prompt for the LLM including existing tags
-4. Parses LLM response to extract tags
-5. Saves new tags to the database
-
-### RagQueryService
-
-Processes RAG queries using tag-based filtering.
-
-**Key Methods:**
-- `ProcessQueryAsync(string userQuery)`: Main entry point for RAG queries
-
-**RAG Query Pipeline:**
-1. Fetches all available tags
-2. Uses LLM to select relevant tags based on user query
-3. Filters entities matching selected tags
-4. Generates response using filtered entities as context
+- **`codex-cli` (preferred)** — `CodexCliService` runs the official OpenAI Codex CLI
+  headless (`codex exec --sandbox read-only`). Authentication comes from the CLI's own
+  ChatGPT login (`codex login`), so a ChatGPT subscription powers the compilation
+  without managing an API key. Config: `CodexCli:Command` (default `codex`),
+  `CodexCli:Model`, `CodexCli:ExtraArgs`, `CodexCli:TimeoutSeconds` (default 600).
+  Per-call latency is much higher than a raw HTTP endpoint — fine for the offline
+  compile, unsuitable for anything interactive.
+- **`openai` (default)** — `DockerModelRunnerService` calls any OpenAI-compatible
+  chat-completions endpoint: Docker Model Runner locally, or a hosted API. Config:
+  `DockerModelRunner:Endpoint`, `DockerModelRunner:SimpleModel`,
+  `DockerModelRunner:ApiKey` (for hosted APIs), `DockerModelRunner:TimeoutSeconds`.
 
 ## Configuration
 
-### Database Connection
+All compiler settings live in `StructuredRAG.Compiler/appsettings.json` and can be
+overridden via environment variables or `--Section:Key=value` arguments:
 
-Update `appsettings.json`:
+| Section | Purpose |
+|---------|---------|
+| `Llm:Provider` | `codex-cli` or `openai` (see above) |
+| `CodexCli:*`, `DockerModelRunner:*` | Provider settings (see above) |
+| `BariApi:*` | Base URL, max concurrency, politeness delay |
+| `Ingest:*` | Semesters (`26HS;27FS`), study programs, raw cache path/TTL, output path |
+| `Compiler:*` | Source path, output path, `Force` (recompile unchanged modules) |
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=sqlserver;Database=StructuredRAG;..."
-  }
-}
-```
-
-Or use environment variables in docker-compose.yml:
-
-```yaml
-environment:
-  - ConnectionStrings__DefaultConnection=Server=...
-```
-
-### LLM Endpoint
-
-Configure the Docker Model Runner endpoint:
-
-```json
-{
-  "DockerModelRunner": {
-    "Endpoint": "http://model-runner.docker.internal/engines/llama.cpp/v1"
-  }
-}
-```
+The MCP server (`StructuredRAG.Mcp/appsettings.json`) needs `Catalog:CompiledPath`
+(default `../compiled-sample`) and `BariApi:*` for the live fetch-through.
 
 ## Development Workflow
 
-### Local Development
-
-1. **Start dependencies:**
-   ```bash
-   docker compose up sqlserver
-   ```
-   (Note: LLM is handled by Docker Model Runner if configured in Docker Desktop, or you may need to ensure the environment is set up correctly).
-
-2. **Run application locally:**
-   ```bash
-   cd StructuredRAG.Api
-   dotnet run
-   ```
-
-### Full Docker Development
-
 ```bash
-docker compose up --build
+# Run the MCP server against the hand-compiled sample catalog
+dotnet run --project StructuredRAG.Mcp        # endpoint: http://localhost:<port>/mcp
+
+# Full pipeline against real FHNW data
+dotnet run --project StructuredRAG.Compiler -- ingest
+dotnet run --project StructuredRAG.Compiler -- compile --Llm:Provider=codex-cli
+Catalog__CompiledPath=compiled dotnet run --project StructuredRAG.Mcp
+
+# Containerized server (sample catalog baked in, real catalog mountable)
+docker build -t structured-rag-mcp .
+docker run -p 8080:8080 structured-rag-mcp
 ```
 
-### Debugging
-
-1. **Check SQL Server:**
-   ```bash
-   docker compose logs sqlserver
-   ```
-
-2. **Check Application:**
-   ```bash
-   docker compose logs app
-   ```
-
-## Extending the Solution
-
-### Adding New Entity Types
-
-1. Create a new model in `Models/`
-2. Add DbSet to `ApplicationDbContext`
-3. Update database schema (migrations or EnsureCreated)
-
-### Customizing Tag Generation
-
-Modify `TagGenerationService.BuildTagGenerationPrompt()` to:
-- Change number of tags generated
-- Add domain-specific instructions
-- Adjust tag format
-
-### Implementing Vector Search
-
-To add vector search capabilities:
-
-1. Add a vector embedding package (e.g., Microsoft.ML.OnnxRuntime)
-2. Generate embeddings for entity content
-3. Store embeddings in database
-4. Use filtered entities + vector similarity in RAG query
-
-### Custom RAG Logic
-
-Modify `RagQueryService.ProcessQueryAsync()` to:
-- Change tag selection criteria
-- Adjust entity filtering logic
-- Customize response generation
+The server is plain streamable HTTP, so it can be smoke-tested with `curl` JSON-RPC
+requests against `/mcp` (`initialize`, `tools/list`, `tools/call`); `GET /` returns a
+health/info document. To test widget rendering, register the server in ChatGPT
+developer mode or Claude via a public tunnel (e.g. `ngrok http 5210`).
 
 ## Testing
 
-### Manual Testing
+There is no test project yet. To add one:
 
-1. **Verify Database:**
-   - Connect to SQL Server
-   - Check `Entities` and `Tags` tables
+```bash
+dotnet new xunit -n StructuredRAG.Tests
+dotnet sln add StructuredRAG.Tests
+```
 
-2. **Test LLM:**
-   (If accessible from host)
-   ```bash
-   curl http://localhost:PORT/engines/llama.cpp/v1 -d '{...}'
-   ```
-
-3. **Monitor Logs:**
-   - Watch application output for tag generation
-   - Verify RAG query results
-
-### Unit Testing
-
-To add unit tests:
-
-1. Create test project:
-   ```bash
-   dotnet new xunit -n StructuredRAG.Tests
-   ```
-
-2. Add test packages:
-   ```bash
-   dotnet add package Moq
-   dotnet add package Microsoft.EntityFrameworkCore.InMemory
-   ```
-
-3. Write tests for services using in-memory database
-
-## Performance Considerations
-
-- **LLM Latency**: Model responses can take 5-30 seconds
-- **Database Connection**: Use connection pooling (enabled by default)
-- **Tag Caching**: Consider caching all tags in memory
-- **Batch Processing**: Process multiple entities in parallel
-
-## Troubleshooting
-
-### Application doesn't start
-
-- Check Docker resources (8GB+ RAM recommended)
-- Verify the port is available (1433)
-- Check Docker logs for each service
-
-### LLM timeouts
-
-- Increase timeout in DockerModelRunnerService
-- Use a smaller model
-- Reduce prompt length
-
-### Database connection issues
-
-- Verify SQL Server is healthy
-- Check connection string
-- Ensure trust server certificate is enabled
+Good first targets: `SourceModuleMapper` (HTML stripping, mapping), the deterministic
+MCP tools (`plan_semester`, `plan_path` scheduling), and `KnowledgeCompilationService`
+with a fake `ILlmClient`.
 
 ## Production Considerations
 
-Before deploying to production:
-
-1. **Security:**
-   - Use secrets management for passwords
-   - Enable SSL/TLS for database connections
-   - Implement authentication/authorization
-
-2. **Performance:**
-   - Use a dedicated SQL Server instance
-   - Implement caching strategy
-
-3. **Monitoring:**
-   - Add application insights/logging
-   - Monitor LLM response times
-   - Track database performance
-
-4. **Scalability:**
-   - Use managed database service
-   - Deploy LLM separately with load balancing
-   - Consider async/queue-based processing
+1. **Security**: the MCP server ships without authentication — put it behind OAuth
+   (MCP authorization flow) or a reverse proxy; keep API keys (if any) in secrets
+   management.
+2. **Freshness**: run `ingest` + `compile` on a schedule (cron, GitHub Actions); the
+   server picks up new artifacts automatically via the `manifest.json` timestamp.
+3. **Monitoring**: add logging/metrics around bariapi fetch-through latency and
+   compile-run reports.

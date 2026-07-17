@@ -64,13 +64,15 @@ public class KnowledgeCompilationService
         {
             var hash = ComputeSourceHash(module);
 
-            // Incremental: reuse the previous record when the source is unchanged and
-            // its tags are still part of the (possibly evolved) taxonomy.
+            // Incremental: reuse the previous record's LLM enrichments when the prompt
+            // inputs are unchanged and its tags are still part of the (possibly evolved)
+            // taxonomy. Pass-through data is refreshed from the current source — schedule
+            // or location changes must reach the catalog without an LLM call.
             if (previousByCode.TryGetValue(module.Code, out var prev)
                 && prev.SourceHash == hash
                 && prev.Tags.All(validTagNames.Contains))
             {
-                compiled.Add(prev);
+                compiled.Add(RefreshPassThrough(prev, module, hash));
                 reused++;
                 continue;
             }
@@ -326,11 +328,79 @@ Output JSON:";
         }
     }
 
+    /// <summary>
+    /// Hash over exactly the fields that feed the enrichment prompt in
+    /// <see cref="CompileModuleAsync"/>. Deterministic pass-through data (offerings,
+    /// lessons, locations, assessment, ...) is deliberately excluded — it changes
+    /// between catalog publications without affecting what the LLM would produce,
+    /// and is refreshed on reuse instead. Structured source prerequisites are the
+    /// one exception: they don't feed the prompt, but they gate whether the
+    /// LLM-extracted prerequisites are used, so a change (especially a removal)
+    /// must invalidate reuse — otherwise <see cref="RefreshPassThrough"/> would keep
+    /// a prerequisite the source no longer states.
+    /// </summary>
     public static string ComputeSourceHash(SourceModule module)
     {
-        var json = JsonSerializer.Serialize(module, HashOptions);
+        var llmInputs = new
+        {
+            module.Code,
+            module.Title,
+            module.TitleEn,
+            module.Description,
+            module.Ects,
+            module.Level,
+            module.ModuleType,
+            module.OfferedIn,
+            module.StudyPrograms,
+            module.RequirementsText,
+            module.RequirementsTextEn,
+            module.Prerequisites
+        };
+        var json = JsonSerializer.Serialize(llmInputs, HashOptions);
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
     }
+
+    /// <summary>
+    /// Rebuilds a reused module from the current source's deterministic fields plus the
+    /// previous record's LLM outputs — mirrors the assignments in
+    /// <see cref="CompileModuleAsync"/> so a reused record never carries stale
+    /// pass-through data (e.g. an outdated lesson schedule).
+    /// </summary>
+    private static CompiledModule RefreshPassThrough(CompiledModule prev, SourceModule module, string sourceHash) => new()
+    {
+        Code = module.Code,
+        ModuleId = module.ModuleId,
+        Title = module.Title,
+        TitleEn = module.TitleEn,
+        Description = module.Description,
+        DescriptionEn = module.DescriptionEn,
+        Ects = module.Ects,
+        Level = module.Level,
+        OfferedIn = module.OfferedIn,
+        Offerings = module.Offerings,
+        Languages = module.Languages,
+        Weekdays = module.Weekdays,
+        // Same rule as a fresh compile: structured source prerequisites win; otherwise
+        // keep the previously extracted (and validated) ones. Safe, because the source
+        // prerequisites are part of SourceHash — any change skips this reuse path.
+        Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : prev.Prerequisites,
+        PrerequisiteNotes = prev.PrerequisiteNotes,
+        Recommended = module.Recommended,
+        StudyPrograms = module.StudyPrograms,
+        ModuleType = module.ModuleType,
+        Locations = module.Locations,
+        ResponsibleName = module.ResponsibleName,
+        Assessment = module.Assessment,
+        Url = module.Url,
+        Summary = prev.Summary,
+        SummaryEn = prev.SummaryEn,
+        Audience = prev.Audience,
+        AudienceEn = prev.AudienceEn,
+        Tags = prev.Tags,
+        TypicalQuestions = prev.TypicalQuestions,
+        TypicalQuestionsEn = prev.TypicalQuestionsEn,
+        SourceHash = sourceHash
+    };
 
     private class ModuleEnrichment
     {

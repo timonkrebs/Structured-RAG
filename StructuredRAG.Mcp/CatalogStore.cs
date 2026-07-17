@@ -173,6 +173,27 @@ public class CatalogStore
         return sb.ToString();
     }
 
+    /// <summary>Compact catalog snapshot for the MCP initialize instructions: size,
+    /// compile date and the tag vocabulary with per-tag module counts. Names only —
+    /// clients get an immediate vocabulary to filter with, without a first round-trip;
+    /// tag descriptions stay one call away in list_tags / catalog://taxonomy.</summary>
+    public string InstructionsSnapshot()
+    {
+        EnsureFresh();
+        if (_modules.Count == 0)
+            return "No compiled catalog is loaded on this server yet.";
+
+        var vocabulary = string.Join(", ", _taxonomy
+            .OrderByDescending(t => t.ModuleCount)
+            .Select(t =>
+            {
+                var alias = string.IsNullOrWhiteSpace(t.NameEn) || t.NameEn == t.Name ? "" : $" / {t.NameEn}";
+                return $"{t.Name}{alias} ({t.ModuleCount})";
+            }));
+        return $"Catalog snapshot: {_modules.Count} modules — {_manifest.Source}, compiled {_manifest.CompiledAt:yyyy-MM-dd}. " +
+               $"Tag vocabulary as \"German canonical / English alias (module count)\": {vocabulary}.";
+    }
+
     public string TaxonomyMarkdown()
     {
         EnsureFresh();

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -41,42 +42,71 @@ public class DockerModelRunnerService : ILlmClient
         };
     }
 
+    // A compile run makes one call per changed module and only writes artifacts at the
+    // end, so a single transient failure (rate limit, gateway hiccup) must not abort
+    // the whole run. 429/5xx and network/timeout errors are retried with backoff.
+    private const int MaxAttempts = 4;
+
     /// <summary>
     /// Sends a prompt to the LLM and returns the response
     /// </summary>
     public async Task<string> GenerateAsync(string prompt, CancellationToken cancellationToken = default, string? system = null)
     {
-        try
+        var request = new
         {
-            var request = new
+            model = _modelName,
+            messages = new[]
             {
-                model = _modelName,
-                messages = new[]
+                new
                 {
-                    new
-                    {
-                        role = "system",
-                        content = system ?? @"You are an expert content classifier and taxonomy system. Your goal is to analyze the provided text and generate precise, hierarchical tags. Format: [""tag1"", ""tag2""]"
-                    },
-                    new
-                    {
-                        role = "user",
-                        content = prompt
-                    }
+                    role = "system",
+                    content = system ?? @"You are an expert content classifier and taxonomy system. Your goal is to analyze the provided text and generate precise, hierarchical tags. Format: [""tag1"", ""tag2""]"
+                },
+                new
+                {
+                    role = "user",
+                    content = prompt
                 }
-            };
+            }
+        };
 
-            var response = await _httpClient.PostAsJsonAsync(_modelEndpoint + "/chat/completions", request, _jsonOptions, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
-            return result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
-        }
-        catch (Exception ex)
+        for (var attempt = 1; ; attempt++)
         {
-            _logger.LogError(ex, "Error generating response from LLM endpoint {Endpoint}", _modelEndpoint);
-            throw;
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(_modelEndpoint + "/chat/completions", request, _jsonOptions, cancellationToken);
+                if (attempt < MaxAttempts && IsTransient(response.StatusCode))
+                {
+                    var delay = response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(attempt * 5);
+                    _logger.LogWarning("LLM endpoint returned {StatusCode}; retrying in {Delay:0}s (attempt {Attempt}/{Max})",
+                        (int)response.StatusCode, delay.TotalSeconds, attempt, MaxAttempts);
+                    response.Dispose();
+                    await Task.Delay(delay, cancellationToken);
+                    continue;
+                }
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken);
+                return result?.Choices?.FirstOrDefault()?.Message?.Content ?? string.Empty;
+            }
+            catch (Exception ex) when (attempt < MaxAttempts
+                && ex is HttpRequestException or TaskCanceledException
+                && !cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("LLM call failed ({Message}); retrying in {Delay}s (attempt {Attempt}/{Max})",
+                    ex.Message, attempt * 5, attempt, MaxAttempts);
+                await Task.Delay(TimeSpan.FromSeconds(attempt * 5), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating response from LLM endpoint {Endpoint}", _modelEndpoint);
+                throw;
+            }
         }
+
+        static bool IsTransient(HttpStatusCode status) =>
+            status == HttpStatusCode.TooManyRequests || (int)status >= 500;
     }
 
     // Response models matching OpenAI Chat Completion format

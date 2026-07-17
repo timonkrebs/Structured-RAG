@@ -78,10 +78,21 @@ public class ModuleResponsibleDto
     public string? Email { get; set; }
 }
 
-/// <summary>One concrete course instance (class) of a module offering.</summary>
+/// <summary>One concrete course instance (class) of a module offering. Lecturer and
+/// capacity fields are deliberately not declared — they carry personal data (emails)
+/// or noise and must not reach compiled artifacts.</summary>
 public class ModuleInstanceDto
 {
+    public string? Number { get; set; }
     public string? Day { get; set; }
+
+    /// <summary>Lesson start with a dummy date part (e.g. "1899-12-30T08:15:00") — only the clock time is meaningful.</summary>
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+
+    /// <summary>Rhythm in days; 7 = weekly.</summary>
+    public int? Periodicity { get; set; }
+
     public string? Language { get; set; }
     public string? Location { get; set; }
 }

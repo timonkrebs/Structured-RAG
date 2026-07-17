@@ -10,9 +10,14 @@ milliseconds.
 
 ## How the client model works with it
 
-1. Read the `catalog://taxonomy` resource (or call `list_tags`) — the closed tag
-   vocabulary with descriptions. The client maps the student's interests onto tags itself.
-2. Call `search_modules` (structured filters) or `search` (free text) to find candidates.
+1. Map the student's interests onto the tag vocabulary that arrives with the MCP
+   initialize instructions (tag names + module counts); `catalog://taxonomy` or
+   `list_tags` add the tag descriptions.
+2. Call `search_modules` (boolean tag filters + structured criteria; `includeFacets`
+   returns per-tag counts of the match set for the next narrowing step) or `search`
+   (free text) to find candidates. The server instructions steer the client
+   recall-first: wide `anyOfTags` sweeps over stacked `allOfTags` intersections,
+   since compiled tags are approximate and the compact format makes wide results cheap.
 3. Call `fetch` for full module details.
 4. For semester planning, call `plan_semester` with the student's completed modules —
    the server computes eligibility deterministically (prerequisites, offering semester);
@@ -24,11 +29,12 @@ milliseconds.
 |------|---------|
 | `search` | Free-text search, German or English (ChatGPT-connector-compatible shape) |
 | `fetch` | One module in full: **current official description fetched live** from the FHNW module directory (TTL-cached, deterministic HTTP — still no inference) plus compiled enrichments; falls back to the compiled record when the API is unreachable (`metadata.source`: `live`/`compiled`) |
-| `search_modules` | Structured filtering: tags (German canonical or English alias), semester (`HS`/`FS` or concrete `26HS`), level, module type, study program, ECTS range, language |
+| `search_modules` | Boolean tag filtering (`allOfTags`/`anyOfTags`/`noneOfTags`; German canonical or English alias) plus semester (`HS`/`FS` or concrete `26HS`), level, module type, study program, ECTS range, language and free text. Returns `total`, the matches as `compact` (default) / `full` / `codes` with optional `limit`, and per-tag counts of the match set via `includeFacets` (faceted drill-down) |
 | `list_tags` | The closed bilingual tag taxonomy with descriptions and module counts |
 | `get_catalog_overview` | Taxonomy + full module index as one markdown blob — ideal first call for clients without resource support (ChatGPT) |
 | `plan_semester` | Eligible vs. blocked modules for a semester, given completed modules; includes free-text prerequisite notes, weekdays and the ECTS target for the client's planning reasoning |
 | `compare_modules` | 2–4 modules side by side (ECTS, semesters, languages, weekdays, tags, prerequisites, summaries) |
+| `plan_path` | Fastest way to reach a target module: missing transitive prerequisites scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), earliest completion semester, total ECTS |
 
 ## Resources
 
@@ -40,8 +46,8 @@ milliseconds.
 
 ## Interactive widgets (ChatGPT Apps SDK + MCP Apps)
 
-`plan_semester` and `compare_modules` don't just return JSON — in hosts with widget
-support they render interactive UI:
+`plan_semester`, `compare_modules` and `plan_path` don't just return JSON — in hosts
+with widget support they render interactive UI:
 
 - **Semester plan builder** (on `plan_semester`): pick eligible modules via checkboxes,
   watch a live ECTS meter against the target (`ectsTarget` parameter, default 30), get
@@ -51,8 +57,12 @@ support they render interactive UI:
 - **Module comparer** (on `compare_modules`): side-by-side table with tags shared by
   all modules highlighted; columns can be removed or added (the widget re-calls
   `compare_modules`).
+- **Path planner** (on `plan_path`): semester-by-semester timeline to a target module —
+  "when can I take Machine Learning at the earliest?" Waiting semesters are shown when
+  the HS/FS offering rhythm forces a gap; marking a prerequisite as already completed
+  re-plans the path live (the widget re-calls `plan_path`).
 
-The same two self-contained HTML files (`Widgets/*.html`, embedded in the assembly)
+The same self-contained HTML files (`Widgets/*.html`, embedded in the assembly)
 serve **both host conventions** — each widget detects its host at runtime:
 
 | | OpenAI Apps SDK (ChatGPT) | [MCP Apps extension](https://modelcontextprotocol.io/extensions/apps/overview) (Claude, VS Code, …) |
@@ -64,10 +74,10 @@ serve **both host conventions** — each widget detects its host at runtime:
 
 The widgets are deterministic vanilla JS, bilingual (German/English from the host
 locale) and light/dark theme aware; all interaction (ECTS math, weekday hints, shared
-tags) runs client-side, so the server stays zero-inference. `fetch`, `search_modules`
-and `compare_modules` carry `_meta["openai/widgetAccessible"]` so the ChatGPT widgets
-may call them (MCP Apps tool calls need no extra flag; `visibility` defaults allow
-them). Hosts without widget support simply ignore the `_meta` keys and use the
+tags) runs client-side, so the server stays zero-inference. `fetch`, `search_modules`,
+`compare_modules` and `plan_path` carry `_meta["openai/widgetAccessible"]` so the
+ChatGPT widgets may call them (MCP Apps tool calls need no extra flag; `visibility`
+defaults allow them). Hosts without widget support simply ignore the `_meta` keys and use the
 structured JSON.
 
 Registration is the same as for the other developer-mode tools (see below). ChatGPT
@@ -105,8 +115,9 @@ The server must be reachable over HTTPS on the public internet for hosted client
 ## Updating the catalog (daily/weekly)
 
 The pipeline ingests directly from the official FHNW Modulbeschreibungen API
-(`bariapi.fhnw.ch`, public) and then compiles. Run on a schedule (cron, GitHub
-Actions, scheduled container) from the repo root:
+(`bariapi.fhnw.ch`, public) and then compiles. In this repo the automated path is
+`.github/workflows/refresh-catalog.yml` (on-demand run that opens a review PR —
+see `DEPLOYMENT.md`); to run it by hand from the repo root:
 
 ```bash
 # 1. Ingest: FHNW API -> data/modules.wirtschaftsinformatik.json (raw cache in data/raw/)
@@ -114,18 +125,27 @@ dotnet run --project StructuredRAG.Compiler -- ingest \
   --Ingest:Semesters="26HS;27FS" \
   --Ingest:StudyPrograms="BSc in Wirtschaftsinformatik"
 
-# 2. Compile: source JSON -> compiled artifacts (bilingual, prerequisite extraction)
+# 2. Compile: source JSON -> compiled artifacts (bilingual, prerequisite extraction).
+#    Preferred LLM transport: the OpenAI Codex CLI in headless mode — it reuses a
+#    ChatGPT login instead of an API key (once: npm i -g @openai/codex && codex login)
+dotnet run --project StructuredRAG.Compiler -- compile --Llm:Provider=codex-cli
+
+#    Alternative: any OpenAI-compatible chat-completions endpoint
 DockerModelRunner__ApiKey=$LLM_API_KEY \
 dotnet run --project StructuredRAG.Compiler -- compile \
   --DockerModelRunner:Endpoint=https://<llm-endpoint>/v1 \
   --DockerModelRunner:SimpleModel=<model>
 
-# or both in one go:  dotnet run --project StructuredRAG.Compiler -- all
+# or ingest + compile in one go:  dotnet run --project StructuredRAG.Compiler -- all
 ```
 
-The compiler works with any OpenAI-compatible chat-completions endpoint (set
-`DockerModelRunner:ApiKey` for hosted APIs). Because compilation is offline and
-infrequent, this is the place to spend on a strong model — taxonomy quality determines
+The compiler talks to the LLM through the `ILlmClient` abstraction with two providers:
+`Llm:Provider=codex-cli` shells out to `codex exec` (configured via `CodexCli:Command`,
+`CodexCli:Model`, `CodexCli:ExtraArgs`, `CodexCli:TimeoutSeconds`; per-call latency is
+higher than a raw HTTP endpoint, which is fine for this offline path), and
+`Llm:Provider=openai` (the default) works with any OpenAI-compatible chat-completions
+endpoint (set `DockerModelRunner:ApiKey` for hosted APIs). Because compilation is
+offline and infrequent, this is the place to spend on a strong model — taxonomy quality determines
 how well the client can search. Repeat runs are cheap: the previous taxonomy is passed
 to the model to keep tag names stable, and modules whose source is unchanged
 (SourceHash) are reused without LLM calls. The compiler writes `manifest.json` last,

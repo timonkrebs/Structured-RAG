@@ -1,4 +1,5 @@
 using StructuredRAG.Core.Models.Catalog;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -18,6 +19,7 @@ public static class SourceModuleMapper
         var semesterId = d.SemesterId ?? SemesterIdFromPlanId(d.PlanSemesterModulId);
         var languages = ExtractLanguages(d);
         var weekdays = ExtractWeekdays(d);
+        var lessons = ExtractLessons(d);
 
         // English-taught modules often have content only in the *EN fields — fall back
         // so Description is never empty when the catalog has any content at all.
@@ -46,7 +48,8 @@ public static class SourceModuleMapper
                     SemesterId = semesterId,
                     PlanSemesterModulId = d.PlanSemesterModulId,
                     Languages = languages,
-                    Weekdays = weekdays
+                    Weekdays = weekdays,
+                    Lessons = lessons
                 }
             },
             Languages = languages,
@@ -150,11 +153,19 @@ public static class SourceModuleMapper
         return Key(a).CompareTo(Key(b));
     }
 
+    /// <summary>Class instances that actually take place. The API has no dedicated
+    /// cancellation field — a cancelled class is only signalled by an "… Abgesagt"
+    /// suffix glued onto the location (e.g. "Basel- Abgesagt"). Cancelled instances
+    /// must not surface as plannable lessons, weekdays or languages.</summary>
+    private static IEnumerable<ModuleInstanceDto> ActiveInstances(ModuleDetailDto d) =>
+        (d.ModuleInstances ?? new List<ModuleInstanceDto>())
+            .Where(i => i.Location?.Contains("abgesagt", StringComparison.OrdinalIgnoreCase) != true);
+
     /// <summary>Language lives per course instance; the top-level field is usually null.</summary>
     private static List<string> ExtractLanguages(ModuleDetailDto d)
     {
         var texts = new List<string?> { d.Language };
-        if (d.ModuleInstances != null) texts.AddRange(d.ModuleInstances.Select(i => i.Language));
+        texts.AddRange(ActiveInstances(d).Select(i => i.Language));
         return texts.SelectMany(ParseLanguages).Distinct().ToList();
     }
 
@@ -162,7 +173,7 @@ public static class SourceModuleMapper
         { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
     private static List<string> ExtractWeekdays(ModuleDetailDto d) =>
-        (d.ModuleInstances ?? new List<ModuleInstanceDto>())
+        ActiveInstances(d)
             .Select(i => i.Day)
             .Where(day => !string.IsNullOrWhiteSpace(day))
             .Select(day => day!)
@@ -175,6 +186,39 @@ public static class SourceModuleMapper
     {
         var i = Array.FindIndex(DayOrder, x => x.Equals(day, StringComparison.OrdinalIgnoreCase));
         return i < 0 ? int.MaxValue : i;
+    }
+
+    /// <summary>Weekly lesson slots, one per class instance (Modulanlass). The times come
+    /// with a dummy date part — only the clock time is kept. Instances without any
+    /// schedule signal (no day, no times) carry nothing plannable and are skipped.</summary>
+    private static List<Lesson> ExtractLessons(ModuleDetailDto d) =>
+        ActiveInstances(d)
+            .Where(i => !string.IsNullOrWhiteSpace(i.Day) || i.StartTime != null || i.EndTime != null)
+            .Select(i => new Lesson
+            {
+                Number = NormalizeClassNumber(i.Number),
+                Day = NullIfEmpty(i.Day?.Trim()),
+                Start = i.StartTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
+                End = i.EndTime?.ToString("HH:mm", CultureInfo.InvariantCulture),
+                Location = NullIfEmpty(i.Location?.Trim()),
+                Language = ParseLanguages(i.Language).FirstOrDefault(),
+                Periodicity = i.Periodicity
+            })
+            .OrderBy(l => DayIndex(l.Day ?? string.Empty))
+            .ThenBy(l => l.Start, StringComparer.Ordinal)
+            .ToList();
+
+    // FHNW prefixes each class number with a per-meeting index, e.g. "2-26HS.…/TZT26a".
+    // A class that meets several times a week therefore appears as "2-…/TZT26a",
+    // "3-…/TZT26a", … — same class, different slots. Strip that leading index so the
+    // slots of one class share Number and group as a single class (not as alternatives
+    // the student picks between); genuinely different classes keep distinct trailing ids.
+    private static readonly Regex MeetingIndexRegex = new(@"^\d+-", RegexOptions.Compiled);
+
+    private static string? NormalizeClassNumber(string? number)
+    {
+        if (string.IsNullOrWhiteSpace(number)) return null;
+        return NullIfEmpty(MeetingIndexRegex.Replace(number.Trim(), ""));
     }
 
     private static List<string> ParseLanguages(string? language)

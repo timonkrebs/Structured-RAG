@@ -81,4 +81,38 @@ public class ModuleOffering
 
     /// <summary>Class weekdays of THIS offering (English day names).</summary>
     public List<string> Weekdays { get; set; } = new();
+
+    /// <summary>Weekly lesson slots of THIS offering — enables timetable planning.</summary>
+    public List<Lesson> Lessons { get; set; } = new();
+}
+
+/// <summary>
+/// One weekly lesson slot of a class (Modulanlass). A module can run several parallel
+/// classes the student chooses between; slots sharing <see cref="Number"/> belong to
+/// the same class (attend all of them).
+/// </summary>
+public class Lesson
+{
+    /// <summary>Class identity used to group weekly slots into one class (e.g.
+    /// "26HS.W-B-…/TZT26a"). Normalized from the raw FHNW number by stripping its
+    /// leading per-meeting index, so every slot of the same class shares this value.</summary>
+    public string? Number { get; set; }
+
+    /// <summary>English day name, e.g. "Thursday".</summary>
+    public string? Day { get; set; }
+
+    /// <summary>Start of the lesson as 24h clock time, e.g. "08:15"; null if unpublished.</summary>
+    public string? Start { get; set; }
+
+    /// <summary>End of the lesson as 24h clock time, e.g. "17:00".</summary>
+    public string? End { get; set; }
+
+    /// <summary>Location of this class, e.g. "Olten" (may differ between classes).</summary>
+    public string? Location { get; set; }
+
+    /// <summary>ISO language code of this class, e.g. "de".</summary>
+    public string? Language { get; set; }
+
+    /// <summary>Rhythm in days as published by the catalog: 7 = weekly.</summary>
+    public int? Periodicity { get; set; }
 }
