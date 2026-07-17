@@ -1,0 +1,132 @@
+# On-demand catalog refresh: ingest from the FHNW API, compile with an
+# OpenAI-compatible LLM endpoint, validate, and open a pull request with the
+# updated artifacts. Merging that PR is what triggers the Render redeploy
+# (the Dockerfile bakes compiled/ into the image).
+#
+# codex-cli (the preferred transport locally) needs an interactive ChatGPT
+# login, so CI uses --Llm:Provider=openai. Configure once under
+# Settings → Secrets and variables → Actions:
+#
+#   Secret   LLM_API_KEY    key for the endpoint (e.g. OpenCode Zen, opencode.ai/auth)
+#   Variable LLM_ENDPOINT   OpenAI-compatible base URL as shown with your key,
+#                           e.g. https://opencode.ai/zen/go/v1 (go plan)
+#   Variable LLM_MODEL      model id as the endpoint expects it, e.g. deepseek-v4-pro
+name: Refresh catalog
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Full recompile — ignore sourceHash reuse; every module costs an LLM call
+        type: boolean
+        default: false
+  # For a recurring refresh, add e.g.:
+  # schedule:
+  #   - cron: '0 2 * * 0'   # Sundays 02:00 UTC
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: catalog-refresh
+  cancel-in-progress: false
+
+env:
+  MIN_MODULES: 80   # sanity floor before a PR is opened; the current catalog has ~118
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # data/raw/ is gitignored, so every CI run ingests cold (~120 calls against
+      # the public FHNW API, a few minutes). The compile is incremental: only
+      # modules whose sourceHash changed cost an LLM call (plus 1 taxonomy call).
+      - name: Ingest and compile
+        env:
+          DockerModelRunner__Endpoint: ${{ vars.LLM_ENDPOINT }}
+          DockerModelRunner__SimpleModel: ${{ vars.LLM_MODEL }}
+          DockerModelRunner__ApiKey: ${{ secrets.LLM_API_KEY }}
+        run: >
+          dotnet run --project StructuredRAG.Compiler -- all
+          --Llm:Provider=openai
+          ${{ inputs.force && '--Compiler:Force=true' || '' }}
+
+      - name: Validate compiled catalog
+        run: |
+          jq -e . compiled/manifest.json > /dev/null
+          modules=$(jq 'length' compiled/modules.json)
+          tags=$(jq 'length' compiled/taxonomy.json)
+          manifest_count=$(jq '.moduleCount' compiled/manifest.json)
+          echo "modules=$modules tags=$tags (manifest says $manifest_count modules)"
+          test "$modules" -eq "$manifest_count"
+          test "$modules" -ge "$MIN_MODULES"
+          test "$tags" -ge 10 && test "$tags" -le 40
+          untagged=$(jq -r '[.[] | select((.tags | length) == 0) | .code] | join(", ")' compiled/modules.json)
+          if [ -n "$untagged" ]; then
+            echo "::warning::Modules without tags: $untagged"
+          fi
+
+      - name: Detect content changes
+        id: diff
+        # manifest.json alone changes on every run (compiledAt) — only open a PR
+        # when modules, taxonomy or the ingested source actually differ. git status
+        # instead of git diff so the first run, where compiled/ is untracked, counts.
+        run: |
+          changes=$(git status --porcelain -- compiled data/modules.wirtschaftsinformatik.json \
+            | grep -v 'compiled/manifest\.json$' || true)
+          if [ -n "$changes" ]; then
+            echo "$changes"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Catalog content unchanged — no PR."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Summarize changes for the PR
+        if: steps.diff.outputs.changed == 'true'
+        id: summary
+        run: |
+          modules=$(jq 'length' compiled/modules.json)
+          tags=$(jq 'length' compiled/taxonomy.json)
+          echo "title=Catalog refresh: $modules modules, $tags tags" >> "$GITHUB_OUTPUT"
+          {
+            echo 'body<<BODY'
+            echo "Automated refresh, compiled at $(jq -r '.compiledAt' compiled/manifest.json)."
+            echo
+            echo "- Modules: $modules, tags: $tags"
+            if git cat-file -e HEAD:compiled/modules.json 2> /dev/null; then
+              git show HEAD:compiled/modules.json | jq -r '.[].code' | sort > /tmp/old-codes
+              jq -r '.[].code' compiled/modules.json | sort > /tmp/new-codes
+              added=$(comm -13 /tmp/old-codes /tmp/new-codes | paste -sd ', ' -)
+              removed=$(comm -23 /tmp/old-codes /tmp/new-codes | paste -sd ', ' -)
+              [ -n "$added" ] && echo "- Added: $added"
+              [ -n "$removed" ] && echo "- Removed: $removed"
+              true
+            else
+              echo "- First compiled catalog in git (previously only compiled-sample/)."
+            fi
+            echo
+            echo "Merging redeploys the server with this catalog (Render rebuilds on push)."
+            echo 'BODY'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open or update pull request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: catalog-refresh
+          delete-branch: true
+          add-paths: |
+            compiled/
+            data/modules.wirtschaftsinformatik.json
+          commit-message: 'chore: refresh module catalog'
+          title: ${{ steps.summary.outputs.title }}
+          body: ${{ steps.summary.outputs.body }}

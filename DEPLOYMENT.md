@@ -32,13 +32,69 @@ changes if the Codespace is recreated. Not a standing deployment.
 
 ## Option 2 — Render.com free tier (easiest standing deployment)
 
-1. [render.com](https://render.com) → *New* → *Web Service* → connect this GitHub repo.
-2. Runtime: **Docker** — Render builds the existing `Dockerfile` as-is (no config
-   needed; the free instance type is fine).
-3. Every push to the connected branch auto-redeploys.
+The recommended standing deployment: a stable HTTPS URL, automatic redeploys on
+every push, and zero required configuration on top of the existing `Dockerfile`.
 
-The service gets a stable `https://<name>.onrender.com` URL. Free instances spin down
-after ~15 minutes idle; the first request afterwards cold-starts in ~30–60 s.
+### Create the service
+
+1. Sign in at [render.com](https://render.com) (GitHub login) and authorize access
+   to this repository.
+2. *New* → *Web Service* → pick the repo. Render detects the `Dockerfile` and sets
+   **Language: Docker** — leave it; there is nothing to configure for build or
+   start commands.
+3. Settings that matter:
+   - **Name** — becomes the URL: `https://<name>.onrender.com`.
+   - **Branch** — `main`. This is the branch whose pushes redeploy, and the one
+     catalog-refresh PRs merge into.
+   - **Region** — pick *Frankfurt (EU Central)* for FHNW-local latency.
+   - **Instance type** — *Free*.
+4. Under *Advanced*, set **Health Check Path** to `/` — the server's health/info
+   endpoint (`Program.cs` maps it) returns the catalog manifest as JSON, so Render
+   only routes traffic once a complete catalog is loaded, and zero-downtime deploys
+   replace instances cleanly.
+5. *Deploy Web Service*. The first build takes ~5 minutes (image build + publish);
+   watch it under *Logs*.
+
+No environment variables are required: the image binds port 8080
+(`ASPNETCORE_URLS` in the `Dockerfile`) and Render auto-detects the bound port.
+If detection ever misfires, add an env var `PORT=8080` in the dashboard to pin the
+routing. Optional overrides (dashboard → *Environment*): `Catalog__CompiledPath`
+to point at a mounted catalog, `BariApi__*` for the live-fetch client.
+
+### Verify
+
+```bash
+curl https://<name>.onrender.com/          # health: name, endpoint, catalog manifest
+```
+
+Check that `catalog.moduleCount` matches what you expect (10 = the sample catalog;
+the real catalog only ships once a compiled `compiled/` directory is committed —
+see the refresh workflow below). Then register `https://<name>.onrender.com/mcp`
+in ChatGPT or Claude as described in the [README](README.md#using-it-from-chatgpt-or-claude).
+
+### How updates reach the service
+
+- **Auto-deploy is on by default**: every push to the connected branch rebuilds
+  the image and redeploys. Merging a *Catalog refresh* PR (see below) is therefore
+  all it takes to ship a new catalog.
+- **Manual deploys**: dashboard → *Manual Deploy* → *Deploy latest commit*, or
+  *Clear build cache & deploy* when a build behaves oddly.
+- Auto-deploy can be turned off per service (*Settings → Build & Deploy*) if you
+  ever want to batch merges without redeploying.
+
+### Free-tier limits and troubleshooting
+
+- **Spin-down**: free instances sleep after ~15 minutes idle; the next request
+  cold-starts the container in ~30–60 s. MCP clients may time out on that first
+  request — retrying once is enough, the instance stays warm afterwards.
+- **Budgets**: the free plan includes ~750 instance-hours and ~500 build minutes
+  per month per workspace — one always-on service plus a handful of catalog
+  redeploys fits comfortably.
+- **Build fails on a fresh fork**: it shouldn't — the `Dockerfile` falls back to
+  `compiled-sample/` when no real `compiled/` catalog is committed yet. If a build
+  fails, the *Logs* tab shows the failing Docker step directly.
+- **Wrong catalog served**: confirm what `/` reports; if it says 10 modules you
+  are still on the sample — merge the catalog-refresh PR and let it redeploy.
 
 ## Option 3 — Google Cloud Run / Azure Container Apps (free tiers, more setup)
 
@@ -94,24 +150,39 @@ the static JSON artifacts baked into the image. The loop:
    compiled catalog is a build input of the image, and versioning it makes every
    deploy reproducible.
 
-3. **Point the image at them** — add to the `Dockerfile` (after the existing
-   `compiled-sample` lines, so the sample stays the fallback):
+3. **Push** — the `Dockerfile` bakes `compiled/` into the image automatically as
+   soon as it exists in the repo (it falls back to `compiled-sample/` until then).
+   Render (option 2) rebuilds and redeploys on every push; on Cloud Run /
+   Container Apps re-run the deploy command.
 
-   ```dockerfile
-   COPY compiled /app/catalog
-   ENV Catalog__CompiledPath=/app/catalog
-   ```
+## Automated refresh (GitHub Actions)
 
-   (Alternatively keep the Dockerfile untouched and set `Catalog__CompiledPath`
-   as an environment variable in the Render dashboard.)
+`.github/workflows/refresh-catalog.yml` runs the whole loop on demand: ingest,
+compile, validate (module/tag count gates), and open a **pull request** with the
+updated `compiled/` artifacts and ingested source. Merging that PR is what
+triggers the Render redeploy. `codex login` is interactive, so the workflow uses
+the OpenAI-compatible provider (`--Llm:Provider=openai`); any OpenAI-compatible
+endpoint works, e.g. an OpenCode Zen key from [opencode.ai/auth](https://opencode.ai/auth).
 
-4. **Push** — Render (option 2) rebuilds and redeploys automatically; on Cloud
-   Run / Container Apps re-run the deploy command.
+Configure once under *Settings → Secrets and variables → Actions*:
 
-To automate the daily/weekly rhythm, run steps 1–2 in a scheduled GitHub Actions
-workflow and let the push trigger the redeploy. Note that `codex login` is
-interactive, so CI should use the OpenAI-compatible provider instead
-(`--Llm:Provider=openai` plus endpoint/key from repository secrets).
+| Kind     | Name           | Example                          |
+| -------- | -------------- | -------------------------------- |
+| Secret   | `LLM_API_KEY`  | OpenCode Zen API key             |
+| Variable | `LLM_ENDPOINT` | `https://opencode.ai/zen/go/v1`  |
+| Variable | `LLM_MODEL`    | `deepseek-v4-pro`                |
+
+Use the exact base URL shown alongside your key at
+[opencode.ai/auth](https://opencode.ai/auth) — subscription plans (e.g. *go*) use a
+plan-scoped path, pay-as-you-go keys use `https://opencode.ai/zen/v1`. Model ids are
+plain (`deepseek-v4-pro`), without the `opencode/` prefix used in opencode's own config.
+
+Then trigger it from *Actions → Refresh catalog → Run workflow* (or
+`gh workflow run refresh-catalog.yml`). The `force` input recompiles every module
+from scratch instead of reusing unchanged ones. Runs whose catalog content is
+unchanged (only the `compiledAt` timestamp moved) end without opening a PR. For a
+recurring rhythm, uncomment the `schedule:` block in the workflow — the PR flow
+stays the same, so nothing deploys without review.
 
 ## Notes
 

@@ -170,7 +170,8 @@ architecture principle), `catalog://index` columns.
 
 ## Backlog (unchanged, from the previous plan)
 
-- Scheduled ingest + compile (GitHub Action / cron container)
+- ~~Scheduled ingest + compile~~ — done: `.github/workflows/refresh-catalog.yml`
+  (manual `workflow_dispatch`, opens a review PR; cron line prepared but commented)
 - MCP server authentication (OAuth per the MCP spec authorization flow)
 - Hochschule für Technik data source (not covered by bariapi)
 - Embedding/vector search

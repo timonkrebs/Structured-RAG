@@ -115,8 +115,9 @@ The server must be reachable over HTTPS on the public internet for hosted client
 ## Updating the catalog (daily/weekly)
 
 The pipeline ingests directly from the official FHNW Modulbeschreibungen API
-(`bariapi.fhnw.ch`, public) and then compiles. Run on a schedule (cron, GitHub
-Actions, scheduled container) from the repo root:
+(`bariapi.fhnw.ch`, public) and then compiles. In this repo the automated path is
+`.github/workflows/refresh-catalog.yml` (on-demand run that opens a review PR —
+see `DEPLOYMENT.md`); to run it by hand from the repo root:
 
 ```bash
 # 1. Ingest: FHNW API -> data/modules.wirtschaftsinformatik.json (raw cache in data/raw/)
