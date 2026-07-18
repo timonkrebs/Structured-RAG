@@ -197,11 +197,16 @@ public static class ModuleCatalogTools
 
         var eligible = new List<PlannableModule>();
         var blocked = new List<BlockedModule>();
+        // Coverage counters: the widget explains WHY the eligible list is short
+        // ("N not offered this semester, M already completed") instead of leaving
+        // students to wonder where the rest of the catalog went.
+        var notOffered = 0;
+        var completedCount = 0;
 
         foreach (var m in store.Modules)
         {
-            if (completed.Contains(m.Code)) continue;
-            if (!MatchesSemester(m, semester)) continue;
+            if (completed.Contains(m.Code)) { completedCount++; continue; }
+            if (!MatchesSemester(m, semester)) { notOffered++; continue; }
 
             var missing = m.Prerequisites.Where(p => !completed.Contains(p)).ToList();
             var interestMatches = m.Tags.Intersect(interests, StringComparer.OrdinalIgnoreCase).ToList();
@@ -226,6 +231,8 @@ public static class ModuleCatalogTools
             Blocked: blocked.OrderBy(b => b.Code).ToList(),
             TotalEligibleEcts: eligible.Sum(e => e.Module.Ects),
             EctsTarget: ectsTarget is > 0 ? ectsTarget.Value : 30,
+            NotOfferedCount: notOffered,
+            CompletedCount: completedCount,
             Note: "Structured prerequisites are LLM-extracted from the official requirement texts and validated against " +
                   "this catalog; per-module 'prerequisiteNotes' may contain additional requirements that could not be " +
                   "resolved to module codes — take them into account when planning.");
@@ -273,7 +280,7 @@ public static class ModuleCatalogTools
     [McpMeta("openai/widgetAccessible", true)] // the path widget re-plans when the student marks modules as completed
     [McpMeta("openai/toolInvocation/invoking", "Computing the fastest path…")]
     [McpMeta("openai/toolInvocation/invoked", "Path to target module ready")]
-    [Description("Compute the fastest way to reach a target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
+    [Description("Compute the fastest way to reach ONE specific target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Call this only when the user explicitly asks how or when they can reach a particular module (e.g. 'When can I take X at the earliest?'); for planning a whole semester use plan_semester alone — do NOT call both for the same request unless the user asked for a path. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
     public static PathPlanData PlanPath(
         CatalogStore store,
         [Description("Target module code the student wants to reach, e.g. 'mldm'")] string targetModule,
@@ -567,6 +574,8 @@ public record SemesterPlanData(
     IReadOnlyList<BlockedModule> Blocked,
     int TotalEligibleEcts,
     int EctsTarget,
+    int NotOfferedCount,
+    int CompletedCount,
     string Note);
 
 public record ModuleComparisonData(

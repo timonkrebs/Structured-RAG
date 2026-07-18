@@ -290,6 +290,10 @@
     de: {
       title: function (s) { return "Semesterplan " + s; },
       eligibleCount: function (n) { return n + " wählbare Module"; },
+      covEligible: function (n) { return n + " wählbar"; },
+      covBlocked: function (n) { return n + " gesperrt"; },
+      covNotOffered: function (n, sem) { return n + " im " + sem + " nicht angeboten"; },
+      covCompleted: function (n) { return n + " abgeschlossen"; },
       target: "Ziel",
       ects: "ECTS",
       overTarget: function (n) { return "⚠ " + n + " ECTS über dem Ziel"; },
@@ -322,6 +326,10 @@
     en: {
       title: function (s) { return "Semester plan " + s; },
       eligibleCount: function (n) { return n + " eligible modules"; },
+      covEligible: function (n) { return n + " eligible"; },
+      covBlocked: function (n) { return n + " blocked"; },
+      covNotOffered: function (n, sem) { return n + " not offered in " + sem; },
+      covCompleted: function (n) { return n + " completed"; },
       target: "Target",
       ects: "ECTS",
       overTarget: function (n) { return "⚠ " + n + " ECTS over target"; },
@@ -550,8 +558,19 @@
 
     // Header + ECTS meter (single-value meter: accent fill, warning overflow segment;
     // over/reached is always also said in text — never color alone).
+    // With coverage counts (newer server), the subtitle explains where the whole
+    // catalog went — a short eligible list is otherwise inexplicable to students.
+    var subText;
+    if (typeof d.notOfferedCount === "number") {
+      var cov = [s.covEligible((d.eligible || []).length), s.covBlocked((d.blocked || []).length),
+                 s.covNotOffered(d.notOfferedCount, d.semester)];
+      if (d.completedCount > 0) cov.push(s.covCompleted(d.completedCount));
+      subText = cov.join(" · ");
+    } else {
+      subText = s.eligibleCount((d.eligible || []).length);
+    }
     html += '<div class="header"><h1>' + esc(s.title(d.semester)) + "</h1>" +
-      '<span class="sub">' + esc(s.eligibleCount((d.eligible || []).length)) + "</span></div>";
+      '<span class="sub">' + esc(subText) + "</span></div>";
 
     // Up to the target the bar tracks sum/target; over target the full bar
     // represents `sum`, split into the target part (accent) and overflow (warning).
