@@ -70,7 +70,12 @@
     color: var(--muted); font-size: 12px; white-space: nowrap;
     min-width: 90px; max-width: 130px; border-right: 1px solid var(--hairline);
   }
-  thead th.rowlabel { background: var(--plane); }
+  /* Sticky corner: needs an opaque base (columns scroll under it) with the
+     header's translucent plane tint layered on top to match the other cells. */
+  thead th.rowlabel {
+    background-color: var(--surface);
+    background-image: linear-gradient(var(--plane), var(--plane));
+  }
   .col-head { display: flex; align-items: flex-start; gap: 6px; }
   .col-title { font-weight: 600; flex: 1 1 auto; }
   .col-title .code { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; }
