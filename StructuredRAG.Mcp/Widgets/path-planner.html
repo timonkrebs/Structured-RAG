@@ -68,6 +68,13 @@
   .chip.key { border-color: var(--accent); color: var(--accent); font-weight: 600; }
   .chip.ects { font-variant-numeric: tabular-nums; color: var(--ink); border-color: var(--ring); font-weight: 600; }
   .chip.day { background: var(--plane); }
+  .chip.req { border-color: var(--accent); color: var(--accent); }
+  .sem-pick {
+    font: inherit; font-size: 12px; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 6px; padding: 2px 6px;
+    margin-top: 4px; max-width: 100%;
+  }
+  #resetseq { font-size: 12px; padding: 3px 9px; }
   .done-line { font-size: 12.5px; color: var(--good-text); margin: 6px 0 0; }
   .done-line .undo {
     border: none; padding: 0 3px; color: var(--muted); font-size: 12px; cursor: pointer; background: none;
@@ -259,6 +266,11 @@
       loadError: "Details konnten nicht geladen werden.",
       official: "Offizielle Modulseite ↗",
       gap: function (n) { return "⏳ " + n + (n === 1 ? " Wartesemester" : " Wartesemester") + " (kein passendes Angebot)"; },
+      requiredFor: function (codes) { return "→ benötigt für " + codes; },
+      chooseSem: "Semester wählen",
+      recommendedSeq: function (sem) { return "empfohlen: " + sem; },
+      resetSeq: "↺ Empfohlene Abfolge",
+      resetSeqTitle: "Alle Verschiebungen zurücksetzen",
       notes: function (n) { return "Hinweise (" + n + ")"; },
       send: "Pfad in den Chat senden",
       noData: "Keine Pfaddaten — bitte zuerst plan_path aufrufen.",
@@ -284,6 +296,11 @@
       loadError: "Could not load details.",
       official: "Official module page ↗",
       gap: function (n) { return "⏳ " + n + (n === 1 ? " waiting semester" : " waiting semesters") + " (no matching offering)"; },
+      requiredFor: function (codes) { return "→ required for " + codes; },
+      chooseSem: "Choose semester",
+      recommendedSeq: function (sem) { return "recommended: " + sem; },
+      resetSeq: "↺ Recommended sequence",
+      resetSeqTitle: "Reset all deferrals",
       notes: function (n) { return "Notes (" + n + ")"; },
       send: "Send path to chat",
       noData: "No path data — call plan_path first.",
@@ -310,6 +327,7 @@
   var expanded = {};       // code -> details panel open
   var details = {};        // code -> {loading|error|text,url}
   var notesOpen = false;   // survives re-renders (hosts re-render on any global change)
+  var deferred = {};       // code -> slot the student chose instead of the earliest one
 
   function init() {
     if (initialized) return;
@@ -317,24 +335,41 @@
     if (!d || !Array.isArray(d.steps)) return;
     current = d;
     initialized = true;
-    // Restore a completed-set changed in an earlier turn (openai widget state only).
+    // Restore choices changed in an earlier turn (openai widget state only).
+    // Deferrals are scoped to the exact path they were made for: a delay chosen
+    // for a shared prerequisite in an earlier path (different target or start)
+    // must not silently reshape a newly rendered one.
     var ws = Host.widgetState;
+    if (ws && ws.deferred && typeof ws.deferred === "object"
+        && ws.target === current.targetCode && ws.start === current.startSemester) {
+      Object.keys(ws.deferred).forEach(function (c) {
+        if (typeof ws.deferred[c] === "number") deferred[c] = ws.deferred[c];
+      });
+    }
     var saved = ws && Array.isArray(ws.completed) ? ws.completed : null;
     if (saved && saved.join("|") !== (current.completedModules || []).join("|")) replan(saved);
   }
 
   function persistState() {
-    Host.setState({ completed: current.completedModules || [] }, pathSummary());
+    var state = { completed: current.completedModules || [] };
+    if (Object.keys(deferred).length > 0) {
+      state.deferred = deferred;
+      state.target = current.targetCode;
+      state.start = current.startSemester;
+    }
+    Host.setState(state, pathSummary());
   }
 
-  // Model-facing one-liner (used as MCP Apps model context).
+  // Model-facing one-liner (used as MCP Apps model context); reflects the
+  // student's chosen sequence, not just the server's earliest-possible one.
   function pathSummary() {
     if (!current) return "";
-    var stepsText = current.steps.map(function (s) {
+    var view = schedule(deferred);
+    var stepsText = view.steps.map(function (s) {
       return s.semester + ": " + s.modules.map(function (m) { return m.code; }).join("+");
     }).join(" -> ");
-    return "Fastest path to " + current.targetCode + " (widget): " + stepsText +
-      "; earliest " + current.earliestSemester + ", " + current.totalEcts + " ECTS total.";
+    return "Path to " + current.targetCode + " (widget, student's chosen sequence): " + stepsText +
+      "; completion " + view.earliest + ", " + current.totalEcts + " ECTS total.";
   }
 
   // ---------- helpers ----------
@@ -376,6 +411,103 @@
     return null;
   }
 
+  // ---------- client-side scheduling ----------
+  // The server plans every module into its earliest possible slot; the student may
+  // deviate by deferring modules to later semesters. Rescheduling uses the same
+  // deterministic algorithm (prerequisite order + HS/FS offering rhythm), so it can
+  // run client-side without a tool call. With no deferrals it reproduces the
+  // server's plan exactly.
+  function anchorIsHs() {
+    var st = current.startSemester || "HS";
+    return (st.length === 4 ? st.slice(2) : st).toUpperCase() === "HS";
+  }
+  function slotType(i) { return ((i % 2 === 0) === anchorIsHs()) ? "HS" : "FS"; }
+  function slotLabel(i) {
+    var st = current.startSemester || "HS";
+    if (st.length !== 4) return "Semester " + (i + 1) + " (" + slotType(i) + ")";
+    var year = parseInt(st.slice(0, 2), 10), isHs = st.slice(2).toUpperCase() === "HS";
+    for (var k = 0; k < i; k++) { if (isHs) { year++; isHs = false; } else isHs = true; }
+    return (year < 10 ? "0" + year : String(year)) + (isHs ? "HS" : "FS");
+  }
+  // Steps come slot-ordered, so flattening them is a topological order (a
+  // prerequisite always sits in an earlier slot than its dependent).
+  function planModules() {
+    var out = [];
+    (current.steps || []).forEach(function (st) { (st.modules || []).forEach(function (m) { out.push(m); }); });
+    return out;
+  }
+  function offeringTypes(m) {
+    var types = (m.offeredIn || []).map(function (x) { return String(x).toUpperCase(); });
+    if (types.length === 0) (m.offerings || []).forEach(function (o) {
+      var ty = String(o.semesterId || "").slice(-2).toUpperCase();
+      if ((ty === "HS" || ty === "FS") && types.indexOf(ty) < 0) types.push(ty);
+    });
+    return types;
+  }
+  // First slot >= the given one matching the module's offering rhythm (modules
+  // without offering info are unconstrained, like on the server).
+  function fitSlot(m, slot) {
+    var types = offeringTypes(m);
+    if (types.length === 0) return slot;
+    while (types.indexOf(slotType(slot)) < 0) slot++;
+    return slot;
+  }
+  function schedule(overrides) {
+    var placed = {};
+    planModules().forEach(function (m) {
+      var min = 0;
+      (m.prerequisites || []).forEach(function (p) {
+        var k = p.toLowerCase();
+        if (placed[k] !== undefined) min = Math.max(min, placed[k] + 1);
+      });
+      var slot = fitSlot(m, min);
+      var want = overrides[m.code];
+      if (typeof want === "number" && want > slot) slot = fitSlot(m, want);
+      placed[m.code.toLowerCase()] = slot;
+    });
+    var bySlot = {};
+    planModules().forEach(function (m) {
+      var sl = placed[m.code.toLowerCase()];
+      (bySlot[sl] = bySlot[sl] || []).push(m);
+    });
+    var steps = Object.keys(bySlot).map(Number).sort(function (a, b) { return a - b; })
+      .map(function (sl) {
+        var ms = bySlot[sl];
+        return { slot: sl, semester: slotLabel(sl), modules: ms,
+                 ects: ms.reduce(function (a, m) { return a + (m.ects || 0); }, 0) };
+      });
+    var tSlot = placed[current.targetCode.toLowerCase()];
+    return { steps: steps, placed: placed, earliest: slotLabel(tSlot), semesterCount: tSlot + 1 };
+  }
+  // The semester options offered for one module: its earliest valid slot (given
+  // where its prerequisites currently sit) plus the next few offering-compatible ones.
+  function slotChoices(m, view) {
+    var min = 0;
+    (m.prerequisites || []).forEach(function (p) {
+      var k = p.toLowerCase();
+      if (view.placed[k] !== undefined && k !== m.code.toLowerCase()) min = Math.max(min, view.placed[k] + 1);
+    });
+    var out = [], slot = fitSlot(m, min);
+    while (out.length < 5) {
+      out.push(slot);
+      var next = fitSlot(m, slot + 1);
+      if (next === slot) break;
+      slot = next;
+    }
+    return out;
+  }
+  // code -> plan modules that directly require it (why is this module in the path?).
+  function requiredForMap() {
+    var map = {};
+    planModules().forEach(function (m) {
+      (m.prerequisites || []).forEach(function (p) {
+        var k = p.toLowerCase();
+        (map[k] = map[k] || []).push(m.code);
+      });
+    });
+    return map;
+  }
+
   // ---------- rendering ----------
   function render() {
     init();
@@ -387,14 +519,22 @@
       return;
     }
 
+    var base = schedule({});
+    var view = schedule(deferred);
+    var reqFor = requiredForMap();
+    var deviates = JSON.stringify(view.placed) !== JSON.stringify(base.placed);
+
     var targetTitle = (!isDe() && current.targetTitleEn) ? current.targetTitleEn : current.targetTitle;
     var html = '<div class="header"><h1>' + esc(s.title(targetTitle)) +
       '<span class="code">' + esc(current.targetCode) + "</span></h1></div>";
 
+    var delayed = view.earliest !== base.earliest;
     html += '<div class="headline-chips">' +
-      '<span class="chip key">' + esc(s.earliest(current.earliestSemester)) + "</span>" +
-      '<span class="chip">' + esc(s.semesters(current.semesterCount)) + "</span>" +
+      '<span class="chip key">' + esc(delayed ? view.earliest : s.earliest(view.earliest)) + "</span>" +
+      (delayed ? '<span class="chip">' + esc(s.recommendedSeq(base.earliest)) + "</span>" : "") +
+      '<span class="chip">' + esc(s.semesters(view.semesterCount)) + "</span>" +
       '<span class="chip ects">' + current.totalEcts + " " + esc(s.ects) + "</span>" +
+      (deviates ? '<button id="resetseq" title="' + esc(s.resetSeqTitle) + '">' + esc(s.resetSeq) + "</button>" : "") +
       "</div>";
 
     if ((current.alreadyCompleted || []).length > 0) {
@@ -406,7 +546,7 @@
 
     html += '<div class="timeline">';
     var prevSlot = -1;
-    current.steps.forEach(function (step) {
+    view.steps.forEach(function (step) {
       if (prevSlot >= 0 && step.slot - prevSlot > 1) {
         html += '<div class="gap">' + esc(t().gap(step.slot - prevSlot - 1)) + "</div>";
       }
@@ -418,6 +558,7 @@
 
       step.modules.forEach(function (m) {
         var isTarget = m.code === current.targetCode;
+        var needs = reqFor[m.code.toLowerCase()] || [];
         html += '<div class="card' + (isTarget ? " target" : "") + '">' +
           '<div class="card-row"><div class="card-main">' +
           '<div class="card-title">' + esc(locTitle(m)) + '<span class="code">' + esc(m.code) + "</span></div>" +
@@ -425,8 +566,10 @@
           (isTarget ? '<span class="chip key">' + esc(s.targetBadge) + "</span>" : "") +
           '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
           (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("") +
+          (needs.length ? '<span class="chip req">' + esc(s.requiredFor(needs.join(", "))) + "</span>" : "") +
           "</div>" +
           '<div class="card-summary">' + esc(locSummary(m)) + "</div>" +
+          semPicker(m, view) +
           "</div>" +
           '<div class="card-actions">' +
           '<button data-details="' + esc(m.code) + '">' + esc(expanded[m.code] ? s.hide : s.details) + "</button>" +
@@ -466,6 +609,22 @@
   }
   function linkHtml(url, label) {
     return '<a href="' + esc(url) + '" data-open="' + esc(url) + '">' + esc(label) + "</a>";
+  }
+
+  // Semester selector: lets the student defer a module to a later offering instead
+  // of following the recommended earliest slot; dependents and the completion
+  // semester recompute deterministically on change.
+  function semPicker(m, view) {
+    var s = t();
+    var choices = slotChoices(m, view);
+    var cur = view.placed[m.code.toLowerCase()];
+    if (choices.indexOf(cur) < 0) { choices.push(cur); choices.sort(function (a, b) { return a - b; }); }
+    if (choices.length < 2) return "";
+    var html = '<div><select class="sem-pick" data-defer="' + esc(m.code) + '" title="' + esc(s.chooseSem) + '">';
+    choices.forEach(function (sl) {
+      html += '<option value="' + sl + '"' + (sl === cur ? " selected" : "") + ">" + esc(slotLabel(sl)) + "</option>";
+    });
+    return html + "</select></div>";
   }
 
   // ---------- actions ----------
@@ -532,12 +691,13 @@
   function sendPath() {
     if (!current) return;
     var s = t();
+    var view = schedule(deferred);
     var targetTitle = (!isDe() && current.targetTitleEn) ? current.targetTitleEn : current.targetTitle;
-    var lines = current.steps.map(function (step) {
+    var lines = view.steps.map(function (step) {
       return "- " + step.semester + ": " +
         step.modules.map(function (m) { return m.code + " (" + m.ects + " ECTS)"; }).join(", ");
     }).join("\n");
-    Host.sendMessage(s.followUp(targetTitle, lines, current.earliestSemester, current.totalEcts));
+    Host.sendMessage(s.followUp(targetTitle, lines, view.earliest, current.totalEcts));
   }
 
   // ---------- events ----------
@@ -548,7 +708,7 @@
     if (ev.target.matches && ev.target.matches("details.notes")) notesOpen = ev.target.open;
   }, true);
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-details],[data-done],[data-undo],[data-open],#send");
+    var el = ev.target.closest("[data-details],[data-done],[data-undo],[data-open],#send,#resetseq");
     if (!el) return;
     if (el.hasAttribute("data-details")) toggleDetails(el.getAttribute("data-details"));
     else if (el.hasAttribute("data-done")) markDone(el.getAttribute("data-done"));
@@ -558,6 +718,14 @@
       Host.openLink(el.getAttribute("data-open"));
     }
     else if (el.id === "send") sendPath();
+    else if (el.id === "resetseq") { deferred = {}; persistState(); render(); }
+  });
+  document.getElementById("root").addEventListener("change", function (ev) {
+    var el = ev.target;
+    if (el.hasAttribute && el.hasAttribute("data-defer")) {
+      var slot = parseInt(el.value, 10);
+      if (!isNaN(slot)) { deferred[el.getAttribute("data-defer")] = slot; persistState(); render(); }
+    }
   });
 
   function applyTheme() {
