@@ -503,13 +503,17 @@
   // differ between HS and FS, and after a deferral the server-narrowed weekdays
   // (computed for the earliest slot) may be wrong. Re-derive them from the offerings
   // matching the placed semester; no matching offering -> no chips (accurate) rather
-  // than a misleading day. Catalogs without offering records keep the summary days.
+  // than a misleading day. The HS/FS-type fallback applies only to generic starts:
+  // with a concrete start, a slot beyond the compiled offerings is a semester whose
+  // schedule is simply unknown — showing an older year's weekday would mislead.
+  // Catalogs without offering records keep the summary days.
   function weekdaysFor(m, slot) {
     var offs = m.offerings || [];
     if (offs.length === 0) return m.weekdays || [];
     var label = slotLabel(slot).toUpperCase(), type = slotType(slot);
+    var concrete = (current.startSemester || "").length === 4;
     var match = offs.filter(function (o) { return String(o.semesterId || "").toUpperCase() === label; });
-    if (!match.length) match = offs.filter(function (o) { return String(o.semesterId || "").toUpperCase().slice(-2) === type; });
+    if (!match.length && !concrete) match = offs.filter(function (o) { return String(o.semesterId || "").toUpperCase().slice(-2) === type; });
     var days = [];
     match.forEach(function (o) {
       (o.weekdays || []).forEach(function (d) { if (days.indexOf(d) < 0) days.push(d); });

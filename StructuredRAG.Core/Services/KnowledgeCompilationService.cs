@@ -250,12 +250,15 @@ Output JSON:";
                 module.Code, string.Join(", ", droppedPrereqs));
         }
 
-        var (hardExtracted, recommendedMentions) = SplitRecommendedOnlyMentions(module, extractedPrerequisites, allModules);
+        var recommendedMentions = FindRecommendationOnlyMentions(module, allModules);
         if (recommendedMentions.Count > 0)
         {
-            _logger.LogInformation("Module {Code}: recommendation-only mentions moved to Recommended: {Codes}",
+            _logger.LogInformation("Module {Code}: recommendation-only mentions resolved to Recommended: {Codes}",
                 module.Code, string.Join(", ", recommendedMentions));
         }
+        var hardExtracted = extractedPrerequisites
+            .Where(p => !recommendedMentions.Contains(p, StringComparer.OrdinalIgnoreCase))
+            .ToList();
 
         var prerequisiteNotes = NormalizeNoPrereqSentinel(enrichment?.PrerequisiteNotes);
         if (prerequisiteNotes is null && extractedPrerequisites.Count == 0)
@@ -280,9 +283,8 @@ Output JSON:";
             Weekdays = module.Weekdays,
             Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : hardExtracted,
             PrerequisiteNotes = string.IsNullOrWhiteSpace(prerequisiteNotes) ? null : prerequisiteNotes.Trim(),
-            Recommended = module.Prerequisites.Count > 0
-                ? module.Recommended
-                : module.Recommended.Concat(recommendedMentions).Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+            Recommended = MergeRecommended(module, recommendedMentions,
+                module.Prerequisites.Count > 0 ? module.Prerequisites : hardExtracted),
             StudyPrograms = module.StudyPrograms,
             ModuleType = module.ModuleType,
             Locations = module.Locations,
@@ -404,20 +406,18 @@ Output JSON:";
     }
 
     /// <summary>
-    /// Requirement texts often mark some courses as merely recommended ("Highly
-    /// recommended: Project Management", "Besuch des «Italienisch A1» ist empfohlen").
-    /// The LLM extraction occasionally lists those as hard prerequisites, which makes
-    /// plan_semester hide the module from otherwise eligible students. Deterministic
-    /// guard: an extracted prerequisite whose title is mentioned only inside
-    /// recommendation-flagged segments of the requirement text moves to Recommended.
+    /// Catalog modules that the requirement text mentions ONLY inside
+    /// recommendation-flagged segments ("Highly recommended: Project Management",
+    /// "Empfehlungen:\n- Datenbanken", "Besuch des «Italienisch A1» ist empfohlen").
+    /// Resolved directly against all catalog titles — not just against the
+    /// LLM-extracted prerequisites — so a recommendation reaches Recommended even
+    /// when the extractor returned nothing for it, and an extracted "prerequisite"
+    /// that is merely recommended is demoted instead of blocking plan_semester.
     /// </summary>
-    private static (List<string> Hard, List<string> Recommended) SplitRecommendedOnlyMentions(
-        SourceModule module, IReadOnlyList<string> extracted, IEnumerable<SourceModule> allModules)
+    private static List<string> FindRecommendationOnlyMentions(
+        SourceModule module, IEnumerable<SourceModule> allModules)
     {
-        var hard = new List<string>();
         var recommended = new List<string>();
-        if (extracted.Count == 0) return (hard, recommended);
-
         var text = (module.RequirementsText ?? "") + "\n" + (module.RequirementsTextEn ?? "");
         // Recommendation headers introduce lists ("Empfehlungen:\n- Datenbanken"): the
         // marker sits in its own segment, so bullet segments inherit the recommendation
@@ -435,21 +435,27 @@ Output JSON:";
             else { reco = false; inRecoList = false; }
             segments.Add((seg, reco));
         }
-        var byCode = allModules
-            .GroupBy(m => m.Code, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+        if (!segments.Any(s => s.Reco)) return recommended;
 
-        foreach (var code in extracted)
+        foreach (var candidate in allModules)
         {
-            var names = byCode.TryGetValue(code, out var pm)
-                ? new[] { pm.Title, pm.TitleEn }.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!).ToList()
-                : new List<string>();
+            if (candidate.Code.Equals(module.Code, StringComparison.OrdinalIgnoreCase)) continue;
+            var names = new[] { candidate.Title, candidate.TitleEn }
+                .Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!).ToList();
             var mentioning = segments.Where(s => names.Any(n => MentionsTitle(s.Text, n))).ToList();
-            if (mentioning.Count > 0 && mentioning.All(s => s.Reco)) recommended.Add(code);
-            else hard.Add(code);
+            if (mentioning.Count > 0 && mentioning.All(s => s.Reco)) recommended.Add(candidate.Code);
         }
-        return (hard, recommended);
+        return recommended;
     }
+
+    /// <summary>Source recommendations plus resolved mentions, minus anything that ended
+    /// up a hard prerequisite — a code must never be both.</summary>
+    private static List<string> MergeRecommended(
+        SourceModule module, List<string> recommendedMentions, IReadOnlyList<string> hardPrerequisites) =>
+        module.Recommended.Concat(recommendedMentions)
+            .Where(c => !hardPrerequisites.Contains(c, StringComparer.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     private static bool IsRecommendationSegment(string segment) =>
         System.Text.RegularExpressions.Regex.IsMatch(segment,
@@ -496,27 +502,16 @@ Output JSON:";
     private static CompiledModule RefreshPassThrough(
         CompiledModule prev, SourceModule module, string sourceHash, IEnumerable<SourceModule> allModules)
     {
-        // Same rule as a fresh compile: structured source prerequisites are authoritative;
-        // extracted ones get the recommendation-only split re-applied. Codes moved to
-        // Recommended on an earlier run are recomputable — the requirement texts are
-        // unchanged on this path (SourceHash) — so they are re-derived from the mention
-        // rule over prev's prerequisites AND recommendations instead of blindly carrying
-        // prev.Recommended forward; source recommendations come only from the CURRENT
-        // module.Recommended, so a recommendation removed from the source drops out.
-        List<string> hard, reco;
-        if (module.Prerequisites.Count > 0)
-        {
-            hard = prev.Prerequisites.ToList();
-            reco = new List<string>();
-        }
-        else
-        {
-            var candidates = prev.Prerequisites.Concat(prev.Recommended)
-                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            reco = SplitRecommendedOnlyMentions(module, candidates, allModules).Recommended;
-            hard = prev.Prerequisites
-                .Where(p => !reco.Contains(p, StringComparer.OrdinalIgnoreCase)).ToList();
-        }
+        // Same rules as a fresh compile: structured source prerequisites are authoritative,
+        // and recommendation-only mentions are resolved from scratch against the catalog —
+        // the requirement texts are unchanged on this path (SourceHash guard), so this
+        // reproduces (and never loses) earlier reclassifications without carrying
+        // prev.Recommended forward; a recommendation removed from the current source
+        // therefore drops out even though the hash is unchanged.
+        var recoMentions = FindRecommendationOnlyMentions(module, allModules);
+        var hard = module.Prerequisites.Count > 0
+            ? module.Prerequisites.ToList()
+            : prev.Prerequisites.Where(p => !recoMentions.Contains(p, StringComparer.OrdinalIgnoreCase)).ToList();
 
         return new()
         {
@@ -535,10 +530,9 @@ Output JSON:";
         // Structured source prerequisites win; otherwise the previously extracted (and
         // validated) ones minus recommendation-only mentions. Safe, because the source
         // prerequisites are part of SourceHash — any change skips this reuse path.
-        Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : hard,
+        Prerequisites = hard,
         PrerequisiteNotes = NormalizeNoPrereqSentinel(prev.PrerequisiteNotes),
-        Recommended = module.Recommended.Concat(reco)
-            .Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+        Recommended = MergeRecommended(module, recoMentions, hard),
         StudyPrograms = module.StudyPrograms,
         ModuleType = module.ModuleType,
         Locations = module.Locations,

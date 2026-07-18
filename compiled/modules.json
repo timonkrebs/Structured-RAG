@@ -1697,7 +1697,9 @@
     ],
     "prerequisites": [],
     "prerequisiteNotes": "Keine.\nEmpfehlungen:\n\n- Wirtschaftsmathematik 2\n- Datenbanken",
-    "recommended": [],
+    "recommended": [
+      "9212177"
+    ],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik"
     ],
@@ -9722,8 +9724,10 @@
     "prerequisites": [],
     "prerequisiteNotes": null,
     "recommended": [
+      "9776667",
       "9879640",
-      "9776667"
+      "9879643",
+      "9212188"
     ],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
