@@ -4,10 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* Role tokens; dark mode is its own selected set, not an automatic flip. */
+  /* Role tokens; dark mode is its own selected set, not an automatic flip.
+     The body is transparent so the host's card background shows through;
+     --surface is only for elements that need an opaque fill, and --plane is
+     a translucent overlay that adapts to any host background — raised in
+     dark mode (lighter), recessed in light mode (darker). */
   :root {
-    --surface: #fcfcfb;
-    --plane: #f9f9f7;
+    color-scheme: light;
+    --surface: #ffffff;
+    --plane: rgba(0, 0, 0, 0.04);
     --ink: #0b0b0b;
     --ink-2: #52514e;
     --muted: #898781;
@@ -18,13 +23,14 @@
     --good-text: #006300;
   }
   :root[data-theme="dark"] {
-    --surface: #1a1a19;
-    --plane: #0d0d0d;
+    color-scheme: dark;
+    --surface: #212121;
+    --plane: rgba(255, 255, 255, 0.06);
     --ink: #ffffff;
     --ink-2: #c3c2b7;
     --muted: #898781;
-    --hairline: #2c2c2a;
-    --ring: rgba(255, 255, 255, 0.10);
+    --hairline: #3a3a38;
+    --ring: rgba(255, 255, 255, 0.14);
     --accent: #3987e5;
     --accent-soft: #184f95;
     --good-text: #0ca30c;
@@ -32,7 +38,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--surface);
+    background: transparent;
     color: var(--ink);
     font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
