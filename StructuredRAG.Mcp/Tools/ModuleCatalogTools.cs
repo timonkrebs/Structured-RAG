@@ -20,7 +20,7 @@ namespace StructuredRAG.Mcp.Tools;
 [McpServerToolType]
 public static class ModuleCatalogTools
 {
-    [McpServerTool(Name = "search", ReadOnly = true)]
+    [McpServerTool(Name = "search", ReadOnly = true, UseStructuredContent = true)]
     [Description("Search study modules by free-text query (German or English). Returns matching modules with id, title and summary. For precise filtering by tags, ECTS, semester or level use search_modules instead.")]
     public static SearchResults Search(
         CatalogStore store,
@@ -52,7 +52,7 @@ public static class ModuleCatalogTools
         return await liveFetcher.FetchAsync(m, cancellationToken);
     }
 
-    [McpServerTool(Name = "search_modules", ReadOnly = true)]
+    [McpServerTool(Name = "search_modules", ReadOnly = true, UseStructuredContent = true)]
     [McpMeta("openai/widgetAccessible", true)]
     [Description("Filter modules by boolean tag criteria (allOfTags/anyOfTags/noneOfTags) plus semester, level, module type, study program, ECTS range, language and optional free text. Returns the total match count, the modules in the requested format and — with includeFacets — per-tag counts of the result set to pick the next filter from. Search WIDE: tags are compiled and approximate, so prefer anyOfTags with many tags over stacking allOfTags — missing a relevant module is worse than reviewing extras, and the compact format keeps wide results cheap. The tag vocabulary is in the server instructions; list_tags has the tag descriptions.")]
     public static ModuleSearchResults SearchModules(
@@ -165,12 +165,12 @@ public static class ModuleCatalogTools
         return resolved;
     }
 
-    [McpServerTool(Name = "list_tags", ReadOnly = true)]
+    [McpServerTool(Name = "list_tags", ReadOnly = true, UseStructuredContent = true)]
     [Description("List the closed tag taxonomy of the catalog: canonical German tag names, English aliases, what each tag covers, and how many modules carry it. Use these tags with search_modules.")]
     public static IReadOnlyList<TagDefinition> ListTags(CatalogStore store) =>
         store.Taxonomy.OrderByDescending(t => t.ModuleCount).ToList();
 
-    [McpServerTool(Name = "get_catalog_overview", ReadOnly = true)]
+    [McpServerTool(Name = "get_catalog_overview", ReadOnly = true, UseStructuredContent = true)]
     [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, tags) plus the tag taxonomy. Ideal first call to load the full catalog into context, especially for semester planning.")]
     public static string GetCatalogOverview(CatalogStore store) =>
         store.TaxonomyMarkdown() + "\n\n" + store.IndexMarkdown();

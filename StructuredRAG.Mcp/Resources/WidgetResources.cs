@@ -27,6 +27,11 @@ public static class WidgetResources
     private const string SkybridgeMimeType = "text/html+skybridge";
     private const string McpAppMimeType = "text/html;profile=mcp-app";
 
+    // Unique origin identifying this app's widgets (ChatGPT sandboxes them under a
+    // domain derived from it; required for app-store submission). The deployment's
+    // public origin — update if the service moves.
+    private const string WidgetDomain = "https://structured-rag-69g2.onrender.com";
+
     private const string PlannerDescription =
         "Interactive semester plan builder: pick eligible modules, track ECTS against a target, " +
         "see same-weekday hints and why blocked modules are blocked.";
@@ -45,7 +50,9 @@ public static class WidgetResources
     [Description("ChatGPT widget template rendered for plan_semester results.")]
     [McpMeta("openai/widgetDescription", PlannerDescription)]
     [McpMeta("openai/widgetPrefersBorder", true)]
+    [McpMeta("openai/widgetDomain", WidgetDomain)]
     [McpMeta("openai/widgetCSP", JsonValue = """{"connect_domains":[],"resource_domains":[]}""")]
+    [McpMeta("ui", JsonValue = "{\"domain\":\"" + WidgetDomain + "\",\"csp\":{\"connectDomains\":[],\"resourceDomains\":[]}}")]
     public static TextResourceContents SemesterPlannerSkybridge() =>
         WidgetContents("ui://widget/semester-planner.html", SkybridgeMimeType, "semester-planner.html", PlannerDescription);
 
@@ -53,7 +60,9 @@ public static class WidgetResources
     [Description("ChatGPT widget template rendered for compare_modules results.")]
     [McpMeta("openai/widgetDescription", ComparerDescription)]
     [McpMeta("openai/widgetPrefersBorder", true)]
+    [McpMeta("openai/widgetDomain", WidgetDomain)]
     [McpMeta("openai/widgetCSP", JsonValue = """{"connect_domains":[],"resource_domains":[]}""")]
+    [McpMeta("ui", JsonValue = "{\"domain\":\"" + WidgetDomain + "\",\"csp\":{\"connectDomains\":[],\"resourceDomains\":[]}}")]
     public static TextResourceContents ModuleComparerSkybridge() =>
         WidgetContents("ui://widget/module-comparer.html", SkybridgeMimeType, "module-comparer.html", ComparerDescription);
 
@@ -61,7 +70,9 @@ public static class WidgetResources
     [Description("ChatGPT widget template rendered for plan_path results.")]
     [McpMeta("openai/widgetDescription", PathDescription)]
     [McpMeta("openai/widgetPrefersBorder", true)]
+    [McpMeta("openai/widgetDomain", WidgetDomain)]
     [McpMeta("openai/widgetCSP", JsonValue = """{"connect_domains":[],"resource_domains":[]}""")]
+    [McpMeta("ui", JsonValue = "{\"domain\":\"" + WidgetDomain + "\",\"csp\":{\"connectDomains\":[],\"resourceDomains\":[]}}")]
     public static TextResourceContents PathPlannerSkybridge() =>
         WidgetContents("ui://widget/path-planner.html", SkybridgeMimeType, "path-planner.html", PathDescription);
 
@@ -99,10 +110,22 @@ public static class WidgetResources
             {
                 ["openai/widgetDescription"] = description,
                 ["openai/widgetPrefersBorder"] = true,
+                ["openai/widgetDomain"] = WidgetDomain,
                 ["openai/widgetCSP"] = new JsonObject
                 {
                     ["connect_domains"] = new JsonArray(),
                     ["resource_domains"] = new JsonArray(),
+                },
+                // Standard MCP Apps equivalents of the openai/* keys above — ChatGPT
+                // prefers these going forward; empty lists = fully self-contained.
+                ["ui"] = new JsonObject
+                {
+                    ["domain"] = WidgetDomain,
+                    ["csp"] = new JsonObject
+                    {
+                        ["connectDomains"] = new JsonArray(),
+                        ["resourceDomains"] = new JsonArray(),
+                    },
                 },
             }
             : new JsonObject
