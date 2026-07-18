@@ -317,6 +317,18 @@ Output JSON:";
                     module.Code, string.Join(", ", dangling));
                 module.Prerequisites = module.Prerequisites.Where(codes.Contains).ToList();
             }
+
+            // Same guard for recommendations: the incremental reuse path carries prior
+            // Recommended entries forward, so a module that has since disappeared from
+            // the catalog must be dropped here or plan_semester keeps reporting a
+            // missing recommendation that no longer exists.
+            var danglingReco = module.Recommended.Where(p => !codes.Contains(p)).ToList();
+            if (danglingReco.Count > 0)
+            {
+                _logger.LogWarning("Module {Code}: removing dangling recommendations: {Dangling}",
+                    module.Code, string.Join(", ", danglingReco));
+                module.Recommended = module.Recommended.Where(codes.Contains).ToList();
+            }
         }
 
         foreach (var tag in taxonomy)

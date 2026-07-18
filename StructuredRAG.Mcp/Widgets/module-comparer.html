@@ -238,6 +238,7 @@
       noFixedDay: "unregelm.",
       tags: "Tags",
       prereqs: "Voraussetzungen",
+      recommended: "Empfohlen",
       prereqNotes: "Hinweise",
       summary: "Kurzbeschreibung",
       link: "Modulseite",
@@ -263,6 +264,7 @@
       noFixedDay: "irreg.",
       tags: "Tags",
       prereqs: "Prerequisites",
+      recommended: "Recommended",
       prereqNotes: "Notes",
       summary: "Summary",
       link: "Module page",
@@ -415,6 +417,10 @@
     html += row(s.prereqs, mods, function (m) {
       var codes = m.prerequisites || [];
       return codes.length ? chips(codes.map(function (c) { return { label: c }; })) : '<span class="cell-note">' + esc(s.none) + "</span>";
+    });
+    html += row(s.recommended, mods, function (m) {
+      var codes = m.recommended || [];
+      return codes.length ? chips(codes.map(function (c) { return { label: c }; })) : "";
     });
     html += row(s.prereqNotes, mods, function (m) {
       return m.prerequisiteNotes ? '<span class="cell-note">' + esc(m.prerequisiteNotes) + "</span>" : "";

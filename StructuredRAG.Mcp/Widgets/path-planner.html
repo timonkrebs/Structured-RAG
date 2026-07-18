@@ -101,6 +101,7 @@
   .card-title .code { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
   .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
   .card-summary { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+  .card-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .card-actions { flex: none; display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
   .card-actions button { font-size: 12px; padding: 3px 9px; white-space: nowrap; }
 
@@ -267,6 +268,7 @@
       official: "Offizielle Modulseite ↗",
       gap: function (n) { return "⏳ " + n + (n === 1 ? " Wartesemester" : " Wartesemester") + " (kein passendes Angebot)"; },
       requiredFor: function (codes) { return "→ benötigt für " + codes; },
+      recommendedNote: function (codes) { return "Empfohlen (nicht zwingend): " + codes; },
       chooseSem: "Semester wählen",
       recommendedSeq: function (sem) { return "empfohlen: " + sem; },
       resetSeq: "↺ Empfohlene Abfolge",
@@ -297,6 +299,7 @@
       official: "Official module page ↗",
       gap: function (n) { return "⏳ " + n + (n === 1 ? " waiting semester" : " waiting semesters") + " (no matching offering)"; },
       requiredFor: function (codes) { return "→ required for " + codes; },
+      recommendedNote: function (codes) { return "Recommended (not required): " + codes; },
       chooseSem: "Choose semester",
       recommendedSeq: function (sem) { return "recommended: " + sem; },
       resetSeq: "↺ Recommended sequence",
@@ -587,6 +590,8 @@
           (needs.length ? '<span class="chip req">' + esc(s.requiredFor(needs.join(", "))) + "</span>" : "") +
           "</div>" +
           '<div class="card-summary">' + esc(locSummary(m)) + "</div>" +
+          ((m.recommended || []).length
+            ? '<div class="card-note">' + esc(s.recommendedNote(m.recommended.join(", "))) + "</div>" : "") +
           semPicker(m, view) +
           "</div>" +
           '<div class="card-actions">' +

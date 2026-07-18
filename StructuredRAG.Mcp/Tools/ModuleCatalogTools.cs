@@ -522,14 +522,15 @@ public record ModuleSummary(
     IReadOnlyList<string> Languages, IReadOnlyList<string> Weekdays,
     IReadOnlyList<Lesson> Lessons,
     IReadOnlyList<string> Tags, string Summary, string? SummaryEn, string Audience,
-    IReadOnlyList<string> Prerequisites, string? PrerequisiteNotes, string? Url)
+    IReadOnlyList<string> Prerequisites, IReadOnlyList<string> Recommended,
+    string? PrerequisiteNotes, string? Url)
 {
     public static ModuleSummary From(CompiledModule m) => new(
         m.Code, m.Title, m.TitleEn, m.Ects, m.Level, m.ModuleType,
         m.OfferedIn, m.Offerings, m.Languages, m.Weekdays,
         NewestLessons(m.Offerings),
         m.Tags, m.Summary, m.SummaryEn, m.Audience,
-        m.Prerequisites, m.PrerequisiteNotes, m.Url);
+        m.Prerequisites, m.Recommended, m.PrerequisiteNotes, m.Url);
 
     /// <summary>Summary narrowed to the offerings matching the given semester: a module can
     /// meet on different weekdays in HS vs FS, and the module-level union would produce wrong
