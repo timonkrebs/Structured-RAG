@@ -185,11 +185,24 @@
         if (typeof api.openExternal === "function") api.openExternal({ href: url });
         else window.open(url, "_blank", "noopener");
       };
+      // ChatGPT fires set_globals for many reasons (scroll, keyboard, layout
+      // changes — very frequently on mobile). Re-rendering on every event snaps
+      // open dropdowns shut mid-pick, so only notify when something the widget
+      // actually renders from has changed.
+      var sigOf = function () {
+        var ws; try { ws = JSON.stringify(h.widgetState || null); } catch (e) { ws = ""; }
+        return [h.theme, h.locale, ws].join("|");
+      };
+      var lastSig = sigOf();
       window.addEventListener("openai:set_globals", function () {
+        var toolChanged = !!api.toolOutput && api.toolOutput !== h.toolOutput;
         h.theme = api.theme || h.theme;
         h.locale = api.locale || h.locale;
         h.toolOutput = api.toolOutput || h.toolOutput;
         h.widgetState = api.widgetState || h.widgetState;
+        var sig = sigOf();
+        if (!toolChanged && sig === lastSig) return;
+        lastSig = sig;
         notify();
       });
     } else if (window.parent && window.parent !== window) {
@@ -771,7 +784,31 @@
     document.documentElement.dataset.theme = theme;
   }
 
-  Host.onchange = function () { applyTheme(); render(); };
+  // Host-triggered re-renders must never destroy a form control the student is
+  // using: replacing an open <select> closes it before a choice can be made.
+  // Defer the render until the control is committed or left; our own event
+  // handlers keep calling render() directly (the dropdown is closed by then).
+  var hostRenderDeferred = false;
+  function hostRender() {
+    var root = document.getElementById("root");
+    var active = document.activeElement;
+    if (active && root.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT")) {
+      if (hostRenderDeferred) return;
+      hostRenderDeferred = true;
+      var done = function () {
+        active.removeEventListener("blur", done);
+        active.removeEventListener("change", done);
+        hostRenderDeferred = false;
+        render();
+      };
+      active.addEventListener("blur", done);
+      active.addEventListener("change", done);
+      return;
+    }
+    render();
+  }
+
+  Host.onchange = function () { applyTheme(); hostRender(); };
 
   applyTheme();
   render();
