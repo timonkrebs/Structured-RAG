@@ -102,10 +102,16 @@
 
   .details-panel {
     margin: 8px 0 0 24px; padding: 8px 10px; font-size: 12.5px;
-    border: 1px solid var(--hairline); border-radius: 8px; background: var(--plane);
-    white-space: pre-wrap; overflow-wrap: break-word; max-height: 260px; overflow-y: auto;
+    border: 1px solid var(--hairline); border-radius: 8px;
+    overflow-wrap: break-word; max-height: 260px; overflow-y: auto;
   }
   .details-panel a { color: var(--accent); }
+  .details-panel p { margin: 0 0 6px; }
+  .details-panel p:last-child { margin-bottom: 0; }
+  .details-panel ul { margin: 0 0 6px; padding-left: 18px; }
+  .details-panel li { margin: 2px 0; }
+  .details-panel .md-h { font-weight: 650; margin: 8px 0 4px; }
+  .details-panel .md-h:first-child { margin-top: 0; }
 
   details.blocked { margin-top: 12px; border-top: 1px solid var(--hairline); padding-top: 8px; }
   details.blocked summary { cursor: pointer; color: var(--ink-2); font-weight: 600; font-size: 13px; }
@@ -355,6 +361,7 @@
   var target = 30;
   var targetTouched = false;
   var stateRestored = false;
+  var blockedOpen = false;  // survives re-renders (hosts re-render on any global change)
 
   function data() { return Host.toolOutput; }
 
@@ -399,6 +406,23 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  }
+  // Minimal markdown for the fetch text (headings, bold, bullets). The input is
+  // escaped up front, so the transforms below only ever emit our own tags.
+  function mdHtml(md) {
+    var out = [], list = null, m;
+    esc(md).split(/\r?\n/).forEach(function (line) {
+      line = line.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      if ((m = /^\s*[-*•]\s+(.*)$/.exec(line))) {
+        (list = list || []).push("<li>" + m[1] + "</li>");
+        return;
+      }
+      if (list) { out.push("<ul>" + list.join("") + "</ul>"); list = null; }
+      if ((m = /^\s*#{1,4}\s+(.*)$/.exec(line))) out.push('<div class="md-h">' + m[1] + "</div>");
+      else if (/\S/.test(line)) out.push("<p>" + line + "</p>");
+    });
+    if (list) out.push("<ul>" + list.join("") + "</ul>");
+    return out.join("");
   }
   function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
   function locSummary(m) { return (!isDe() && m.summaryEn) ? m.summaryEn : m.summary; }
@@ -592,7 +616,7 @@
 
     // Blocked modules
     if ((d.blocked || []).length > 0) {
-      html += '<details class="blocked"><summary>' + esc(s.blocked(d.blocked.length)) + "</summary><ul class=\"modules\">";
+      html += '<details class="blocked"' + (blockedOpen ? " open" : "") + "><summary>" + esc(s.blocked(d.blocked.length)) + "</summary><ul class=\"modules\">";
       d.blocked.forEach(function (b) {
         html += '<li><div class="mod-title">' + esc(b.title) + '<span class="code">' + esc(b.code) + "</span></div>" +
           '<div class="badges"><span class="chip ects">' + b.ects + " " + esc(s.ects) + "</span>" +
@@ -704,9 +728,9 @@
     var s = t();
     var st = details[m.code];
     var body;
-    if (!st || st.loading) body = esc(s.loading);
-    else if (st.error) body = esc(s.loadError) + (m.url ? linkHtml(m.url, s.official) : "");
-    else body = esc(st.text) + (st.url || m.url ? "\n\n" + linkHtml(st.url || m.url, s.official) : "");
+    if (!st || st.loading) body = "<p>" + esc(s.loading) + "</p>";
+    else if (st.error) body = "<p>" + esc(s.loadError) + (m.url ? " " + linkHtml(m.url, s.official) : "") + "</p>";
+    else body = mdHtml(st.text) + (st.url || m.url ? "<p>" + linkHtml(st.url || m.url, s.official) + "</p>" : "");
     return '<div class="details-panel">' + body + "</div>";
   }
   function linkHtml(url, label) {
@@ -762,6 +786,12 @@
     }
     else if (el.id === "send") sendPlan();
   });
+  // "toggle" does not bubble — listen in the capture phase. Without this, any
+  // re-render (hosts fire global updates constantly) rebuilds the <details>
+  // element in its default collapsed state right after the user opens it.
+  document.getElementById("root").addEventListener("toggle", function (ev) {
+    if (ev.target.matches && ev.target.matches("details.blocked")) blockedOpen = ev.target.open;
+  }, true);
   document.getElementById("root").addEventListener("change", function (ev) {
     var el = ev.target;
     if (el.hasAttribute && el.hasAttribute("data-toggle")) toggle(el.getAttribute("data-toggle"));
