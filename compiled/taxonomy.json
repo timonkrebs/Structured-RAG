@@ -1,0 +1,282 @@
+[
+  {
+    "name": "K\u00FCnstliche Intelligenz",
+    "nameEn": "Artificial Intelligence",
+    "description": "F\u00FCr Fragen zu generativer KI, Sprachmodellen, KI-Agenten, sozialen Robotern sowie Chancen und Einsatzfeldern k\u00FCnstlicher Intelligenz.",
+    "descriptionEn": "Covers interests in generative AI, language models, AI agents, social robots, and the opportunities and applications of artificial intelligence.",
+    "moduleCount": 23
+  },
+  {
+    "name": "Verantwortungsvolle KI",
+    "nameEn": "Responsible AI",
+    "description": "F\u00FCr Fragen zu KI-Risiken, Vertrauen, Transparenz, Nachvollziehbarkeit, Regulierung und gesellschaftlichen Folgen automatisierter Systeme.",
+    "descriptionEn": "Covers questions about AI risks, trust, transparency, traceability, regulation, and the societal effects of automated systems.",
+    "moduleCount": 12
+  },
+  {
+    "name": "Datenanalyse",
+    "nameEn": "Data Analytics",
+    "description": "F\u00FCr Studierende, die Daten auswerten, visualisieren und f\u00FCr fundierte betriebliche Entscheidungen nutzen m\u00F6chten.",
+    "descriptionEn": "For students who want to analyze and visualize data and use it for evidence-based business decisions.",
+    "moduleCount": 20
+  },
+  {
+    "name": "Statistik",
+    "nameEn": "Statistics",
+    "description": "F\u00FCr Fragen zu Wahrscheinlichkeit, statistischen Methoden, Zeitreihen, mathematischer Modellierung und quantitativer Probleml\u00F6sung.",
+    "descriptionEn": "Covers probability, statistical methods, time series, mathematical modeling, and quantitative problem-solving.",
+    "moduleCount": 9
+  },
+  {
+    "name": "Maschinelles Lernen",
+    "nameEn": "Machine Learning",
+    "description": "F\u00FCr Studierende, die Vorhersagemodelle und Lernverfahren mit Python oder anderen Data-Science-Werkzeugen entwickeln m\u00F6chten.",
+    "descriptionEn": "For students who want to build predictive models and learning methods with Python or other data science tools.",
+    "moduleCount": 5
+  },
+  {
+    "name": "Big Data",
+    "nameEn": "Big Data",
+    "description": "F\u00FCr Interessen an grossen, schnellen, heterogenen oder unstrukturierten Datenbest\u00E4nden und deren technischer Verarbeitung.",
+    "descriptionEn": "Covers interests in large, fast-moving, heterogeneous, or unstructured datasets and their technical processing.",
+    "moduleCount": 3
+  },
+  {
+    "name": "Programmierung",
+    "nameEn": "Programming",
+    "description": "F\u00FCr Fragen zum Einstieg in die Softwareentwicklung, zu Programmiersprachen und zur systematischen Umsetzung von Algorithmen.",
+    "descriptionEn": "Covers introductions to software development, programming languages, and the systematic implementation of algorithms.",
+    "moduleCount": 15
+  },
+  {
+    "name": "Software Engineering",
+    "nameEn": "Software Engineering",
+    "description": "F\u00FCr Interessen an Softwarearchitektur, Entwicklungsprozessen, Tests, Application Lifecycle Management und KI-gest\u00FCtzter Entwicklung.",
+    "descriptionEn": "Covers software architecture, development processes, testing, application lifecycle management, and AI-assisted development.",
+    "moduleCount": 10
+  },
+  {
+    "name": "Webtechnologien",
+    "nameEn": "Web Technologies",
+    "description": "F\u00FCr Studierende, die moderne Webarchitekturen, Webanwendungen, Schnittstellen und Backend-Dienste verstehen und entwickeln m\u00F6chten.",
+    "descriptionEn": "For students who want to understand and build modern web architectures, web applications, interfaces, and backend services.",
+    "moduleCount": 7
+  },
+  {
+    "name": "Datenbanken",
+    "nameEn": "Databases",
+    "description": "F\u00FCr Fragen zu relationalen Datenmodellen, Datenbanksystemen, Abfragen sowie strukturierter Speicherung und Verwaltung von Daten.",
+    "descriptionEn": "Covers relational data models, database systems, queries, and the structured storage and management of data.",
+    "moduleCount": 9
+  },
+  {
+    "name": "Unternehmenssysteme",
+    "nameEn": "Enterprise Systems",
+    "description": "F\u00FCr Interessen an ERP-, CRM-, SRM- und SAP-Systemen sowie deren Rolle in integrierten Gesch\u00E4ftsabl\u00E4ufen.",
+    "descriptionEn": "Covers ERP, CRM, SRM, and SAP systems and their role in integrated business operations.",
+    "moduleCount": 10
+  },
+  {
+    "name": "Digitale Transformation",
+    "nameEn": "Digital Transformation",
+    "description": "F\u00FCr Fragen dazu, wie digitale Technologien Unternehmen, Management, Wertsch\u00F6pfung und ganze Branchen ver\u00E4ndern.",
+    "descriptionEn": "Covers how digital technologies transform organizations, management, value creation, and entire industries.",
+    "moduleCount": 30
+  },
+  {
+    "name": "Digitale Gesch\u00E4ftsmodelle",
+    "nameEn": "Digital Business Models",
+    "description": "F\u00FCr Studierende, die digitale Wertangebote, Plattformen, Tokenisierung und neue Erl\u00F6smodelle entwickeln oder bewerten m\u00F6chten.",
+    "descriptionEn": "For students who want to develop or assess digital value propositions, platforms, tokenization, and new revenue models.",
+    "moduleCount": 10
+  },
+  {
+    "name": "Prozessmanagement",
+    "nameEn": "Process Management",
+    "description": "F\u00FCr Fragen zur Analyse, Modellierung, Optimierung und Digitalisierung durchg\u00E4ngiger Gesch\u00E4ftsprozesse.",
+    "descriptionEn": "Covers the analysis, modeling, optimization, and digitalization of end-to-end business processes.",
+    "moduleCount": 11
+  },
+  {
+    "name": "Projektmanagement",
+    "nameEn": "Project Management",
+    "description": "F\u00FCr Interessen an klassischer und agiler Projektplanung, Zusammenarbeit, Steuerung und praktischer Projektdurchf\u00FChrung.",
+    "descriptionEn": "Covers traditional and agile project planning, collaboration, control, and practical project delivery.",
+    "moduleCount": 13
+  },
+  {
+    "name": "Blockchain",
+    "nameEn": "Blockchain",
+    "description": "F\u00FCr Fragen zu Distributed-Ledger-Technologien, Kryptow\u00E4hrungen, Smart Contracts, Tokenisierung und dezentralen Anwendungen.",
+    "descriptionEn": "Covers distributed ledger technologies, cryptocurrencies, smart contracts, tokenization, and decentralized applications.",
+    "moduleCount": 3
+  },
+  {
+    "name": "Zukunftstechnologien",
+    "nameEn": "Emerging Technologies",
+    "description": "F\u00FCr Studierende, die Quantencomputing, neue IT-Trends und experimentelle Technologien fr\u00FChzeitig kennenlernen m\u00F6chten.",
+    "descriptionEn": "For students who want early exposure to quantum computing, emerging IT trends, and experimental technologies.",
+    "moduleCount": 9
+  },
+  {
+    "name": "Cybersecurity Datenschutz",
+    "nameEn": "Cybersecurity Privacy",
+    "description": "F\u00FCr Fragen zu Datenschutz, Datenverletzungen, Informationssicherheit, Compliance und dem Schutz digitaler Werte.",
+    "descriptionEn": "Covers data privacy, data breaches, information security, compliance, and the protection of digital assets.",
+    "moduleCount": 11
+  },
+  {
+    "name": "Digitales Marketing",
+    "nameEn": "Digital Marketing",
+    "description": "F\u00FCr Interessen an Online-Marketing, Social Media, Markenf\u00FChrung, Content, Aufmerksamkeit und digitalen Kundenbeziehungen.",
+    "descriptionEn": "Covers online marketing, social media, branding, content, attention, and digital customer relationships.",
+    "moduleCount": 6
+  },
+  {
+    "name": "Finanzmanagement",
+    "nameEn": "Financial Management",
+    "description": "F\u00FCr Fragen zu Buchf\u00FChrung, Jahresabschl\u00FCssen, finanzieller Analyse und der Bewertung unternehmerischer Leistung.",
+    "descriptionEn": "Covers accounting, financial statements, financial analysis, and the assessment of business performance.",
+    "moduleCount": 10
+  },
+  {
+    "name": "Banken Zahlungsverkehr",
+    "nameEn": "Banking Payments",
+    "description": "F\u00FCr Interessen am Bankensektor sowie an traditionellen, mobilen und kryptobasierten Zahlungssystemen.",
+    "descriptionEn": "Covers the banking sector and traditional, mobile, and cryptocurrency-based payment systems.",
+    "moduleCount": 4
+  },
+  {
+    "name": "Management Grundlagen",
+    "nameEn": "Management Foundations",
+    "description": "F\u00FCr Studierende, die Planung, Organisation, F\u00FChrung, Kontrolle und unternehmerische Entscheidungen grundlegend verstehen m\u00F6chten.",
+    "descriptionEn": "For students seeking a foundation in planning, organizing, leading, controlling, and managerial decision-making.",
+    "moduleCount": 33
+  },
+  {
+    "name": "Organisation F\u00FChrung",
+    "nameEn": "Organization Leadership",
+    "description": "F\u00FCr Fragen zu Verhalten in Organisationen, Motivation, Rollen, Glaubw\u00FCrdigkeit, Psychodynamik und wirksamer F\u00FChrung.",
+    "descriptionEn": "Covers organizational behavior, motivation, roles, credibility, psychodynamics, and effective leadership.",
+    "moduleCount": 16
+  },
+  {
+    "name": "Unternehmertum Innovation",
+    "nameEn": "Entrepreneurship Innovation",
+    "description": "F\u00FCr Studierende, die Start-ups gr\u00FCnden, Gesch\u00E4ftsideen entwickeln oder innovative Unternehmen und KMU kennenlernen m\u00F6chten.",
+    "descriptionEn": "For students who want to found start-ups, develop business ideas, or explore innovative companies and SMEs.",
+    "moduleCount": 13
+  },
+  {
+    "name": "Internationales Gesch\u00E4ft",
+    "nameEn": "International Business",
+    "description": "F\u00FCr Fragen zu globalen M\u00E4rkten, internationaler Wettbewerbsf\u00E4higkeit, grenz\u00FCberschreitender Gesch\u00E4ftst\u00E4tigkeit und interkultureller Zusammenarbeit.",
+    "descriptionEn": "Covers global markets, international competitiveness, cross-border business, and intercultural collaboration.",
+    "moduleCount": 30
+  },
+  {
+    "name": "Volkswirtschaft Weltordnung",
+    "nameEn": "Economics Global Order",
+    "description": "F\u00FCr Interessen an Wirtschaftssystemen, Globalisierung, gesamtwirtschaftlichen Herausforderungen und alternativen Wirtschaftsordnungen.",
+    "descriptionEn": "Covers economic systems, globalization, macroeconomic challenges, and alternative economic orders.",
+    "moduleCount": 12
+  },
+  {
+    "name": "Recht Justiz",
+    "nameEn": "Law Justice",
+    "description": "F\u00FCr Fragen zu Wirtschaftsrecht, Strafrecht, Gerichten, staatlicher Rechtsdurchsetzung und der Entwicklung rechtlicher Ordnungen.",
+    "descriptionEn": "Covers business law, criminal law, courts, public enforcement, and the development of legal systems.",
+    "moduleCount": 9
+  },
+  {
+    "name": "Ethik Verantwortung",
+    "nameEn": "Ethics Responsibility",
+    "description": "F\u00FCr Studierende, die moralische Dilemmata sowie die gesellschaftliche Verantwortung von Unternehmen und Technologien reflektieren m\u00F6chten.",
+    "descriptionEn": "For students who want to examine moral dilemmas and the social responsibility of businesses and technologies.",
+    "moduleCount": 22
+  },
+  {
+    "name": "Nachhaltigkeit Klima",
+    "nameEn": "Sustainability Climate",
+    "description": "F\u00FCr Fragen zu Klimawandel, Biodiversit\u00E4t, Energie, nachhaltiger Entwicklung, ESG und wirkungsorientiertem Wirtschaften.",
+    "descriptionEn": "Covers climate change, biodiversity, energy, sustainable development, ESG, and impact-driven business.",
+    "moduleCount": 16
+  },
+  {
+    "name": "Politik Institutionen",
+    "nameEn": "Politics Institutions",
+    "description": "F\u00FCr Interessen an \u00F6ffentlicher Verwaltung, regionaler Politik, EU-Institutionen, internationalen Organisationen und politischer Entscheidungsfindung.",
+    "descriptionEn": "Covers public administration, regional politics, EU institutions, international organizations, and political decision-making.",
+    "moduleCount": 18
+  },
+  {
+    "name": "Gesellschaft Kultur",
+    "nameEn": "Society Culture",
+    "description": "F\u00FCr Fragen zu Migration, Religion, Identit\u00E4t, sozialen Konflikten, kultureller Vielfalt und Problemen moderner Gesellschaften.",
+    "descriptionEn": "Covers migration, religion, identity, social conflict, cultural diversity, and challenges facing modern societies.",
+    "moduleCount": 36
+  },
+  {
+    "name": "Geschichte Zeitgeschehen",
+    "nameEn": "History Current Affairs",
+    "description": "F\u00FCr Studierende, die historische Entwicklungen, Kriege, Korruption und ihre Bedeutung f\u00FCr gegenw\u00E4rtige Politik und Wirtschaft untersuchen m\u00F6chten.",
+    "descriptionEn": "For students who want to examine historical developments, wars, corruption, and their relevance to current politics and business.",
+    "moduleCount": 12
+  },
+  {
+    "name": "Asienkompetenz",
+    "nameEn": "Asian Studies",
+    "description": "F\u00FCr Interessen an China, Taiwan, Japan und weiteren asiatischen Gesellschaften, Philosophien, Kulturen und Wirtschaftsr\u00E4umen.",
+    "descriptionEn": "Covers China, Taiwan, Japan, and other Asian societies, philosophies, cultures, and economic regions.",
+    "moduleCount": 8
+  },
+  {
+    "name": "Fremdsprachen",
+    "nameEn": "Foreign Languages",
+    "description": "F\u00FCr Studierende, die Deutsch, Englisch, Franz\u00F6sisch, Chinesisch, Italienisch, Japanisch, Russisch oder Spanisch f\u00FCr Alltag und Beruf lernen m\u00F6chten.",
+    "descriptionEn": "For students who want to learn German, English, French, Chinese, Italian, Japanese, Russian, or Spanish for daily and professional use.",
+    "moduleCount": 16
+  },
+  {
+    "name": "Kommunikation Auftreten",
+    "nameEn": "Communication Presence",
+    "description": "F\u00FCr Fragen zu \u00FCberzeugendem Auftreten, Pr\u00E4sentation, professioneller Kommunikation, pers\u00F6nlicher Wirkung und F\u00FChrungskommunikation.",
+    "descriptionEn": "Covers persuasive presence, presentation, professional communication, personal impact, and leadership communication.",
+    "moduleCount": 46
+  },
+  {
+    "name": "Studienkompetenzen",
+    "nameEn": "Study Skills",
+    "description": "F\u00FCr Studierende, die kritisches Denken, wissenschaftliches Schreiben, Lernstrategien, Konzentration und akademisches Arbeiten verbessern m\u00F6chten.",
+    "descriptionEn": "For students who want to improve critical thinking, academic writing, learning strategies, concentration, and scholarly work.",
+    "moduleCount": 15
+  },
+  {
+    "name": "Wohlbefinden Resilienz",
+    "nameEn": "Wellbeing Resilience",
+    "description": "F\u00FCr Interessen an Achtsamkeit, emotionaler Intelligenz, Stressregulation, mentaler St\u00E4rke und nachhaltiger Leistungsf\u00E4higkeit.",
+    "descriptionEn": "Covers mindfulness, emotional intelligence, stress regulation, mental strength, and sustainable performance.",
+    "moduleCount": 8
+  },
+  {
+    "name": "Karriereentwicklung",
+    "nameEn": "Career Development",
+    "description": "F\u00FCr Fragen zur beruflichen Orientierung, Selbstreflexion, pers\u00F6nlichen Positionierung und zum \u00DCbergang vom Studium in die Arbeitswelt.",
+    "descriptionEn": "Covers career orientation, self-reflection, personal positioning, and the transition from university into professional life.",
+    "moduleCount": 17
+  },
+  {
+    "name": "Praxislernen",
+    "nameEn": "Experiential Learning",
+    "description": "F\u00FCr Studierende, die Wissen in Unternehmensprojekten, Abschlussarbeiten, Exkursionen, Firmenbesuchen oder realen Fallstudien anwenden m\u00F6chten.",
+    "descriptionEn": "For students who want to apply knowledge through company projects, theses, field trips, company visits, or real-world case studies.",
+    "moduleCount": 32
+  },
+  {
+    "name": "Internationaler Austausch",
+    "nameEn": "International Experience",
+    "description": "F\u00FCr Fragen zu Summer Schools, Studienreisen und interkulturellen Lernerfahrungen im Ausland oder mit internationalen Gruppen.",
+    "descriptionEn": "Covers summer schools, study tours, and intercultural learning experiences abroad or within international groups.",
+    "moduleCount": 6
+  }
+]
