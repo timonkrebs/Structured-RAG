@@ -437,13 +437,47 @@ Output JSON:";
         }
         if (!segments.Any(s => s.Reco)) return recommended;
 
-        foreach (var candidate in allModules)
+        var all = allModules.ToList();
+        // Every catalog title as a normalized word sequence: a partial hit whose matched
+        // run spells out some module's EXACT title belongs to that module, not to a
+        // longer title that merely contains the same words.
+        var exactTitles = new HashSet<string>(
+            all.SelectMany(m => new[] { m.Title, m.TitleEn })
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => string.Join(" ", Words(n!))));
+
+        foreach (var candidate in all)
         {
             if (candidate.Code.Equals(module.Code, StringComparison.OrdinalIgnoreCase)) continue;
             var names = new[] { candidate.Title, candidate.TitleEn }
                 .Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!).ToList();
-            var mentioning = segments.Where(s => names.Any(n => MentionsTitle(s.Text, n))).ToList();
-            if (mentioning.Count > 0 && mentioning.All(s => s.Reco)) recommended.Add(candidate.Code);
+
+            var mentions = new List<(bool Reco, List<string> Run, bool Full)>();
+            foreach (var seg in segments)
+            {
+                foreach (var name in names)
+                {
+                    var titleWords = Words(name);
+                    if (titleWords.Count == 0) continue;
+                    var run = LongestTitleRun(seg.Text, titleWords);
+                    var full = run.Count == titleWords.Count;
+                    // Partial hits need a run of at least two words covering >=60% of the
+                    // title — requirement texts drop prefixes ("Project Management" for
+                    // "IT Project Management"), plain substring matching misses them.
+                    var partial = !full && run.Count >= 2 && run.Count >= (int)Math.Ceiling(titleWords.Count * 0.6);
+                    if (full || partial) mentions.Add((seg.Reco, run, full));
+                }
+            }
+
+            if (mentions.Count == 0) continue;
+            if (!mentions.All(m => m.Reco)) continue;
+            // Exact matches win over the partial heuristic: keep this candidate only if
+            // it has a full-title mention somewhere, or at least one partial run that is
+            // NOT another module's exact title. Otherwise "Project Management" would
+            // recommend every "... Project Management" variant alongside the exact one,
+            // and plan_semester reports each Recommended code as independently missing.
+            var hasOwnMention = mentions.Any(m => m.Full || !exactTitles.Contains(string.Join(" ", m.Run)));
+            if (hasOwnMention) recommended.Add(candidate.Code);
         }
         return recommended;
     }
@@ -462,32 +496,29 @@ Output JSON:";
             "recommend|empfohlen|empfehlens|empfehlung|von vorteil|wünschenswert|hilfreich",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-    /// <summary>
-    /// Word-sequence mention check: requirement texts drop title prefixes ("Project
-    /// Management" for the module "IT Project Management"), so plain substring matching
-    /// misses them. A segment mentions a title when it contains the full title or a
-    /// consecutive run of at least two words covering ≥60% of the title's words.
-    /// </summary>
-    private static bool MentionsTitle(string segment, string title)
-    {
-        static List<string> Words(string s) => System.Text.RegularExpressions.Regex
-            .Matches(s.ToLowerInvariant(), @"[\p{L}\d]+").Select(m => m.Value).ToList();
-        var seg = Words(segment);
-        var tit = Words(title);
-        if (tit.Count == 0) return false;
+    private static List<string> Words(string s) => System.Text.RegularExpressions.Regex
+        .Matches(s.ToLowerInvariant(), @"[\p{L}\d]+").Select(m => m.Value).ToList();
 
-        var longestRun = 0;
+    /// <summary>
+    /// Longest run of consecutive title words appearing (in order) in the segment.
+    /// The run's words are identical on both sides, so it is returned from the title's
+    /// word list; a run as long as the title itself is an exact-title mention.
+    /// </summary>
+    private static List<string> LongestTitleRun(string segment, List<string> titleWords)
+    {
+        var seg = Words(segment);
+        var bestStart = 0;
+        var bestLen = 0;
         for (var i = 0; i < seg.Count; i++)
         {
-            for (var j = 0; j < tit.Count; j++)
+            for (var j = 0; j < titleWords.Count; j++)
             {
                 var k = 0;
-                while (i + k < seg.Count && j + k < tit.Count && seg[i + k] == tit[j + k]) k++;
-                longestRun = Math.Max(longestRun, k);
+                while (i + k < seg.Count && j + k < titleWords.Count && seg[i + k] == titleWords[j + k]) k++;
+                if (k > bestLen) { bestStart = j; bestLen = k; }
             }
         }
-        if (longestRun == tit.Count) return true;
-        return longestRun >= 2 && longestRun >= (int)Math.Ceiling(tit.Count * 0.6);
+        return titleWords.GetRange(bestStart, bestLen);
     }
 
     /// <summary>
