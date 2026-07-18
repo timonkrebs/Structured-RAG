@@ -496,6 +496,24 @@
     }
     return out;
   }
+  // Weekday chips must reflect the semester the module is placed in — schedules can
+  // differ between HS and FS, and after a deferral the server-narrowed weekdays
+  // (computed for the earliest slot) may be wrong. Re-derive them from the offerings
+  // matching the placed semester; no matching offering -> no chips (accurate) rather
+  // than a misleading day. Catalogs without offering records keep the summary days.
+  function weekdaysFor(m, slot) {
+    var offs = m.offerings || [];
+    if (offs.length === 0) return m.weekdays || [];
+    var label = slotLabel(slot).toUpperCase(), type = slotType(slot);
+    var match = offs.filter(function (o) { return String(o.semesterId || "").toUpperCase() === label; });
+    if (!match.length) match = offs.filter(function (o) { return String(o.semesterId || "").toUpperCase().slice(-2) === type; });
+    var days = [];
+    match.forEach(function (o) {
+      (o.weekdays || []).forEach(function (d) { if (days.indexOf(d) < 0) days.push(d); });
+    });
+    return days;
+  }
+
   // code -> plan modules that directly require it (why is this module in the path?).
   function requiredForMap() {
     var map = {};
@@ -565,7 +583,7 @@
           '<div class="badges">' +
           (isTarget ? '<span class="chip key">' + esc(s.targetBadge) + "</span>" : "") +
           '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
-          (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("") +
+          weekdaysFor(m, step.slot).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("") +
           (needs.length ? '<span class="chip req">' + esc(s.requiredFor(needs.join(", "))) + "</span>" : "") +
           "</div>" +
           '<div class="card-summary">' + esc(locSummary(m)) + "</div>" +

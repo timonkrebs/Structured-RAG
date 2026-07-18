@@ -17,7 +17,7 @@
     "name": "Datenanalyse",
     "nameEn": "Data Analytics",
     "description": "F\u00FCr Studierende, die Daten und Netzwerke auswerten, visualisieren und f\u00FCr fundierte betriebliche Entscheidungen nutzen m\u00F6chten.",
-    "descriptionEn": "For students who want to analyze and visualize data or networks and use the results to support informed business decisions.",
+    "descriptionEn": "For students who want to analyze and visualize data and networks and use them to make informed business decisions.",
     "moduleCount": 20
   },
   {
@@ -31,21 +31,21 @@
     "name": "Maschinelles Lernen",
     "nameEn": "Machine Learning",
     "description": "F\u00FCr Studierende, die Vorhersagemodelle und Lernverfahren mit Python oder anderen Data-Science-Werkzeugen entwickeln m\u00F6chten.",
-    "descriptionEn": "For students who want to develop predictive models and learning algorithms with Python or other data-science tools.",
+    "descriptionEn": "For students who want to develop predictive models and learning methods using Python or other data science tools.",
     "moduleCount": 5
   },
   {
     "name": "Big Data",
     "nameEn": "Big Data",
     "description": "F\u00FCr Interessen an grossen, schnellen, heterogenen oder unstrukturierten Datenbest\u00E4nden und deren technischer Verarbeitung.",
-    "descriptionEn": "For interests in large, fast-moving, heterogeneous, or unstructured datasets and the technologies used to process them.",
+    "descriptionEn": "For interests in large, fast-moving, heterogeneous, or unstructured datasets and their technical processing.",
     "moduleCount": 3
   },
   {
     "name": "Programmierung",
     "nameEn": "Programming",
     "description": "F\u00FCr Fragen zum Einstieg in die Softwareentwicklung, zu Programmiersprachen und zur systematischen Umsetzung von Algorithmen.",
-    "descriptionEn": "For questions about getting started with software development, programming languages, and the systematic implementation of algorithms.",
+    "descriptionEn": "For questions about getting started in software development, programming languages, and the systematic implementation of algorithms.",
     "moduleCount": 15
   },
   {
@@ -80,14 +80,14 @@
     "name": "Digitale Transformation",
     "nameEn": "Digital Transformation",
     "description": "F\u00FCr Fragen dazu, wie digitale Technologien Unternehmen, Management, Gesundheitswesen, St\u00E4dte, Wertsch\u00F6pfung und ganze Branchen ver\u00E4ndern.",
-    "descriptionEn": "For questions about how digital technologies transform organizations, management, healthcare, cities, value creation, and entire industries.",
+    "descriptionEn": "For questions about how digital technologies transform companies, management, healthcare, cities, value creation, and entire industries.",
     "moduleCount": 30
   },
   {
     "name": "Digitale Gesch\u00E4ftsmodelle",
     "nameEn": "Digital Business Models",
     "description": "F\u00FCr Studierende, die digitale Wertangebote, Plattformen, Tokenisierung und neue Erl\u00F6smodelle entwickeln oder bewerten m\u00F6chten.",
-    "descriptionEn": "For students who want to develop or evaluate digital value propositions, platforms, tokenization approaches, and new revenue models.",
+    "descriptionEn": "For students who want to develop or evaluate digital value propositions, platforms, tokenization, and new revenue models.",
     "moduleCount": 10
   },
   {
@@ -115,7 +115,7 @@
     "name": "Zukunftstechnologien",
     "nameEn": "Emerging Technologies",
     "description": "F\u00FCr Studierende, die Quantencomputing, neue IT-Trends, Technikfolgen und experimentelle Technologien fr\u00FChzeitig kennenlernen m\u00F6chten.",
-    "descriptionEn": "For students who want early exposure to quantum computing, emerging IT trends, technological impacts, and experimental technologies.",
+    "descriptionEn": "For students who want early exposure to quantum computing, new IT trends, technological impacts, and experimental technologies.",
     "moduleCount": 9
   },
   {
@@ -150,7 +150,7 @@
     "name": "Management Grundlagen",
     "nameEn": "Management Foundations",
     "description": "F\u00FCr Studierende, die Planung, Organisation, F\u00FChrung, Kontrolle und unternehmerische Entscheidungen grundlegend verstehen m\u00F6chten.",
-    "descriptionEn": "For students who want a foundational understanding of planning, organizing, leading, controlling, and business decision-making.",
+    "descriptionEn": "For students who want a foundational understanding of planning, organization, leadership, control, and business decision-making.",
     "moduleCount": 33
   },
   {
@@ -164,7 +164,7 @@
     "name": "Unternehmertum Innovation",
     "nameEn": "Entrepreneurship Innovation",
     "description": "F\u00FCr Studierende, die Start-ups gr\u00FCnden, Gesch\u00E4ftsideen entwickeln oder innovative Unternehmen und KMU kennenlernen m\u00F6chten.",
-    "descriptionEn": "For students who want to found a start-up, develop business ideas, or explore innovative companies and small and medium-sized enterprises.",
+    "descriptionEn": "For students who want to found start-ups, develop business ideas, or explore innovative companies and SMEs.",
     "moduleCount": 13
   },
   {
@@ -185,14 +185,14 @@
     "name": "Recht Justiz",
     "nameEn": "Law Justice",
     "description": "F\u00FCr Fragen zu Wirtschaftsrecht, Strafrecht, Gerichten, staatlicher Rechtsdurchsetzung und der Entwicklung rechtlicher Ordnungen.",
-    "descriptionEn": "For questions about business law, criminal law, courts, public enforcement, and the development of legal systems.",
+    "descriptionEn": "For questions about business law, criminal law, courts, public law enforcement, and the development of legal systems.",
     "moduleCount": 9
   },
   {
     "name": "Ethik Verantwortung",
     "nameEn": "Ethics Responsibility",
     "description": "F\u00FCr Studierende, die moralische Dilemmata sowie die gesellschaftliche Verantwortung von Unternehmen und Technologien reflektieren m\u00F6chten.",
-    "descriptionEn": "For students who want to examine moral dilemmas and the societal responsibilities of businesses and technologies.",
+    "descriptionEn": "For students who want to reflect on moral dilemmas and the societal responsibilities of businesses and technologies.",
     "moduleCount": 22
   },
   {
@@ -213,7 +213,7 @@
     "name": "Gesellschaft Kultur",
     "nameEn": "Society Culture",
     "description": "F\u00FCr Fragen zu Migration, Religion, Identit\u00E4t, sozialen Konflikten, Urbanisierung, kultureller Vielfalt und Problemen moderner Gesellschaften.",
-    "descriptionEn": "For questions about migration, religion, identity, social conflict, urbanization, cultural diversity, and the problems of modern societies.",
+    "descriptionEn": "For questions about migration, religion, identity, social conflict, urbanization, cultural diversity, and problems facing modern societies.",
     "moduleCount": 36
   },
   {
