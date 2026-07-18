@@ -393,11 +393,13 @@ Output JSON:";
         var t = text.Trim();
         // Multi-line notes carry more than a sentinel (e.g. "Keine.\nEmpfehlungen: ...").
         if (t.Contains('\n')) return t;
-        // A bare negation token, or a negation followed only by words ("No prerequisites.",
+        // A negation word optionally followed by more words ("No prerequisites.",
         // "Keine besonderen fachlichen Voraussetzungen.", "Keine Vorkenntnisse / Module") —
         // any comma, digit or clause after it means real content ("Keine X, aber Y nötig").
+        // Dashes count only as a BARE token: a leading hyphen is usually a list bullet
+        // ("- Interest in data management"), which is a real note, not a sentinel.
         return System.Text.RegularExpressions.Regex.IsMatch(
-            t, @"^(keine?|none|nein|no|n/?a|-|–|—)([\s/][\p{L}\s/]*)?[.!]?$",
+            t, @"^((keine?|none|nein|no|n/?a)([\s/][\p{L}\s/]*)?[.!]?|[-–—])$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? null : t;
     }
 
@@ -417,8 +419,22 @@ Output JSON:";
         if (extracted.Count == 0) return (hard, recommended);
 
         var text = (module.RequirementsText ?? "") + "\n" + (module.RequirementsTextEn ?? "");
-        var segments = System.Text.RegularExpressions.Regex.Split(text, @"[.!?;\n]")
-            .Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+        // Recommendation headers introduce lists ("Empfehlungen:\n- Datenbanken"): the
+        // marker sits in its own segment, so bullet segments inherit the recommendation
+        // context of the preceding header until a non-bullet segment ends the list.
+        var segments = new List<(string Text, bool Reco)>();
+        var inRecoList = false;
+        foreach (var raw in System.Text.RegularExpressions.Regex.Split(text, @"[.!?;\n]"))
+        {
+            var seg = raw.Trim();
+            if (seg.Length == 0) continue;
+            var isBullet = System.Text.RegularExpressions.Regex.IsMatch(seg, @"^[-–—•*]");
+            bool reco;
+            if (IsRecommendationSegment(seg)) { reco = true; inRecoList = true; }
+            else if (isBullet && inRecoList) reco = true;
+            else { reco = false; inRecoList = false; }
+            segments.Add((seg, reco));
+        }
         var byCode = allModules
             .GroupBy(m => m.Code, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
@@ -428,8 +444,8 @@ Output JSON:";
             var names = byCode.TryGetValue(code, out var pm)
                 ? new[] { pm.Title, pm.TitleEn }.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!).ToList()
                 : new List<string>();
-            var mentioning = segments.Where(s => names.Any(n => MentionsTitle(s, n))).ToList();
-            if (mentioning.Count > 0 && mentioning.All(IsRecommendationSegment)) recommended.Add(code);
+            var mentioning = segments.Where(s => names.Any(n => MentionsTitle(s.Text, n))).ToList();
+            if (mentioning.Count > 0 && mentioning.All(s => s.Reco)) recommended.Add(code);
             else hard.Add(code);
         }
         return (hard, recommended);
@@ -481,11 +497,26 @@ Output JSON:";
         CompiledModule prev, SourceModule module, string sourceHash, IEnumerable<SourceModule> allModules)
     {
         // Same rule as a fresh compile: structured source prerequisites are authoritative;
-        // extracted ones get the recommendation-only split re-applied. Recommended keeps
-        // prev's entries so a code moved on an earlier run is not lost on the next one.
-        var (hard, reco) = module.Prerequisites.Count > 0
-            ? (prev.Prerequisites.ToList(), new List<string>())
-            : SplitRecommendedOnlyMentions(module, prev.Prerequisites, allModules);
+        // extracted ones get the recommendation-only split re-applied. Codes moved to
+        // Recommended on an earlier run are recomputable — the requirement texts are
+        // unchanged on this path (SourceHash) — so they are re-derived from the mention
+        // rule over prev's prerequisites AND recommendations instead of blindly carrying
+        // prev.Recommended forward; source recommendations come only from the CURRENT
+        // module.Recommended, so a recommendation removed from the source drops out.
+        List<string> hard, reco;
+        if (module.Prerequisites.Count > 0)
+        {
+            hard = prev.Prerequisites.ToList();
+            reco = new List<string>();
+        }
+        else
+        {
+            var candidates = prev.Prerequisites.Concat(prev.Recommended)
+                .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            reco = SplitRecommendedOnlyMentions(module, candidates, allModules).Recommended;
+            hard = prev.Prerequisites
+                .Where(p => !reco.Contains(p, StringComparer.OrdinalIgnoreCase)).ToList();
+        }
 
         return new()
         {
@@ -506,7 +537,7 @@ Output JSON:";
         // prerequisites are part of SourceHash — any change skips this reuse path.
         Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : hard,
         PrerequisiteNotes = NormalizeNoPrereqSentinel(prev.PrerequisiteNotes),
-        Recommended = module.Recommended.Concat(prev.Recommended).Concat(reco)
+        Recommended = module.Recommended.Concat(reco)
             .Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
         StudyPrograms = module.StudyPrograms,
         ModuleType = module.ModuleType,
