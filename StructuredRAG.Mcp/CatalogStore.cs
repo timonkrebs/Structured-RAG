@@ -173,23 +173,32 @@ public class CatalogStore
         return sb.ToString();
     }
 
-    /// <summary>Compact schedule for the index: the newest offering's lesson slots as
-    /// "Ddd HH:MM-HH:MM" (deduped; "irregular" when no weekday is published), falling
-    /// back to plain weekdays. This is what lets a client model assemble a clash-free
-    /// semester proposal directly from the overview, without per-module calls.</summary>
+    /// <summary>Compact schedule for the index as "Ddd HH:MM-HH:MM" slots (deduped;
+    /// "irregular" when no weekday is published), falling back to plain weekdays.
+    /// Schedules can differ between a module's offerings (pmgt meets Fri in 26HS but
+    /// Mon in 27FS), so when they do — or when only some offerings publish lessons —
+    /// each slot list is prefixed with its semester id. This is what lets a client
+    /// model assemble a clash-free proposal for a SPECIFIC semester directly from the
+    /// overview, without per-module calls.</summary>
     private static string ScheduleText(CompiledModule m)
     {
-        var lessons = m.Offerings.FirstOrDefault(o => o.Lessons.Count > 0)?.Lessons;
-        if (lessons is { Count: > 0 })
+        static string SlotText(IReadOnlyList<Lesson> lessons) => string.Join(", ", lessons.Select(l =>
         {
-            var labels = lessons.Select(l =>
-            {
-                var day = string.IsNullOrEmpty(l.Day) ? "irregular" : l.Day[..Math.Min(3, l.Day.Length)];
-                return string.IsNullOrEmpty(l.Start) ? day : $"{day} {l.Start}-{l.End}";
-            }).Distinct().ToList();
-            return string.Join(", ", labels);
+            var day = string.IsNullOrEmpty(l.Day) ? "irregular" : l.Day[..Math.Min(3, l.Day.Length)];
+            return string.IsNullOrEmpty(l.Start) ? day : $"{day} {l.Start}-{l.End}";
+        }).Distinct());
+
+        var parts = m.Offerings
+            .Where(o => o.Lessons.Count > 0)
+            .Select(o => (o.SemesterId, Text: SlotText(o.Lessons)))
+            .ToList();
+        if (parts.Count == 0) return string.Join(",", m.Weekdays);
+        if (m.Offerings.Count == 1
+            || (parts.Count == m.Offerings.Count && parts.Select(p => p.Text).Distinct().Count() == 1))
+        {
+            return parts[0].Text;
         }
-        return string.Join(",", m.Weekdays);
+        return string.Join("; ", parts.Select(p => $"{p.SemesterId}: {p.Text}"));
     }
 
     /// <summary>Compact catalog snapshot for the MCP initialize instructions: size,

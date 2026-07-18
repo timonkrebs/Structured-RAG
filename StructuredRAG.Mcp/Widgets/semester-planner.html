@@ -209,7 +209,17 @@
       h.toolOutput = api.toolOutput || null;
       h.widgetState = api.widgetState || null;
       h.canCall = typeof api.callTool === "function";
-      h.setState = function (state) { if (typeof api.setWidgetState === "function") api.setWidgetState(state); };
+      h.setState = function (state, summary) {
+        // Widget state persists between renders but is NOT reliably model-visible in
+        // ChatGPT. Mirror the model-facing summary into the state snapshot and, where
+        // the host supports ui/update-model-context, push it there too — otherwise a
+        // profile recorded here never reaches the model unless a flow button is used.
+        var snapshot = summary ? Object.assign({}, state, { modelSummary: summary }) : state;
+        if (typeof api.setWidgetState === "function") api.setWidgetState(snapshot);
+        if (summary && typeof api.updateModelContext === "function") {
+          try { api.updateModelContext({ content: [{ type: "text", text: summary }] }); } catch (e) {}
+        }
+      };
       h.callTool = function (name, args) { return api.callTool(name, args); };
       h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
       h.openLink = function (url) {

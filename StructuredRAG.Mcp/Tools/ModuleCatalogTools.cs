@@ -256,12 +256,18 @@ public static class ModuleCatalogTools
 
         // The client model's proposal is only forwarded where it can actually be
         // selected — everything else is echoed back so the model can correct itself.
-        var eligibleCodes = new HashSet<string>(eligible.Select(e => e.Module.Code), StringComparer.OrdinalIgnoreCase);
+        // Accepted codes are returned in the catalog's canonical casing: the widget
+        // preselects by exact code match, so an accepted "MLDM" must become "mldm".
+        var canonicalEligible = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var e in eligible) canonicalEligible[e.Module.Code] = e.Module.Code;
         var proposedInput = (proposedModules ?? Array.Empty<string>())
             .Select(c => c?.Trim()).Where(c => !string.IsNullOrEmpty(c)).Select(c => c!)
             .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        var proposed = proposedInput.Where(eligibleCodes.Contains).ToList();
-        var proposedDropped = proposedInput.Except(proposed, StringComparer.OrdinalIgnoreCase).ToList();
+        var proposed = proposedInput
+            .Where(canonicalEligible.ContainsKey)
+            .Select(c => canonicalEligible[c])
+            .ToList();
+        var proposedDropped = proposedInput.Where(c => !canonicalEligible.ContainsKey(c)).ToList();
 
         return new SemesterPlanData(
             Semester: semester,
