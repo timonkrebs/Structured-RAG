@@ -235,6 +235,7 @@
       semesters: "Semester",
       languages: "Sprachen",
       weekdays: "Lektionen",
+      noFixedDay: "unregelm.",
       tags: "Tags",
       prereqs: "Voraussetzungen",
       prereqNotes: "Hinweise",
@@ -259,6 +260,7 @@
       semesters: "Semesters",
       languages: "Languages",
       weekdays: "Lessons",
+      noFixedDay: "irreg.",
       tags: "Tags",
       prereqs: "Prerequisites",
       prereqNotes: "Notes",
@@ -398,7 +400,8 @@
         return chips((m.weekdays || []).map(function (w) { return { label: day(w) }; }));
       }
       return chips(lessons.map(function (l) {
-        var label = (l.day ? day(l.day) : "?") + (l.start ? " " + l.start + "–" + (l.end || "?") : "");
+        // Block courses publish times without a weekday — say so instead of a cryptic "?".
+        var label = (l.day ? day(l.day) : s.noFixedDay) + (l.start ? " " + l.start + "–" + (l.end || "?") : "");
         if (l.location) label += " · " + l.location;
         return { label: label };
       }));

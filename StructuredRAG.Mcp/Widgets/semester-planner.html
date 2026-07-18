@@ -298,6 +298,9 @@
       ects: "ECTS",
       overTarget: function (n) { return "⚠ " + n + " ECTS über dem Ziel"; },
       reached: "✓ Ziel erreicht",
+      remaining: function (n) { return "Noch " + n + " ECTS bis zum Ziel"; },
+      noFixedDay: "unregelm.",
+      flexNote: "Tipp: Module mit unregelmässigen Terminen (ohne festen Wochentag) lassen sich ohne Stundenplan-Konflikt ergänzen.",
       clash: function (day, titles) { return "⚠ Zeitkonflikt (" + day + "): " + titles; },
       clashSoft: function (day, titles) { return "△ Gleicher Wochentag (" + day + "), Zeiten unvollständig: " + titles; },
       timetable: "Stundenplan",
@@ -334,6 +337,9 @@
       ects: "ECTS",
       overTarget: function (n) { return "⚠ " + n + " ECTS over target"; },
       reached: "✓ Target reached",
+      remaining: function (n) { return n + " ECTS to go to reach the target"; },
+      noFixedDay: "irreg.",
+      flexNote: "Tip: modules with irregular dates (no fixed weekday) can be added without timetable clashes.",
       clash: function (day, titles) { return "⚠ Time clash (" + day + "): " + titles; },
       clashSoft: function (day, titles) { return "△ Same weekday (" + day + "), times incomplete: " + titles; },
       timetable: "Timetable",
@@ -492,7 +498,8 @@
   }
   function lessonLabel(l) {
     var s = t();
-    var label = l.day ? day(l.day) : "?";
+    // Block courses publish times without a weekday — say so instead of a cryptic "?".
+    var label = l.day ? day(l.day) : s.noFixedDay;
     if (l.start) label += " " + l.start + "–" + (l.end || "?");
     // Only annotate a real non-weekly rhythm. 7 = weekly (the default, no annotation);
     // FHNW also emits sentinel values (0, -2, …) that are not day intervals — never
@@ -585,6 +592,13 @@
       "</div>";
     if (sum > target) html += '<div class="hint">' + esc(s.overTarget(sum - target)) + "</div>";
     else if (sum === target && sum > 0) html += '<div class="hint reached">' + esc(s.reached) + "</div>";
+    else if (sum > 0 && sum < target) {
+      html += '<div class="hint">' + esc(s.remaining(target - sum)) + "</div>";
+      var hasUnselectedFlexible = (d.eligible || []).some(function (e) {
+        return !selected[e.module.code] && isFlexible(e.module);
+      });
+      if (hasUnselectedFlexible) html += '<div class="hint">' + esc(s.flexNote) + "</div>";
+    }
 
     clashes(mods).forEach(function (c) {
       var part = function (x) {
@@ -668,7 +682,21 @@
     if (lessons.length === 0) {
       return (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("");
     }
-    return lessons.map(function (l) { return '<span class="chip day">' + esc(lessonLabel(l)) + "</span>"; }).join("");
+    // Dedupe: several day-less block slots produce the same label — one chip suffices.
+    var seen = {};
+    return lessons.map(lessonLabel).filter(function (l) {
+      if (seen[l]) return false;
+      seen[l] = true;
+      return true;
+    }).map(function (l) { return '<span class="chip day">' + esc(l) + "</span>"; }).join("");
+  }
+
+  // Modules with published times but no weekday (block courses) can never clash in
+  // the timetable — the ideal filler to reach the ECTS target.
+  function isFlexible(m) {
+    var lessons = m.lessons || [];
+    return lessons.length > 0 && lessons.every(function (l) { return !l.day; })
+      && (m.weekdays || []).length === 0;
   }
 
   // Selector between a module's parallel classes (only rendered when selected and
