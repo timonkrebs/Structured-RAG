@@ -202,7 +202,7 @@ public static class ModuleCatalogTools
     }
 
     [McpServerTool(Name = "get_catalog_overview", ReadOnly = true, UseStructuredContent = true)]
-    [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, tags) plus the tag taxonomy. Ideal first call to load the full catalog into context, especially for semester planning.")]
+    [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, schedule, tags) plus the tag taxonomy. Schedule semantics: ' + ' joins slots of the same class (the student attends all of them), ' or ' separates parallel classes (the student attends exactly one — no clash if one alternative is free); semester-prefixed entries apply to that semester only. Ideal first call to load the full catalog into context, especially before proposing a semester plan.")]
     public static string GetCatalogOverview(CatalogStore store) =>
         store.TaxonomyMarkdown() + "\n\n" + store.IndexMarkdown();
 

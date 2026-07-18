@@ -150,8 +150,10 @@
         // profile recorded here never reaches the model unless a flow button is used.
         var snapshot = summary ? Object.assign({}, state, { modelSummary: summary }) : state;
         if (typeof api.setWidgetState === "function") api.setWidgetState(snapshot);
-        if (summary && typeof api.updateModelContext === "function") {
-          try { api.updateModelContext({ content: [{ type: "text", text: summary }] }); } catch (e) {}
+        // Always push — an empty summary must CLEAR previously pushed context
+        // (a cleared draft would otherwise stay model-visible), like the MCP branch.
+        if (typeof api.updateModelContext === "function") {
+          try { api.updateModelContext({ content: summary ? [{ type: "text", text: summary }] : [] }); } catch (e) {}
         }
       };
       h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };

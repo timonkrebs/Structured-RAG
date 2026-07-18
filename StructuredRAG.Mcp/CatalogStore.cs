@@ -182,11 +182,31 @@ public class CatalogStore
     /// overview, without per-module calls.</summary>
     private static string ScheduleText(CompiledModule m)
     {
-        static string SlotText(IReadOnlyList<Lesson> lessons) => string.Join(", ", lessons.Select(l =>
+        static string SlotLabel(Lesson l)
         {
             var day = string.IsNullOrEmpty(l.Day) ? "irregular" : l.Day[..Math.Min(3, l.Day.Length)];
             return string.IsNullOrEmpty(l.Start) ? day : $"{day} {l.Start}-{l.End}";
-        }).Distinct());
+        }
+
+        // Slots sharing a class number belong to ONE class (the student attends all of
+        // them, joined with " + "); different numbers are parallel classes — the student
+        // attends exactly one, so alternatives join with " or ". Flattening them into a
+        // single list would make a parallel-class module look like it occupies every
+        // slot at once, and a model would flag valid proposals as clashes.
+        static string SlotText(IReadOnlyList<Lesson> lessons)
+        {
+            var groups = new List<List<Lesson>>();
+            var byNum = new Dictionary<string, List<Lesson>>();
+            foreach (var l in lessons)
+            {
+                var key = string.IsNullOrEmpty(l.Number) ? $"~{groups.Count}" : l.Number;
+                if (!byNum.TryGetValue(key, out var g)) { g = new List<Lesson>(); byNum[key] = g; groups.Add(g); }
+                g.Add(l);
+            }
+            return string.Join(" or ", groups
+                .Select(g => string.Join(" + ", g.Select(SlotLabel).Distinct()))
+                .Distinct());
+        }
 
         var parts = m.Offerings
             .Where(o => o.Lessons.Count > 0)
