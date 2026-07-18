@@ -72,7 +72,7 @@ public class KnowledgeCompilationService
                 && prev.SourceHash == hash
                 && prev.Tags.All(validTagNames.Contains))
             {
-                compiled.Add(RefreshPassThrough(prev, module, hash));
+                compiled.Add(RefreshPassThrough(prev, module, hash, modules));
                 reused++;
                 continue;
             }
@@ -250,6 +250,16 @@ Output JSON:";
                 module.Code, string.Join(", ", droppedPrereqs));
         }
 
+        var recommendedMentions = FindRecommendationOnlyMentions(module, allModules);
+        if (recommendedMentions.Count > 0)
+        {
+            _logger.LogInformation("Module {Code}: recommendation-only mentions resolved to Recommended: {Codes}",
+                module.Code, string.Join(", ", recommendedMentions));
+        }
+        var hardExtracted = extractedPrerequisites
+            .Where(p => !recommendedMentions.Contains(p, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
         var prerequisiteNotes = NormalizeNoPrereqSentinel(enrichment?.PrerequisiteNotes);
         if (prerequisiteNotes is null && extractedPrerequisites.Count == 0)
         {
@@ -271,9 +281,10 @@ Output JSON:";
             Offerings = module.Offerings,
             Languages = module.Languages,
             Weekdays = module.Weekdays,
-            Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : extractedPrerequisites,
+            Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : hardExtracted,
             PrerequisiteNotes = string.IsNullOrWhiteSpace(prerequisiteNotes) ? null : prerequisiteNotes.Trim(),
-            Recommended = module.Recommended,
+            Recommended = MergeRecommended(module, recommendedMentions,
+                module.Prerequisites.Count > 0 ? module.Prerequisites : hardExtracted),
             StudyPrograms = module.StudyPrograms,
             ModuleType = module.ModuleType,
             Locations = module.Locations,
@@ -307,6 +318,18 @@ Output JSON:";
                 _logger.LogWarning("Module {Code}: removing dangling prerequisites: {Dangling}",
                     module.Code, string.Join(", ", dangling));
                 module.Prerequisites = module.Prerequisites.Where(codes.Contains).ToList();
+            }
+
+            // Same guard for recommendations: the incremental reuse path carries prior
+            // Recommended entries forward, so a module that has since disappeared from
+            // the catalog must be dropped here or plan_semester keeps reporting a
+            // missing recommendation that no longer exists.
+            var danglingReco = module.Recommended.Where(p => !codes.Contains(p)).ToList();
+            if (danglingReco.Count > 0)
+            {
+                _logger.LogWarning("Module {Code}: removing dangling recommendations: {Dangling}",
+                    module.Code, string.Join(", ", danglingReco));
+                module.Recommended = module.Recommended.Where(codes.Contains).ToList();
             }
         }
 
@@ -370,9 +393,132 @@ Output JSON:";
     {
         if (string.IsNullOrWhiteSpace(text)) return null;
         var t = text.Trim();
+        // Multi-line notes carry more than a sentinel (e.g. "Keine.\nEmpfehlungen: ...").
+        if (t.Contains('\n')) return t;
+        // A negation word optionally followed by more words ("No prerequisites.",
+        // "Keine besonderen fachlichen Voraussetzungen.", "Keine Vorkenntnisse / Module") —
+        // any comma, digit or clause after it means real content ("Keine X, aber Y nötig").
+        // Dashes count only as a BARE token: a leading hyphen is usually a list bullet
+        // ("- Interest in data management"), which is a real note, not a sentinel.
         return System.Text.RegularExpressions.Regex.IsMatch(
-            t, @"^(keine|none|nein|no|n/?a|-|–|—)[.!]?$",
+            t, @"^((keine?|none|nein|no|n/?a)([\s/][\p{L}\s/]*)?[.!]?|[-–—])$",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? null : t;
+    }
+
+    /// <summary>
+    /// Catalog modules that the requirement text mentions ONLY inside
+    /// recommendation-flagged segments ("Highly recommended: Project Management",
+    /// "Empfehlungen:\n- Datenbanken", "Besuch des «Italienisch A1» ist empfohlen").
+    /// Resolved directly against all catalog titles — not just against the
+    /// LLM-extracted prerequisites — so a recommendation reaches Recommended even
+    /// when the extractor returned nothing for it, and an extracted "prerequisite"
+    /// that is merely recommended is demoted instead of blocking plan_semester.
+    /// </summary>
+    private static List<string> FindRecommendationOnlyMentions(
+        SourceModule module, IEnumerable<SourceModule> allModules)
+    {
+        var recommended = new List<string>();
+        var text = (module.RequirementsText ?? "") + "\n" + (module.RequirementsTextEn ?? "");
+        // Recommendation headers introduce lists ("Empfehlungen:\n- Datenbanken"): the
+        // marker sits in its own segment, so bullet segments inherit the recommendation
+        // context of the preceding header until a non-bullet segment ends the list.
+        var segments = new List<(string Text, bool Reco)>();
+        var inRecoList = false;
+        foreach (var raw in System.Text.RegularExpressions.Regex.Split(text, @"[.!?;\n]"))
+        {
+            var seg = raw.Trim();
+            if (seg.Length == 0) continue;
+            var isBullet = System.Text.RegularExpressions.Regex.IsMatch(seg, @"^[-–—•*]");
+            bool reco;
+            if (IsRecommendationSegment(seg)) { reco = true; inRecoList = true; }
+            else if (isBullet && inRecoList) reco = true;
+            else { reco = false; inRecoList = false; }
+            segments.Add((seg, reco));
+        }
+        if (!segments.Any(s => s.Reco)) return recommended;
+
+        var all = allModules.ToList();
+        // Every catalog title as a normalized word sequence: a partial hit whose matched
+        // run spells out some module's EXACT title belongs to that module, not to a
+        // longer title that merely contains the same words.
+        var exactTitles = new HashSet<string>(
+            all.SelectMany(m => new[] { m.Title, m.TitleEn })
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => string.Join(" ", Words(n!))));
+
+        foreach (var candidate in all)
+        {
+            if (candidate.Code.Equals(module.Code, StringComparison.OrdinalIgnoreCase)) continue;
+            var names = new[] { candidate.Title, candidate.TitleEn }
+                .Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => n!).ToList();
+
+            var mentions = new List<(bool Reco, List<string> Run, bool Full)>();
+            foreach (var seg in segments)
+            {
+                foreach (var name in names)
+                {
+                    var titleWords = Words(name);
+                    if (titleWords.Count == 0) continue;
+                    var run = LongestTitleRun(seg.Text, titleWords);
+                    var full = run.Count == titleWords.Count;
+                    // Partial hits need a run of at least two words covering >=60% of the
+                    // title — requirement texts drop prefixes ("Project Management" for
+                    // "IT Project Management"), plain substring matching misses them.
+                    var partial = !full && run.Count >= 2 && run.Count >= (int)Math.Ceiling(titleWords.Count * 0.6);
+                    if (full || partial) mentions.Add((seg.Reco, run, full));
+                }
+            }
+
+            if (mentions.Count == 0) continue;
+            if (!mentions.All(m => m.Reco)) continue;
+            // Exact matches win over the partial heuristic: keep this candidate only if
+            // it has a full-title mention somewhere, or at least one partial run that is
+            // NOT another module's exact title. Otherwise "Project Management" would
+            // recommend every "... Project Management" variant alongside the exact one,
+            // and plan_semester reports each Recommended code as independently missing.
+            var hasOwnMention = mentions.Any(m => m.Full || !exactTitles.Contains(string.Join(" ", m.Run)));
+            if (hasOwnMention) recommended.Add(candidate.Code);
+        }
+        return recommended;
+    }
+
+    /// <summary>Source recommendations plus resolved mentions, minus anything that ended
+    /// up a hard prerequisite — a code must never be both.</summary>
+    private static List<string> MergeRecommended(
+        SourceModule module, List<string> recommendedMentions, IReadOnlyList<string> hardPrerequisites) =>
+        module.Recommended.Concat(recommendedMentions)
+            .Where(c => !hardPrerequisites.Contains(c, StringComparer.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    private static bool IsRecommendationSegment(string segment) =>
+        System.Text.RegularExpressions.Regex.IsMatch(segment,
+            "recommend|empfohlen|empfehlens|empfehlung|von vorteil|wünschenswert|hilfreich",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    private static List<string> Words(string s) => System.Text.RegularExpressions.Regex
+        .Matches(s.ToLowerInvariant(), @"[\p{L}\d]+").Select(m => m.Value).ToList();
+
+    /// <summary>
+    /// Longest run of consecutive title words appearing (in order) in the segment.
+    /// The run's words are identical on both sides, so it is returned from the title's
+    /// word list; a run as long as the title itself is an exact-title mention.
+    /// </summary>
+    private static List<string> LongestTitleRun(string segment, List<string> titleWords)
+    {
+        var seg = Words(segment);
+        var bestStart = 0;
+        var bestLen = 0;
+        for (var i = 0; i < seg.Count; i++)
+        {
+            for (var j = 0; j < titleWords.Count; j++)
+            {
+                var k = 0;
+                while (i + k < seg.Count && j + k < titleWords.Count && seg[i + k] == titleWords[j + k]) k++;
+                if (k > bestLen) { bestStart = j; bestLen = k; }
+            }
+        }
+        return titleWords.GetRange(bestStart, bestLen);
     }
 
     /// <summary>
@@ -380,12 +526,27 @@ Output JSON:";
     /// previous record's LLM outputs — mirrors the assignments in
     /// <see cref="CompileModuleAsync"/> so a reused record never carries stale
     /// pass-through data (e.g. an outdated lesson schedule). Sentinel prerequisite notes
-    /// are re-normalized here too, so tightening the rule reaches reused records on the
-    /// next compile run without an LLM call.
+    /// and recommendation-only prerequisite mentions are re-normalized here too, so
+    /// tightening either rule reaches reused records on the next compile run without an
+    /// LLM call.
     /// </summary>
-    private static CompiledModule RefreshPassThrough(CompiledModule prev, SourceModule module, string sourceHash) => new()
+    private static CompiledModule RefreshPassThrough(
+        CompiledModule prev, SourceModule module, string sourceHash, IEnumerable<SourceModule> allModules)
     {
-        Code = module.Code,
+        // Same rules as a fresh compile: structured source prerequisites are authoritative,
+        // and recommendation-only mentions are resolved from scratch against the catalog —
+        // the requirement texts are unchanged on this path (SourceHash guard), so this
+        // reproduces (and never loses) earlier reclassifications without carrying
+        // prev.Recommended forward; a recommendation removed from the current source
+        // therefore drops out even though the hash is unchanged.
+        var recoMentions = FindRecommendationOnlyMentions(module, allModules);
+        var hard = module.Prerequisites.Count > 0
+            ? module.Prerequisites.ToList()
+            : prev.Prerequisites.Where(p => !recoMentions.Contains(p, StringComparer.OrdinalIgnoreCase)).ToList();
+
+        return new()
+        {
+            Code = module.Code,
         ModuleId = module.ModuleId,
         Title = module.Title,
         TitleEn = module.TitleEn,
@@ -397,12 +558,12 @@ Output JSON:";
         Offerings = module.Offerings,
         Languages = module.Languages,
         Weekdays = module.Weekdays,
-        // Same rule as a fresh compile: structured source prerequisites win; otherwise
-        // keep the previously extracted (and validated) ones. Safe, because the source
+        // Structured source prerequisites win; otherwise the previously extracted (and
+        // validated) ones minus recommendation-only mentions. Safe, because the source
         // prerequisites are part of SourceHash — any change skips this reuse path.
-        Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : prev.Prerequisites,
+        Prerequisites = hard,
         PrerequisiteNotes = NormalizeNoPrereqSentinel(prev.PrerequisiteNotes),
-        Recommended = module.Recommended,
+        Recommended = MergeRecommended(module, recoMentions, hard),
         StudyPrograms = module.StudyPrograms,
         ModuleType = module.ModuleType,
         Locations = module.Locations,
@@ -417,7 +578,8 @@ Output JSON:";
         TypicalQuestions = prev.TypicalQuestions,
         TypicalQuestionsEn = prev.TypicalQuestionsEn,
         SourceHash = sourceHash
-    };
+        };
+    }
 
     private class ModuleEnrichment
     {

@@ -235,8 +235,10 @@
       semesters: "Semester",
       languages: "Sprachen",
       weekdays: "Lektionen",
+      noFixedDay: "unregelm.",
       tags: "Tags",
       prereqs: "Voraussetzungen",
+      recommended: "Empfohlen",
       prereqNotes: "Hinweise",
       summary: "Kurzbeschreibung",
       link: "Modulseite",
@@ -259,8 +261,10 @@
       semesters: "Semesters",
       languages: "Languages",
       weekdays: "Lessons",
+      noFixedDay: "irreg.",
       tags: "Tags",
       prereqs: "Prerequisites",
+      recommended: "Recommended",
       prereqNotes: "Notes",
       summary: "Summary",
       link: "Module page",
@@ -398,7 +402,8 @@
         return chips((m.weekdays || []).map(function (w) { return { label: day(w) }; }));
       }
       return chips(lessons.map(function (l) {
-        var label = (l.day ? day(l.day) : "?") + (l.start ? " " + l.start + "–" + (l.end || "?") : "");
+        // Block courses publish times without a weekday — say so instead of a cryptic "?".
+        var label = (l.day ? day(l.day) : s.noFixedDay) + (l.start ? " " + l.start + "–" + (l.end || "?") : "");
         if (l.location) label += " · " + l.location;
         return { label: label };
       }));
@@ -412,6 +417,10 @@
     html += row(s.prereqs, mods, function (m) {
       var codes = m.prerequisites || [];
       return codes.length ? chips(codes.map(function (c) { return { label: c }; })) : '<span class="cell-note">' + esc(s.none) + "</span>";
+    });
+    html += row(s.recommended, mods, function (m) {
+      var codes = m.recommended || [];
+      return codes.length ? chips(codes.map(function (c) { return { label: c }; })) : "";
     });
     html += row(s.prereqNotes, mods, function (m) {
       return m.prerequisiteNotes ? '<span class="cell-note">' + esc(m.prerequisiteNotes) + "</span>" : "";
