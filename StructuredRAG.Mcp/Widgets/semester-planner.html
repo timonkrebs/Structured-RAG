@@ -291,7 +291,9 @@
       };
       h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
       h.sendMessage = function (text) {
-        request("ui/message", { role: "user", content: { type: "text", text: text } }).catch(function () {});
+        // MCP Apps expects content as a ContentBlock ARRAY — validating hosts
+        // reject a bare object, and the send-to-chat buttons silently do nothing.
+        request("ui/message", { role: "user", content: [{ type: "text", text: text }] }).catch(function () {});
       };
       h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
       h.reportSize = function () {
