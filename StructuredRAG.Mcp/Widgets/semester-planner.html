@@ -132,6 +132,13 @@
 
   .timetable { border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 8px; }
   .timetable h2 { font-size: 13px; font-weight: 650; margin: 0 0 6px; }
+
+  .block-list { border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 8px; }
+  .block-list h2 { font-size: 13px; font-weight: 650; margin: 0 0 6px; }
+  .block-list h2 .sum { color: var(--muted); font-weight: 400; }
+  .block-list ul { list-style: none; margin: 0; padding: 0; }
+  .block-list li { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 3px 0; font-size: 12.5px; }
+  .block-list .code { color: var(--muted); font-size: 12px; }
   .tt { display: flex; gap: 4px; }
   .tt-axis { flex: none; width: 36px; }
   .tt-axis .tt-head { height: 20px; }
@@ -300,6 +307,7 @@
       reached: "✓ Ziel erreicht",
       remaining: function (n) { return "Noch " + n + " ECTS bis zum Ziel"; },
       noFixedDay: "unregelm.",
+      blockList: "Gewählte Blockmodule (kein fester Wochentag)",
       flexNote: "Tipp: Module mit unregelmässigen Terminen (ohne festen Wochentag) lassen sich ohne Stundenplan-Konflikt ergänzen.",
       clash: function (day, titles) { return "⚠ Zeitkonflikt (" + day + "): " + titles; },
       clashSoft: function (day, titles) { return "△ Gleicher Wochentag (" + day + "), Zeiten unvollständig: " + titles; },
@@ -339,6 +347,7 @@
       reached: "✓ Target reached",
       remaining: function (n) { return n + " ECTS to go to reach the target"; },
       noFixedDay: "irreg.",
+      blockList: "Selected block modules (no fixed weekday)",
       flexNote: "Tip: modules with irregular dates (no fixed weekday) can be added without timetable clashes.",
       clash: function (day, titles) { return "⚠ Time clash (" + day + "): " + titles; },
       clashSoft: function (day, titles) { return "△ Same weekday (" + day + "), times incomplete: " + titles; },
@@ -652,6 +661,7 @@
     }
 
     html += timetableHtml(mods);
+    html += blockListHtml(mods);
 
     // Blocked modules
     if ((d.blocked || []).length > 0) {
@@ -774,6 +784,24 @@
       html += "</div></div>";
     });
     return html + "</div></div>";
+  }
+
+  // Selected block modules can't appear in the timetable grid (no fixed weekday),
+  // so they get their own list below it — otherwise a ticked block course is
+  // invisible in the schedule overview even though its ECTS count.
+  function blockListHtml(mods) {
+    var s = t();
+    var blocks = mods.filter(isFlexible);
+    if (blocks.length === 0) return "";
+    var sum = blocks.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
+    var html = '<div class="block-list"><h2>' + esc(s.blockList) +
+      ' <span class="sum">· ' + sum + " " + esc(s.ects) + "</span></h2><ul>";
+    blocks.forEach(function (m) {
+      html += "<li><span>" + esc(locTitle(m)) + '</span><span class="code">' + esc(m.code) + "</span>" +
+        '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
+        scheduleChips(m) + "</li>";
+    });
+    return html + "</ul></div>";
   }
 
   function detailsPanel(m) {
