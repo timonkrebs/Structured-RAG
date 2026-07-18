@@ -44,6 +44,11 @@ public static class WidgetResources
         "Fastest-path timeline to a target module: missing prerequisites scheduled into the " +
         "earliest possible semesters, with waiting semesters, earliest completion and total ECTS.";
 
+    private const string StartDescription =
+        "Getting-started view: catalog snapshot of the study program, a one-time picker for " +
+        "already-completed modules and an ECTS target, plus buttons that start a planning flow " +
+        "as a chat message.";
+
     // ---- OpenAI Apps SDK (ChatGPT) ----
 
     [McpServerResource(UriTemplate = "ui://widget/semester-planner.html", Name = "Semester plan builder widget (ChatGPT)", MimeType = SkybridgeMimeType)]
@@ -76,6 +81,16 @@ public static class WidgetResources
     public static TextResourceContents PathPlannerSkybridge() =>
         WidgetContents("ui://widget/path-planner.html", SkybridgeMimeType, "path-planner.html", PathDescription);
 
+    [McpServerResource(UriTemplate = "ui://widget/start.html", Name = "Getting-started widget (ChatGPT)", MimeType = SkybridgeMimeType)]
+    [Description("ChatGPT widget template rendered for get_started results.")]
+    [McpMeta("openai/widgetDescription", StartDescription)]
+    [McpMeta("openai/widgetPrefersBorder", true)]
+    [McpMeta("openai/widgetDomain", WidgetDomain)]
+    [McpMeta("openai/widgetCSP", JsonValue = """{"connect_domains":[],"resource_domains":[]}""")]
+    [McpMeta("ui", JsonValue = "{\"domain\":\"" + WidgetDomain + "\",\"csp\":{\"connectDomains\":[],\"resourceDomains\":[]}}")]
+    public static TextResourceContents StartSkybridge() =>
+        WidgetContents("ui://widget/start.html", SkybridgeMimeType, "start.html", StartDescription);
+
     // ---- MCP Apps extension (Claude, VS Code, ...) ----
 
     [McpServerResource(UriTemplate = "ui://module-catalog/semester-planner", Name = "Semester plan builder widget (MCP Apps)", MimeType = McpAppMimeType)]
@@ -95,6 +110,12 @@ public static class WidgetResources
     [McpMeta("ui", JsonValue = """{"csp":{"connectDomains":[],"resourceDomains":[]}}""")]
     public static TextResourceContents PathPlannerApp() =>
         WidgetContents("ui://module-catalog/path-planner", McpAppMimeType, "path-planner.html", PathDescription);
+
+    [McpServerResource(UriTemplate = "ui://module-catalog/start", Name = "Getting-started widget (MCP Apps)", MimeType = McpAppMimeType)]
+    [Description("MCP Apps view template rendered for get_started results.")]
+    [McpMeta("ui", JsonValue = """{"csp":{"connectDomains":[],"resourceDomains":[]}}""")]
+    public static TextResourceContents StartApp() =>
+        WidgetContents("ui://module-catalog/start", McpAppMimeType, "start.html", StartDescription);
 
     // The [McpMeta] attributes cover resources/list; resources/read only carries
     // contents-level meta when the method returns TextResourceContents itself,

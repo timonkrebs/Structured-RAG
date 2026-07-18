@@ -306,6 +306,7 @@
       overTarget: function (n) { return "⚠ " + n + " ECTS über dem Ziel"; },
       reached: "✓ Ziel erreicht",
       remaining: function (n) { return "Noch " + n + " ECTS bis zum Ziel"; },
+      proposalHint: "✨ Vorschlag deines Assistenten vorausgewählt — passe die Auswahl an.",
       noFixedDay: "unregelm.",
       blockList: "Gewählte Blockmodule (kein fester Wochentag)",
       flexNote: "Tipp: Module mit unregelmässigen Terminen belegen keinen festen Wochenslot — konkrete Blocktermine auf der Modulseite prüfen, Überschneidungen bleiben möglich.",
@@ -346,6 +347,7 @@
       overTarget: function (n) { return "⚠ " + n + " ECTS over target"; },
       reached: "✓ Target reached",
       remaining: function (n) { return n + " ECTS to go to reach the target"; },
+      proposalHint: "✨ Your assistant's proposal is preselected — adjust it as you like.",
       noFixedDay: "irreg.",
       blockList: "Selected block modules (no fixed weekday)",
       flexNote: "Tip: modules with irregular dates take no fixed weekly slot — check their actual block dates on the module page, overlaps remain possible.",
@@ -391,6 +393,7 @@
   var targetTouched = false;
   var stateRestored = false;
   var blockedOpen = false;  // survives re-renders (hosts re-render on any global change)
+  var proposalApplied = false;  // the assistant's proposal initialized the selection
 
   function data() { return Host.toolOutput; }
 
@@ -406,6 +409,11 @@
         Object.keys(ws.chosenClasses).forEach(function (c) { chosenClass[c] = ws.chosenClasses[c]; });
       }
       if (typeof ws.ectsTarget === "number" && ws.ectsTarget > 0) { target = ws.ectsTarget; targetTouched = true; }
+    } else if (d && (d.proposed || []).length > 0) {
+      // First render without a saved draft: start from the assistant's proposal.
+      // A saved draft (even an empty selection) is the student's own state and wins.
+      d.proposed.forEach(function (c) { selected[c] = true; });
+      proposalApplied = true;
     }
     if (d) stateRestored = true;
   }
@@ -599,6 +607,7 @@
       '<label class="target-wrap">' + esc(s.target) +
       ' <input id="target" type="number" min="1" max="90" step="1" value="' + target + '"></label>' +
       "</div>";
+    if (proposalApplied) html += '<div class="hint">' + esc(s.proposalHint) + "</div>";
     if (sum > target) html += '<div class="hint">' + esc(s.overTarget(sum - target)) + "</div>";
     else if (sum === target && sum > 0) html += '<div class="hint reached">' + esc(s.reached) + "</div>";
     else if (sum > 0 && sum < target) {

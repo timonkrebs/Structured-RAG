@@ -158,8 +158,8 @@ public class CatalogStore
         var sb = new StringBuilder();
         sb.AppendLine($"# Module catalog index ({_manifest.ModuleCount} modules, compiled {_manifest.CompiledAt:yyyy-MM-dd})");
         sb.AppendLine();
-        sb.AppendLine("| Code | Title | ECTS | Level | Type | Offered | Lang | Tags |");
-        sb.AppendLine("|------|-------|------|-------|------|---------|------|------|");
+        sb.AppendLine("| Code | Title | ECTS | Level | Type | Offered | Schedule | Lang | Tags |");
+        sb.AppendLine("|------|-------|------|-------|------|---------|----------|------|------|");
         foreach (var m in _modules.OrderBy(m => m.Title, StringComparer.OrdinalIgnoreCase))
         {
             var title = string.IsNullOrWhiteSpace(m.TitleEn) || m.TitleEn == m.Title
@@ -168,9 +168,28 @@ public class CatalogStore
             var offered = m.Offerings.Count > 0
                 ? string.Join("/", m.Offerings.Select(o => o.SemesterId))
                 : string.Join("/", m.OfferedIn);
-            sb.AppendLine($"| {m.Code} | {title} | {m.Ects} | {m.Level} | {m.ModuleType} | {offered} | {string.Join(",", m.Languages)} | {string.Join(", ", m.Tags)} |");
+            sb.AppendLine($"| {m.Code} | {title} | {m.Ects} | {m.Level} | {m.ModuleType} | {offered} | {ScheduleText(m)} | {string.Join(",", m.Languages)} | {string.Join(", ", m.Tags)} |");
         }
         return sb.ToString();
+    }
+
+    /// <summary>Compact schedule for the index: the newest offering's lesson slots as
+    /// "Ddd HH:MM-HH:MM" (deduped; "irregular" when no weekday is published), falling
+    /// back to plain weekdays. This is what lets a client model assemble a clash-free
+    /// semester proposal directly from the overview, without per-module calls.</summary>
+    private static string ScheduleText(CompiledModule m)
+    {
+        var lessons = m.Offerings.FirstOrDefault(o => o.Lessons.Count > 0)?.Lessons;
+        if (lessons is { Count: > 0 })
+        {
+            var labels = lessons.Select(l =>
+            {
+                var day = string.IsNullOrEmpty(l.Day) ? "irregular" : l.Day[..Math.Min(3, l.Day.Length)];
+                return string.IsNullOrEmpty(l.Start) ? day : $"{day} {l.Start}-{l.End}";
+            }).Distinct().ToList();
+            return string.Join(", ", labels);
+        }
+        return string.Join(",", m.Weekdays);
     }
 
     /// <summary>Compact catalog snapshot for the MCP initialize instructions: size,
