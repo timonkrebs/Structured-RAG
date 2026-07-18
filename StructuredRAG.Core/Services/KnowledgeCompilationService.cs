@@ -250,11 +250,11 @@ Output JSON:";
                 module.Code, string.Join(", ", droppedPrereqs));
         }
 
-        var prerequisiteNotes = enrichment?.PrerequisiteNotes;
-        if (string.IsNullOrWhiteSpace(prerequisiteNotes) && extractedPrerequisites.Count == 0)
+        var prerequisiteNotes = NormalizeNoPrereqSentinel(enrichment?.PrerequisiteNotes);
+        if (prerequisiteNotes is null && extractedPrerequisites.Count == 0)
         {
             // Nothing extracted at all — keep the raw requirement text so clients can still reason over it.
-            prerequisiteNotes = requirements;
+            prerequisiteNotes = NormalizeNoPrereqSentinel(requirements);
         }
 
         return new CompiledModule
@@ -361,10 +361,27 @@ Output JSON:";
     }
 
     /// <summary>
+    /// Official requirement fields often carry an explicit "no prerequisites" sentinel
+    /// ("keine", "none", "-", ...). Those must compile to null — widgets and clients
+    /// treat any non-empty note as a real additional requirement, so a literal "keine"
+    /// would render as a misleading prerequisite warning.
+    /// </summary>
+    private static string? NormalizeNoPrereqSentinel(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+        var t = text.Trim();
+        return System.Text.RegularExpressions.Regex.IsMatch(
+            t, @"^(keine|none|nein|no|n/?a|-|–|—)[.!]?$",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase) ? null : t;
+    }
+
+    /// <summary>
     /// Rebuilds a reused module from the current source's deterministic fields plus the
     /// previous record's LLM outputs — mirrors the assignments in
     /// <see cref="CompileModuleAsync"/> so a reused record never carries stale
-    /// pass-through data (e.g. an outdated lesson schedule).
+    /// pass-through data (e.g. an outdated lesson schedule). Sentinel prerequisite notes
+    /// are re-normalized here too, so tightening the rule reaches reused records on the
+    /// next compile run without an LLM call.
     /// </summary>
     private static CompiledModule RefreshPassThrough(CompiledModule prev, SourceModule module, string sourceHash) => new()
     {
@@ -384,7 +401,7 @@ Output JSON:";
         // keep the previously extracted (and validated) ones. Safe, because the source
         // prerequisites are part of SourceHash — any change skips this reuse path.
         Prerequisites = module.Prerequisites.Count > 0 ? module.Prerequisites : prev.Prerequisites,
-        PrerequisiteNotes = prev.PrerequisiteNotes,
+        PrerequisiteNotes = NormalizeNoPrereqSentinel(prev.PrerequisiteNotes),
         Recommended = module.Recommended,
         StudyPrograms = module.StudyPrograms,
         ModuleType = module.ModuleType,

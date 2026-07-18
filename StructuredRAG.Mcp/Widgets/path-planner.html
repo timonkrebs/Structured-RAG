@@ -336,8 +336,12 @@
     current = d;
     initialized = true;
     // Restore choices changed in an earlier turn (openai widget state only).
+    // Deferrals are scoped to the exact path they were made for: a delay chosen
+    // for a shared prerequisite in an earlier path (different target or start)
+    // must not silently reshape a newly rendered one.
     var ws = Host.widgetState;
-    if (ws && ws.deferred && typeof ws.deferred === "object") {
+    if (ws && ws.deferred && typeof ws.deferred === "object"
+        && ws.target === current.targetCode && ws.start === current.startSemester) {
       Object.keys(ws.deferred).forEach(function (c) {
         if (typeof ws.deferred[c] === "number") deferred[c] = ws.deferred[c];
       });
@@ -348,7 +352,11 @@
 
   function persistState() {
     var state = { completed: current.completedModules || [] };
-    if (Object.keys(deferred).length > 0) state.deferred = deferred;
+    if (Object.keys(deferred).length > 0) {
+      state.deferred = deferred;
+      state.target = current.targetCode;
+      state.start = current.startSemester;
+    }
     Host.setState(state, pathSummary());
   }
 

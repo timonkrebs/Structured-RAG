@@ -27,7 +27,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -193,7 +193,7 @@
       "Saturday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -707,7 +707,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -787,7 +787,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -937,7 +937,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -1020,7 +1020,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -1350,7 +1350,7 @@
       "Monday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -1429,7 +1429,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -1778,7 +1778,7 @@
       "Monday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -1863,7 +1863,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -2047,7 +2047,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -2348,7 +2348,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "None",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -2706,7 +2706,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -2849,7 +2849,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -2987,7 +2987,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -3155,7 +3155,7 @@
       "Saturday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -3244,7 +3244,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "None",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -3323,7 +3323,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -3496,7 +3496,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -3657,7 +3657,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -3811,7 +3811,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -3997,7 +3997,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -4085,7 +4085,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -4228,7 +4228,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -4323,7 +4323,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "None.",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -4415,7 +4415,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -4644,7 +4644,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -4730,7 +4730,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -4819,7 +4819,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -4901,7 +4901,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -5104,7 +5104,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -5184,7 +5184,7 @@
       "Monday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -5529,7 +5529,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -5697,7 +5697,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -5790,7 +5790,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -5961,7 +5961,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -6224,7 +6224,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -6309,7 +6309,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik"
@@ -6531,7 +6531,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -6713,7 +6713,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -6870,7 +6870,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -7133,7 +7133,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -7365,7 +7365,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -7472,7 +7472,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "None",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -7553,7 +7553,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik"
@@ -7620,7 +7620,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -7778,7 +7778,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Administration (International Management)",
@@ -8006,7 +8006,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -8075,7 +8075,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc Wirtschaftsrecht",
@@ -8232,7 +8232,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -8386,7 +8386,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -8492,7 +8492,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc Wirtschaftsrecht",
@@ -8855,7 +8855,7 @@
       "Thursday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -9624,7 +9624,7 @@
       "Friday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Betriebs\u00F6konomie",
@@ -9879,7 +9879,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc Wirtschaftsrecht",
@@ -9962,7 +9962,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -10030,7 +10030,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "none",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Business Information Technology",
@@ -10184,7 +10184,7 @@
       "Saturday"
     ],
     "prerequisites": [],
-    "prerequisiteNotes": "None",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik"
@@ -10417,7 +10417,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
@@ -10571,7 +10571,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
-    "prerequisiteNotes": "Keine",
+    "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
       "BSc in Wirtschaftsinformatik",
