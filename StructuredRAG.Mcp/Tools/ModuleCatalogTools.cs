@@ -352,8 +352,19 @@ public static class ModuleCatalogTools
         if (literalCompleted.Contains(target.Code))
             throw new McpException($"'{target.Code}' is already in the completed modules — there is no path to plan.");
         // Expanded with equivalent language variants: a completed variant satisfies
-        // prerequisites exactly like the course itself.
+        // prerequisites exactly like the course itself — including the target: planning
+        // (and counting ECTS for) a course the student already passed in the other
+        // language would contradict that contract.
         var completed = store.ExpandWithVariants(literalCompleted);
+        if (completed.Contains(target.Code))
+        {
+            var variant = literalCompleted.FirstOrDefault(c =>
+                store.ExpandWithVariants(new[] { c }).Contains(target.Code)) ?? "a language variant";
+            throw new McpException(
+                $"'{variant}' is already completed and is an equivalent language variant of '{target.Code}' — " +
+                "equivalent variants count as completed, so there is no path to plan. If the student wants to take " +
+                $"'{target.Code}' anyway, treat it as a regular eligible module (plan_semester).");
+        }
 
         var start = ValidateSemester(startSemester ?? "HS");
         var concrete = start.Length == 4;
@@ -362,8 +373,6 @@ public static class ModuleCatalogTools
 
         var notes = new List<string>();
         var alreadyCompleted = new List<string>();
-        if (completed.Contains(target.Code))
-            notes.Add($"An equivalent language variant of '{target.Code}' is already completed — taking it again is normally unnecessary.");
 
         // First slot >= the given one that matches the module's offering rhythm
         // (modules without offering info are unconstrained; the scheduling loop
