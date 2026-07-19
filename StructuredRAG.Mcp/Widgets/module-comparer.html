@@ -384,6 +384,7 @@
 
   // ---------- rendering ----------
   function render() {
+    hostRenderDeferred = false; // any render satisfies a pending host update
     init();
     var root = document.getElementById("root");
     var s = t();
@@ -563,10 +564,17 @@
     if (active && root.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT")) {
       if (hostRenderDeferred) return;
       hostRenderDeferred = true;
-      var done = function () {
+      var done = function (ev) {
         active.removeEventListener("blur", done);
         active.removeEventListener("change", done);
         hostRenderDeferred = false;
+        // Focus moving to another element inside the widget (e.g. clicking an
+        // autocomplete suggestion or a button): rendering right now would replace
+        // the click target mid-gesture — let the click land first, then refresh.
+        if (ev && ev.type === "blur" && ev.relatedTarget && root.contains(ev.relatedTarget)) {
+          setTimeout(hostRender, 150);
+          return;
+        }
         render();
       };
       active.addEventListener("blur", done);

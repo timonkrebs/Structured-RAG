@@ -440,9 +440,40 @@
       // First render without a saved draft: start from the assistant's proposal.
       // A saved draft (even an empty selection) is the student's own state and wins.
       d.proposed.forEach(function (c) { selected[c] = true; });
+      autoPickClasses(d);
       proposalApplied = true;
     }
     if (d) stateRestored = true;
+  }
+
+  // A proposal names module codes, not class groups — the default (first) class of
+  // a parallel-class module can clash with the other proposed modules even when
+  // another alternative is free. Greedily pick the first clash-free class per
+  // module so the plan opens the way the assistant meant it; the student can
+  // still switch classes, and when every alternative clashes the default stays
+  // (the clash hints say so).
+  function autoPickClasses(d) {
+    var mods = (d.eligible || []).map(function (e) { return e.module; })
+      .filter(function (m) { return selected[m.code]; });
+    mods.forEach(function (m) {
+      var groups = lessonGroups(m);
+      if (groups.length < 2 || chosenClass[m.code]) return;
+      var others = selectedSlots(mods.filter(function (o) { return o.code !== m.code; }));
+      for (var i = 0; i < groups.length; i++) {
+        var hard = groups[i].some(function (l) {
+          if (!l.day) return false;
+          var s = toMin(l.start), e = toMin(l.end);
+          if (s == null || e == null) return false;
+          return others.some(function (b) {
+            return b.day === l.day && b.s != null && b.e != null && s < b.e && b.s < e;
+          });
+        });
+        if (!hard) {
+          if (i > 0) chosenClass[m.code] = groupKey(groups[i], i);
+          return;
+        }
+      }
+    });
   }
 
   function persistState() {
@@ -589,6 +620,7 @@
 
   // ---------- rendering ----------
   function render() {
+    hostRenderDeferred = false; // any render satisfies a pending host update
     restoreState();
     var root = document.getElementById("root");
     var d = data();
@@ -940,10 +972,17 @@
     if (active && root.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT")) {
       if (hostRenderDeferred) return;
       hostRenderDeferred = true;
-      var done = function () {
+      var done = function (ev) {
         active.removeEventListener("blur", done);
         active.removeEventListener("change", done);
         hostRenderDeferred = false;
+        // Focus moving to another element inside the widget (e.g. clicking an
+        // autocomplete suggestion or a button): rendering right now would replace
+        // the click target mid-gesture — let the click land first, then refresh.
+        if (ev && ev.type === "blur" && ev.relatedTarget && root.contains(ev.relatedTarget)) {
+          setTimeout(hostRender, 150);
+          return;
+        }
         render();
       };
       active.addEventListener("blur", done);
