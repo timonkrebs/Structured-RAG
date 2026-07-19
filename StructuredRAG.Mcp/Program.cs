@@ -75,6 +75,8 @@ builder.Services.AddOptions<McpServerOptions>().PostConfigure<CatalogStore>((opt
            and the concrete semester (e.g. '26HS'). Combine eligible modules into a plan
            that fits the ECTS target and interests — and mind each module's
            prerequisiteNotes (requirements that are free text, not module codes).
+           Structured prerequisites come as groups of interchangeable alternatives
+           (language variants of the same course): any ONE member satisfies its group.
            Eligible modules carry lesson time slots where published (lessons: day,
            start-end, one entry per weekly slot; slots sharing the same number form
            one parallel class — the student attends ONE class); use them to propose
@@ -85,6 +87,9 @@ builder.Services.AddOptions<McpServerOptions>().PostConfigure<CatalogStore>((opt
            via the MCP Apps extension), plan_semester, compare_modules and plan_path
            additionally render interactive widgets (semester plan builder / comparison
            table / path timeline); other clients simply use the structured JSON results.
+           EVERY call of a widget tool renders a NEW widget: never call the same
+           widget tool twice for one request (prepare inputs first, then call once) —
+           back-to-back calls show the student duplicate widgets.
         The compiled catalog has a compilation date (see manifest / catalog info); for
         authoritative current details always rely on fetch results and the official URL.
 

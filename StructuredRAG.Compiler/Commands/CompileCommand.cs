@@ -84,7 +84,7 @@ public class CompileCommand
     /// Writes via temp file + rename so a watching MCP server never observes a
     /// partially-written artifact.
     /// </summary>
-    private static async Task WriteAtomicAsync(string path, string content, CancellationToken ct)
+    internal static async Task WriteAtomicAsync(string path, string content, CancellationToken ct)
     {
         var tempPath = path + ".tmp";
         await File.WriteAllTextAsync(tempPath, content, ct);

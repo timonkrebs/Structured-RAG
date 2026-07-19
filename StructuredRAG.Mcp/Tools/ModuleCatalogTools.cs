@@ -213,17 +213,20 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. You are advising the one student you are chatting with; if their interests or level are unknown, do not interrogate them — propose a sensible plan (mandatory/foundational modules first), state your assumptions briefly, and let them adjust in the widget. If you do not even know which modules they completed and the request is vague, call get_started first: its widget collects completed modules and the ECTS target without chat questions. In ChatGPT this renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Prerequisites are evaluated as GROUPS of interchangeable alternatives (language variants of the same course, e.g. 'Statistik 1' de/en) — completing any ONE member satisfies a group; blocked modules report missingPrerequisiteGroups in that shape. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. Call plan_semester exactly ONCE per planning request, with the proposal already included: every call renders its own plan-builder widget, so calling it again in the same turn (e.g. first without and then with proposedModules) shows the student two duplicate widgets. Prepare first, then make the one call; re-call only when the request itself changes (different semester, newly completed modules). You are advising the one student you are chatting with; if their interests or level are unknown, do not interrogate them — propose a sensible plan (mandatory/foundational modules first), state your assumptions briefly, and let them adjust in the widget. If you do not even know which modules they completed and the request is vague, call get_started first: its widget collects completed modules and the ECTS target without chat questions. In ChatGPT this renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
-        [Description("Module codes the student has already completed")] string[]? completedModules = null,
+        [Description("Module codes the student has already completed. A completed module also counts for its equivalent language variants — the sibling edition is treated as completed too")] string[]? completedModules = null,
         [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null,
         [Description("The student's target ECTS for the semester; echoed into the result and used to initialize the plan-builder widget (default 30)")] int? ectsTarget = null,
         [Description("Your concrete plan proposal: module codes to preselect in the plan-builder widget. Assemble it from get_catalog_overview — eligible modules matching the student's interests and ECTS target without overlapping lesson times. Codes that turn out not eligible are dropped and reported in proposedDropped.")] string[]? proposedModules = null)
     {
         semester = ValidateSemester(semester);
-        var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        // Expanded with equivalent language variants: a completed variant both satisfies
+        // prerequisite groups and takes its sibling edition out of the eligible list —
+        // otherwise the plan proposes retaking the same course in the other language.
+        var completed = store.ExpandWithVariants(completedModules ?? Array.Empty<string>());
         var interests = (interestTags ?? Array.Empty<string>())
             .Select(store.ResolveTagName).Where(t => t != null).Select(t => t!).ToList();
 
@@ -240,7 +243,12 @@ public static class ModuleCatalogTools
             if (completed.Contains(m.Code)) { completedCount++; continue; }
             if (!MatchesSemester(m, semester)) { notOffered++; continue; }
 
-            var missing = m.Prerequisites.Where(p => !completed.Contains(p)).ToList();
+            // Group semantics: ANY completed member satisfies a group — its members are
+            // interchangeable language variants of the same course (issue #21).
+            var missing = m.EffectivePrerequisiteGroups()
+                .Where(g => !g.Any(completed.Contains))
+                .Select(g => (IReadOnlyList<string>)g)
+                .ToList();
             var interestMatches = m.Tags.Intersect(interests, StringComparer.OrdinalIgnoreCase).ToList();
 
             if (missing.Count == 0)
@@ -284,7 +292,9 @@ public static class ModuleCatalogTools
             ProposedDropped: proposedDropped,
             Note: "Structured prerequisites are LLM-extracted from the official requirement texts and validated against " +
                   "this catalog; per-module 'prerequisiteNotes' may contain additional requirements that could not be " +
-                  "resolved to module codes — take them into account when planning.");
+                  "resolved to module codes — take them into account when planning. 'missingPrerequisiteGroups' lists " +
+                  "GROUPS of interchangeable codes (language variants of the same course): completing any ONE member " +
+                  "unlocks that group.");
     }
 
     [McpServerTool(Name = "compare_modules", ReadOnly = true, UseStructuredContent = true)]
@@ -329,18 +339,34 @@ public static class ModuleCatalogTools
     [McpMeta("openai/widgetAccessible", true)] // the path widget re-plans when the student marks modules as completed
     [McpMeta("openai/toolInvocation/invoking", "Computing the fastest path…")]
     [McpMeta("openai/toolInvocation/invoked", "Path to target module ready")]
-    [Description("Compute the fastest way to reach ONE specific target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Call this only when the user explicitly asks how or when they can reach a particular module (e.g. 'When can I take X at the earliest?'); for planning a whole semester use plan_semester alone — do NOT call both for the same request unless the user asked for a path. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
+    [Description("Compute the fastest way to reach ONE specific target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Interchangeable language variants of the same course count once — the path schedules one variant and notes the alternatives. Call this only when the user explicitly asks how or when they can reach a particular module (e.g. 'When can I take X at the earliest?'); for planning a whole semester use plan_semester alone — do NOT call both for the same request unless the user asked for a path. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
     public static PathPlanData PlanPath(
         CatalogStore store,
         [Description("Target module code the student wants to reach, e.g. 'mldm'")] string targetModule,
-        [Description("Module codes the student has already completed")] string[]? completedModules = null,
+        [Description("Module codes the student has already completed. A completed module also counts for its equivalent language variants")] string[]? completedModules = null,
         [Description("First semester available for planning: concrete id like '26HS' (real semester labels) or type 'HS'/'FS' (generic labels). Default 'HS'.")] string? startSemester = null)
     {
         var target = store.GetModule(targetModule.Trim())
             ?? throw new McpException($"No module with code '{targetModule}'. Use search or search_modules to find valid codes.");
-        var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-        if (completed.Contains(target.Code))
+        var literalCompleted = new HashSet<string>(
+            (completedModules ?? Array.Empty<string>()).Select(c => c?.Trim()).Where(c => !string.IsNullOrEmpty(c)).Select(c => c!),
+            StringComparer.OrdinalIgnoreCase);
+        if (literalCompleted.Contains(target.Code))
             throw new McpException($"'{target.Code}' is already in the completed modules — there is no path to plan.");
+        // Expanded with equivalent language variants: a completed variant satisfies
+        // prerequisites exactly like the course itself — including the target: planning
+        // (and counting ECTS for) a course the student already passed in the other
+        // language would contradict that contract.
+        var completed = store.ExpandWithVariants(literalCompleted);
+        if (completed.Contains(target.Code))
+        {
+            var variant = literalCompleted.FirstOrDefault(c =>
+                store.ExpandWithVariants(new[] { c }).Contains(target.Code)) ?? "a language variant";
+            throw new McpException(
+                $"'{variant}' is already completed and is an equivalent language variant of '{target.Code}' — " +
+                "equivalent variants count as completed, so there is no path to plan. If the student wants to take " +
+                $"'{target.Code}' anyway, treat it as a regular eligible module (plan_semester).");
+        }
 
         var start = ValidateSemester(startSemester ?? "HS");
         var concrete = start.Length == 4;
@@ -350,28 +376,93 @@ public static class ModuleCatalogTools
         var notes = new List<string>();
         var alreadyCompleted = new List<string>();
 
+        // First slot >= the given one that matches the module's offering rhythm
+        // (modules without offering info are unconstrained; the scheduling loop
+        // reports those separately).
+        int FitSlot(CompiledModule m, int slot)
+        {
+            var types = m.OfferedIn.Count > 0
+                ? m.OfferedIn
+                : m.Offerings.Select(o => SourceModuleMapper.SemesterTypeOf(o.SemesterId))
+                    .Where(t => t != null).Select(t => t!).Distinct().ToList();
+            if (types.Count > 0)
+            {
+                while (!types.Contains(SlotType(slot), StringComparer.OrdinalIgnoreCase)) slot++;
+            }
+            return slot;
+        }
+
+        // Earliest slot each module could be completed in (memoized). A group is
+        // available as soon as its FASTEST member is: alternatives can differ in
+        // offering rhythm (HS/FS) and in their own prerequisite chains, so picking
+        // a fixed group member could miss the fastest path.
+        var earliest = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var computing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int Earliest(CompiledModule m)
+        {
+            if (earliest.TryGetValue(m.Code, out var known)) return known;
+            if (!computing.Add(m.Code))
+                throw new McpException($"Prerequisite cycle detected around '{m.Code}'. " +
+                                       "The catalog data needs fixing before a path can be planned.");
+            var slot = 0;
+            foreach (var group in m.EffectivePrerequisiteGroups())
+            {
+                if (group.Any(completed.Contains)) continue;
+                var members = group.Select(store.GetModule).Where(x => x != null).Select(x => x!).ToList();
+                if (members.Count == 0) continue; // dangling codes are reported during Visit
+                slot = Math.Max(slot, members.Min(Earliest) + 1);
+            }
+            slot = FitSlot(m, slot);
+            computing.Remove(m.Code);
+            earliest[m.Code] = slot;
+            return slot;
+        }
+
         // Missing-prerequisite closure of the target, in topological order (prereqs first).
         // Completed modules cut the recursion — their own prerequisites are irrelevant.
         var state = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase); // false = in progress, true = done
         var path = new List<string>();
         var topo = new List<CompiledModule>();
+        // Per module: the representatives Visit chose for its UNSATISFIED groups. Only
+        // these constrain the module's slot — a sibling variant scheduled for another
+        // module's group must not delay a group satisfied by a completed or faster
+        // alternative.
+        var repOf = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         void Visit(CompiledModule m)
         {
             state[m.Code] = false;
             path.Add(m.Code);
-            foreach (var p in m.Prerequisites)
+            foreach (var group in m.EffectivePrerequisiteGroups())
             {
-                if (completed.Contains(p))
+                // ANY completed member satisfies the group (interchangeable language
+                // variants). Report the code the student actually completed, not the
+                // expanded sibling variant.
+                var completedMember = group.FirstOrDefault(literalCompleted.Contains)
+                    ?? group.FirstOrDefault(completed.Contains);
+                if (completedMember != null)
                 {
-                    if (!alreadyCompleted.Contains(p, StringComparer.OrdinalIgnoreCase)) alreadyCompleted.Add(p);
+                    if (!alreadyCompleted.Contains(completedMember, StringComparer.OrdinalIgnoreCase))
+                        alreadyCompleted.Add(completedMember);
                     continue;
                 }
-                var pm = store.GetModule(p);
-                if (pm is null)
+                // Schedule exactly ONE representative per group: the fastest-completing
+                // alternative wins; ties prefer a variant another module already pulled
+                // onto the path (no duplicate variants across dependents), then the
+                // order the requirement referenced them in.
+                var candidates = group.Select(store.GetModule).Where(x => x != null).Select(x => x!).ToList();
+                if (candidates.Count == 0)
                 {
-                    notes.Add($"{m.Code}: prerequisite '{p}' is not in this catalog — verify it manually.");
+                    notes.Add($"{m.Code}: prerequisite '{group[0]}' is not in this catalog — verify it manually.");
                     continue;
                 }
+                var best = candidates.Min(Earliest);
+                var pm = candidates.FirstOrDefault(c => Earliest(c) == best && state.ContainsKey(c.Code))
+                    ?? candidates.First(c => Earliest(c) == best);
+                if (!repOf.TryGetValue(m.Code, out var reps)) repOf[m.Code] = reps = new List<string>();
+                reps.Add(pm.Code);
+                if (group.Count > 1)
+                    notes.Add($"{m.Code}: '{string.Join("' / '", group)}' are equivalent variants — " +
+                              $"the path schedules '{pm.Code}'; any one of them satisfies the requirement.");
                 if (state.TryGetValue(pm.Code, out var done))
                 {
                     if (!done)
@@ -394,8 +485,10 @@ public static class ModuleCatalogTools
         var slotOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var m in topo)
         {
-            var slot = m.Prerequisites
-                .Where(p => slotOf.ContainsKey(p))
+            // Only the representatives Visit chose for THIS module constrain it; groups
+            // satisfied by a completed variant contributed no representative at all.
+            var slot = (repOf.TryGetValue(m.Code, out var mReps) ? mReps : (IReadOnlyList<string>)Array.Empty<string>())
+                .Where(slotOf.ContainsKey)
                 .Select(p => slotOf[p] + 1)
                 .DefaultIfEmpty(0)
                 .Max();
@@ -445,7 +538,10 @@ public static class ModuleCatalogTools
             EarliestSemester: labels[slotOf[target.Code]],
             SemesterCount: slotOf[target.Code] + 1,
             TotalEcts: topo.Sum(m => m.Ects),
-            CompletedModules: completed.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
+            // The LITERAL input codes, not the variant-expanded set: the path widget
+            // round-trips this list as its Mark-done/Undo state — an expanded sibling
+            // would survive an undo and keep the prerequisite silently satisfied.
+            CompletedModules: literalCompleted.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
             AlreadyCompleted: alreadyCompleted.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
             Steps: steps,
             Notes: notes);
@@ -571,7 +667,8 @@ public record ModuleSummary(
     IReadOnlyList<string> Languages, IReadOnlyList<string> Weekdays,
     IReadOnlyList<Lesson> Lessons,
     IReadOnlyList<string> Tags, string Summary, string? SummaryEn, string Audience,
-    IReadOnlyList<string> Prerequisites, IReadOnlyList<string> Recommended,
+    IReadOnlyList<string> Prerequisites, IReadOnlyList<IReadOnlyList<string>> PrerequisiteGroups,
+    IReadOnlyList<string> Recommended,
     string? PrerequisiteNotes, string? Url)
 {
     public static ModuleSummary From(CompiledModule m) => new(
@@ -579,7 +676,9 @@ public record ModuleSummary(
         m.OfferedIn, m.Offerings, m.Languages, m.Weekdays,
         NewestLessons(m.Offerings),
         m.Tags, m.Summary, m.SummaryEn, m.Audience,
-        m.Prerequisites, m.Recommended, m.PrerequisiteNotes, m.Url);
+        m.Prerequisites,
+        m.EffectivePrerequisiteGroups().Select(g => (IReadOnlyList<string>)g).ToList(),
+        m.Recommended, m.PrerequisiteNotes, m.Url);
 
     /// <summary>Summary narrowed to the offerings matching the given semester: a module can
     /// meet on different weekdays in HS vs FS, and the module-level union would produce wrong
@@ -616,7 +715,9 @@ public record PlannableModule(
     IReadOnlyList<string> InterestMatches,
     IReadOnlyList<string> MissingRecommended);
 
-public record BlockedModule(string Code, string Title, int Ects, IReadOnlyList<string> MissingPrerequisites);
+/// <summary>Missing prerequisites as groups: the student must complete ONE module from each
+/// group — members of a group are interchangeable (language variants of the same course).</summary>
+public record BlockedModule(string Code, string Title, int Ects, IReadOnlyList<IReadOnlyList<string>> MissingPrerequisiteGroups);
 
 public record SemesterPlanData(
     string Semester,

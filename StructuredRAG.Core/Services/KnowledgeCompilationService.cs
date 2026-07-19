@@ -215,7 +215,7 @@ A single JSON object:
   ""tags"": [""3 to 8 canonical German tag names copied verbatim from the vocabulary""],
   ""typicalQuestions"": [""3 to 5 German questions a student might ask for which this module is a good answer""],
   ""typicalQuestionsEn"": [""the same questions in English""],
-  ""prerequisites"": [""codes from the module list above that the enrollment requirements clearly refer to; empty if none""],
+  ""prerequisites"": [""codes from the module list above that the enrollment requirements clearly refer to; when a required course exists in several language variants in the list, include every variant's code; empty if none""],
   ""prerequisiteNotes"": ""requirement aspects that could NOT be mapped to module codes (German, verbatim-ish); empty string if none""
 }}
 
@@ -330,6 +330,19 @@ Output JSON:";
                 _logger.LogWarning("Module {Code}: removing dangling recommendations: {Dangling}",
                     module.Code, string.Join(", ", danglingReco));
                 module.Recommended = module.Recommended.Where(codes.Contains).ToList();
+            }
+        }
+
+        // Collapse equivalent language variants into prerequisite OR-groups. Recomputed on
+        // every compile (force) so modules reused from a previous catalog pick up
+        // catalog-wide equivalence changes instead of carrying stale groups forward.
+        PrerequisiteGrouping.EnsureGroups(modules, force: true);
+        foreach (var module in modules)
+        {
+            foreach (var group in module.PrerequisiteGroups.Where(g => g.Count > 1))
+            {
+                _logger.LogInformation("Module {Code}: prerequisite alternatives grouped: {Group}",
+                    module.Code, string.Join(" | ", group));
             }
         }
 

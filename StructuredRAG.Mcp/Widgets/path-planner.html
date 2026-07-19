@@ -466,6 +466,34 @@
     (current.steps || []).forEach(function (st) { (st.modules || []).forEach(function (m) { out.push(m); }); });
     return out;
   }
+  // Prerequisite groups: inner lists are interchangeable variants (OR); a group
+  // constrains a module only through its EARLIEST placed member — a slower sibling
+  // placed for another module's group must not delay a group that is already
+  // satisfied. Modules absent from the plan (completed or not needed) never constrain.
+  function groupsOf(m) {
+    return m.prerequisiteGroups || (m.prerequisites || []).map(function (p) { return [p]; });
+  }
+  // Flat view for display maps ("required for" chips).
+  function prereqCodes(m) {
+    var out = [];
+    groupsOf(m).forEach(function (g) { g.forEach(function (p) { out.push(p); }); });
+    return out;
+  }
+  // Earliest slot allowed by the groups, given placed (code -> slot); excludeSelf
+  // guards against a module listed in its own group data.
+  function groupFloor(m, placed) {
+    var min = 0;
+    groupsOf(m).forEach(function (g) {
+      var best = null;
+      g.forEach(function (p) {
+        var k = p.toLowerCase();
+        if (k === m.code.toLowerCase()) return;
+        if (placed[k] !== undefined && (best === null || placed[k] < best)) best = placed[k];
+      });
+      if (best !== null) min = Math.max(min, best + 1);
+    });
+    return min;
+  }
   function offeringTypes(m) {
     var types = (m.offeredIn || []).map(function (x) { return String(x).toUpperCase(); });
     if (types.length === 0) (m.offerings || []).forEach(function (o) {
@@ -485,12 +513,7 @@
   function schedule(overrides) {
     var placed = {};
     planModules().forEach(function (m) {
-      var min = 0;
-      (m.prerequisites || []).forEach(function (p) {
-        var k = p.toLowerCase();
-        if (placed[k] !== undefined) min = Math.max(min, placed[k] + 1);
-      });
-      var slot = fitSlot(m, min);
+      var slot = fitSlot(m, groupFloor(m, placed));
       var want = overrides[m.code];
       if (typeof want === "number" && want > slot) slot = fitSlot(m, want);
       placed[m.code.toLowerCase()] = slot;
@@ -512,12 +535,7 @@
   // The semester options offered for one module: its earliest valid slot (given
   // where its prerequisites currently sit) plus the next few offering-compatible ones.
   function slotChoices(m, view) {
-    var min = 0;
-    (m.prerequisites || []).forEach(function (p) {
-      var k = p.toLowerCase();
-      if (view.placed[k] !== undefined && k !== m.code.toLowerCase()) min = Math.max(min, view.placed[k] + 1);
-    });
-    var out = [], slot = fitSlot(m, min);
+    var out = [], slot = fitSlot(m, groupFloor(m, view.placed));
     while (out.length < 5) {
       out.push(slot);
       var next = fitSlot(m, slot + 1);
@@ -552,7 +570,8 @@
   function requiredForMap() {
     var map = {};
     planModules().forEach(function (m) {
-      (m.prerequisites || []).forEach(function (p) {
+      // Both variants of a group map to m — only the placed one's entry is ever read.
+      prereqCodes(m).forEach(function (p) {
         var k = p.toLowerCase();
         (map[k] = map[k] || []).push(m.code);
       });

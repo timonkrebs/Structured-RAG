@@ -128,7 +128,9 @@ public class LiveModuleFetcher
             sb.AppendLine($"**Lessons (weekly slots; slots sharing a class number belong to the same parallel class):** {string.Join("; ", lessons.Select(FormatLesson))}");
         sb.AppendLine($"**Assessment:** {assessment}");
         sb.AppendLine($"**Tags:** {string.Join(", ", compiled.Tags)}");
-        sb.AppendLine($"**Prerequisites (module codes):** {(compiled.Prerequisites.Count > 0 ? string.Join(", ", compiled.Prerequisites) : "none")}");
+        var prerequisiteGroups = compiled.EffectivePrerequisiteGroups().ToList();
+        sb.AppendLine($"**Prerequisites (module codes; ' or ' separates interchangeable language variants):** " +
+                      $"{(prerequisiteGroups.Count > 0 ? string.Join("; ", prerequisiteGroups.Select(g => string.Join(" or ", g))) : "none")}");
         if (!string.IsNullOrWhiteSpace(requirements))
             sb.AppendLine($"**Requirements (official text):** {requirements}");
         sb.AppendLine();
@@ -156,6 +158,8 @@ public class LiveModuleFetcher
                 ["lessons"] = lessons,
                 ["tags"] = compiled.Tags,
                 ["prerequisites"] = compiled.Prerequisites,
+                // Outer list = AND, inner list = interchangeable variants (OR).
+                ["prerequisiteGroups"] = prerequisiteGroups,
                 ["studyPrograms"] = live is { StudyPrograms.Count: > 0 } ? live.StudyPrograms : compiled.StudyPrograms
             });
     }
