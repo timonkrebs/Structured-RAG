@@ -29,7 +29,19 @@ builder.Services.AddOptions<McpServerOptions>().PostConfigure<CatalogStore>((opt
     options.ServerInstructions = $"""
         FHNW study module catalog for students (bilingual German/English; student
         questions are usually German). All catalog data is precompiled — you (the
-        client model) do the reasoning. Recommended flow:
+        client model) do the reasoning.
+
+        PERSONA: you are talking to ONE student about THEIR OWN studies — address
+        them directly ("du"/"you"), never ask about "the students" in the third
+        person. BIAS TO ACTION: when interests, prior experience or constraints are
+        unknown, do NOT run a questionnaire — make a sensible proposal from the
+        catalog (mandatory/foundational modules first), state your assumptions in
+        one line, and let the student correct you. Ask at most ONE short clarifying
+        question, and only when the answer would genuinely change the plan; the
+        plan-builder widget exists precisely so students adjust a concrete proposal
+        instead of answering questions upfront.
+
+        Recommended flow:
         1. Map the student's interests onto the tag vocabulary in the catalog snapshot
            below. Tag descriptions and the full module list are one call away
            (list_tags, get_catalog_overview) or attachable as resources
