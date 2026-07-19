@@ -86,6 +86,13 @@
   ul.modules { list-style: none; margin: 8px 0 0; padding: 0; }
   ul.modules > li { border-top: 1px solid var(--hairline); padding: 9px 2px; }
   ul.modules > li.selected { box-shadow: inset 3px 0 0 var(--accent); background: var(--plane); }
+  /* Transient cue after jumping here from a timetable block; an outline pulse
+     doesn't fight the persistent .selected background. */
+  @keyframes nav-flash { from { outline-color: var(--accent); } to { outline-color: transparent; } }
+  ul.modules > li.nav-flash {
+    outline: 2px solid transparent; outline-offset: -2px; border-radius: 6px;
+    animation: nav-flash 1.6s ease-out;
+  }
   .mod-row { display: flex; align-items: flex-start; gap: 9px; }
   .mod-row input[type="checkbox"] { margin-top: 3px; width: 15px; height: 15px; accent-color: var(--accent); flex: none; }
   .mod-main { flex: 1 1 auto; min-width: 0; }
@@ -121,8 +128,6 @@
 
   details.blocked { margin-top: 12px; border-top: 1px solid var(--hairline); padding-top: 8px; }
   details.blocked summary { cursor: pointer; color: var(--ink-2); font-weight: 600; font-size: 13px; }
-  details.blocked li { border: none; padding: 6px 2px 2px 8px; }
-  details.blocked .mod-title { color: var(--ink-2); font-weight: 500; }
 
   details.cat { border-top: 1px solid var(--hairline); margin-top: 8px; padding-top: 6px; }
   details.cat > summary { cursor: pointer; font-size: 13px; }
@@ -165,6 +170,7 @@
     position: absolute; overflow: hidden;
     background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 5px;
     font-size: 10.5px; line-height: 1.3; padding: 1px 4px;
+    cursor: pointer; overflow-wrap: anywhere;
   }
   .tt-block .tt-time { font-variant-numeric: tabular-nums; color: var(--ink-2); display: block; }
   /* Overlaps are also always reported as a text hint above the list — never color alone. */
@@ -331,7 +337,7 @@
       title: function (s) { return "Semesterplan " + s; },
       eligibleCount: function (n) { return n + " wählbare Module"; },
       covEligible: function (n) { return n + " wählbar"; },
-      covBlocked: function (n) { return n + " gesperrt"; },
+      covBlocked: function (n) { return n + " mit offenen Voraussetzungen"; },
       covNotOffered: function (n, sem) { return n + " im " + sem + " nicht angeboten"; },
       covCompleted: function (n) { return n + " abgeschlossen"; },
       target: "Ziel",
@@ -360,8 +366,9 @@
       loading: "Lade offizielle Beschreibung…",
       loadError: "Details konnten nicht geladen werden.",
       official: "Offizielle Modulseite ↗",
-      blocked: function (n) { return "Gesperrte Module (" + n + ")"; },
+      blocked: function (n) { return "Module mit offenen Voraussetzungen (" + n + ")"; },
       missing: "fehlt: ",
+      openPrereq: function (txt) { return "Voraussetzungen offen: " + txt; },
       orSep: " oder ",
       selectedSum: function (n, e) { return n + " Module · " + e + " ECTS gewählt"; },
       send: "Plan in den Chat senden",
@@ -377,7 +384,7 @@
       title: function (s) { return "Semester plan " + s; },
       eligibleCount: function (n) { return n + " eligible modules"; },
       covEligible: function (n) { return n + " eligible"; },
-      covBlocked: function (n) { return n + " blocked"; },
+      covBlocked: function (n) { return n + " with open prerequisites"; },
       covNotOffered: function (n, sem) { return n + " not offered in " + sem; },
       covCompleted: function (n) { return n + " completed"; },
       target: "Target",
@@ -406,8 +413,9 @@
       loading: "Loading official description…",
       loadError: "Could not load details.",
       official: "Official module page ↗",
-      blocked: function (n) { return "Blocked modules (" + n + ")"; },
+      blocked: function (n) { return "Modules with open prerequisites (" + n + ")"; },
       missing: "missing: ",
+      openPrereq: function (txt) { return "prerequisites open: " + txt; },
       orSep: " or ",
       selectedSum: function (n, e) { return n + " modules · " + e + " ECTS selected"; },
       send: "Send plan to chat",
@@ -458,7 +466,12 @@
       // First render without a saved draft: start from the assistant's proposal.
       // A saved draft (even an empty selection) is the student's own state and wins.
       d.proposed.forEach(function (c) { selected[c] = true; });
-      autoPickClasses(d);
+      // Classes the assistant pinned explicitly (proposedClasses) win over the
+      // clash-free auto-pick — the widget must open with the exact Durchführung
+      // the assistant reasoned about, not an arbitrary first class.
+      var pins = d.proposedClasses || {};
+      Object.keys(pins).forEach(function (c) { chosenClass[c] = pins[c]; });
+      autoPickClasses();
       proposalApplied = true;
     }
     if (d) stateRestored = true;
@@ -469,10 +482,9 @@
   // another alternative is free. Greedily pick the first clash-free class per
   // module so the plan opens the way the assistant meant it; the student can
   // still switch classes, and when every alternative clashes the default stays
-  // (the clash hints say so).
-  function autoPickClasses(d) {
-    var mods = (d.eligible || []).map(function (e) { return e.module; })
-      .filter(function (m) { return selected[m.code]; });
+  // (the clash hints say so). Modules whose class is already pinned are skipped.
+  function autoPickClasses() {
+    var mods = selectedModules();
     mods.forEach(function (m) {
       var groups = lessonGroups(m);
       if (groups.length < 2 || chosenClass[m.code]) return;
@@ -510,7 +522,9 @@
       " ECTS): " + mods.map(function (m) {
         var slots = chosenLessons(m).filter(function (l) { return l.day; })
           .map(function (l) { return l.day + (l.start ? " " + l.start + "-" + (l.end || "?") : ""); }).join(", ");
-        return m.code + (slots ? " (" + slots + ")" : "");
+        var open = openPrereqOf(m.code);
+        return m.code + (slots ? " (" + slots + ")" : "") +
+          (open ? " [prerequisites open: " + open + "]" : "");
       }).join(", ");
   }
 
@@ -539,10 +553,35 @@
   }
   function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
   function locSummary(m) { return (!isDe() && m.summaryEn) ? m.summaryEn : m.summary; }
-  function selectedModules() {
+  // Blocked modules are selectable too — a student may satisfy a requirement in a
+  // way the strict module graph cannot see — so eligible and blocked share one
+  // entry shape for rendering and selection; blocked entries additionally carry
+  // their open prerequisite groups. Fallbacks cover payloads of older servers:
+  // flat missingPrerequisites lists and blocked rows without a module summary
+  // (those render, but without lessons they stay out of the timetable).
+  function blockedEntries() {
     var d = data();
-    if (!d) return [];
-    return (d.eligible || []).map(function (e) { return e.module; })
+    return ((d && d.blocked) || []).map(function (b) {
+      var groups = b.missingPrerequisiteGroups ||
+        (b.missingPrerequisites || []).map(function (c) { return [c]; });
+      return { module: b.module || b, interestMatches: [], missingRecommended: [], missingGroups: groups };
+    });
+  }
+  function allEntries() {
+    var d = data();
+    return ((d && d.eligible) || []).concat(blockedEntries());
+  }
+  function missingText(groups) {
+    var s = t();
+    return groups.map(function (g) { return g.join(s.orSep); }).join(", ");
+  }
+  // The open prerequisite text of a blocked module, null for eligible ones.
+  function openPrereqOf(code) {
+    var hit = blockedEntries().filter(function (e) { return e.module.code === code; })[0];
+    return hit && hit.missingGroups.length > 0 ? missingText(hit.missingGroups) : null;
+  }
+  function selectedModules() {
+    return allEntries().map(function (e) { return e.module; })
       .filter(function (m) { return selected[m.code]; });
   }
   // callTool result → structured payload: prefer structuredContent, fall back to
@@ -654,18 +693,13 @@
     return order.map(function (label) { return { label: label, entries: map[label] }; });
   }
 
-  // The first render with data decides which categories start open: those holding
-  // selected modules (a proposal opens exactly its categories); without any
-  // selection those with interest matches; else only the first. Afterwards the
+  // The accordion starts fully collapsed (issue #30): the per-category counters
+  // ("n gewählt · x ECTS") and the ★ marker still show where a proposal or the
+  // interest matches landed without pushing the list open. Afterwards the
   // accordion is purely student-driven and survives host re-renders.
   function initCatOpen(cats) {
     if (catInit) return;
-    var hasSel = function (c) { return c.entries.some(function (e) { return selected[e.module.code]; }); };
-    var hasMatch = function (c) { return c.entries.some(function (e) { return (e.interestMatches || []).length > 0; }); };
-    var anySel = cats.some(hasSel), anyMatch = cats.some(hasMatch);
-    cats.forEach(function (c, i) {
-      catOpen[c.label] = anySel ? hasSel(c) : anyMatch ? hasMatch(c) : i === 0;
-    });
+    cats.forEach(function (c) { catOpen[c.label] = false; });
     catInit = true;
   }
 
@@ -738,15 +772,17 @@
 
     if (anyMatches) html += '<div class="legend">' + esc(s.matchLegend) + "</div>";
 
-    // Eligible modules. One <li> per module; inside the category accordion the
-    // per-module type chip is dropped — the category header already names it.
+    // Eligible AND blocked modules share this renderer. One <li> per module; inside
+    // the category accordion the per-module type chip is dropped — the category
+    // header already names it. Blocked entries carry missingGroups and get a
+    // warning note; data-mod anchors the row for timetable-click navigation.
     function moduleLi(e, hideTypeChip) {
       var m = e.module;
       var isSel = !!selected[m.code];
       var matches = {};
       (e.interestMatches || []).forEach(function (tag) { matches[tag.toLowerCase()] = true; });
 
-      return '<li class="' + (isSel ? "selected" : "") + '">' +
+      return '<li data-mod="' + esc(m.code) + '" class="' + (isSel ? "selected" : "") + '">' +
         '<div class="mod-row">' +
         '<input type="checkbox" data-toggle="' + esc(m.code) + '"' + (isSel ? " checked" : "") + ">" +
         '<div class="mod-main">' +
@@ -762,6 +798,8 @@
         "</div>" +
         (isSel && lessonGroups(m).length > 1 ? classPicker(m) : "") +
         '<div class="mod-summary">' + esc(locSummary(m)) + "</div>" +
+        ((e.missingGroups || []).length
+          ? '<div class="mod-note warn-note">' + esc(s.missing) + esc(missingText(e.missingGroups)) + "</div>" : "") +
         ((e.missingRecommended || []).length
           ? '<div class="mod-note warn-note">' + esc(s.missingRec(e.missingRecommended.join(", "))) + "</div>" : "") +
         (m.prerequisiteNotes
@@ -801,20 +839,13 @@
     html += timetableHtml(mods);
     html += blockListHtml(mods);
 
-    // Blocked modules
-    if ((d.blocked || []).length > 0) {
-      html += '<details class="blocked"' + (blockedOpen ? " open" : "") + "><summary>" + esc(s.blocked(d.blocked.length)) + "</summary><ul class=\"modules\">";
-      d.blocked.forEach(function (b) {
-        // Groups of interchangeable variants: one code per group suffices ("A oder B").
-        // Fallback: pre-groups payloads carried a flat missingPrerequisites list.
-        var groups = b.missingPrerequisiteGroups ||
-          (b.missingPrerequisites || []).map(function (c) { return [c]; });
-        var missingText = groups.map(function (g) { return g.join(s.orSep); }).join(", ");
-        html += '<li><div class="mod-title">' + esc(b.title) + '<span class="code">' + esc(b.code) + "</span></div>" +
-          '<div class="badges"><span class="chip ects">' + b.ects + " " + esc(s.ects) + "</span>" +
-          '<span class="chip">' + esc(s.missing) + esc(missingText) + "</span></div></li>";
-      });
-      html += "</ul></details>";
+    // Blocked modules: selectable like eligible ones (a student may satisfy a
+    // requirement in a way the module graph cannot see), rendered by the same
+    // moduleLi — including checkbox, class picker and the open-prerequisites note.
+    var bEntries = blockedEntries();
+    if (bEntries.length > 0) {
+      html += '<details class="blocked"' + (blockedOpen ? " open" : "") + "><summary>" + esc(s.blocked(bEntries.length)) + "</summary>" +
+        '<ul class="modules">' + bEntries.map(function (e) { return moduleLi(e, false); }).join("") + "</ul></details>";
     }
 
     // Footer
@@ -864,7 +895,10 @@
     if (chosen < 0) chosen = 0; // no/stale choice -> first class, like chosenLessons()
     var html = '<div><select class="class-pick" data-class="' + esc(m.code) + '" title="' + esc(s.chooseClass) + '">';
     groups.forEach(function (g, i) {
-      var label = g.map(lessonLabel).join(", ") + (g[0].location ? " · " + g[0].location : "");
+      // The class number is part of the label — it is how the official timetable
+      // identifies the Durchführung the student has to enrol in.
+      var label = g.map(lessonLabel).join(", ") + (g[0].location ? " · " + g[0].location : "") +
+        (g[0].number ? " · " + g[0].number : "");
       html += '<option value="' + esc(groupKey(g, i)) + '"' + (i === chosen ? " selected" : "") + ">" + esc(label) + "</option>";
     });
     return html + "</select></div>";
@@ -917,11 +951,15 @@
         '<div class="tt-col" style="height:' + height + 'px;background-image:repeating-linear-gradient(' +
         "to bottom, var(--hairline) 0, var(--hairline) 1px, transparent 1px, transparent " + hourPx.toFixed(2) + 'px)">';
       colSlots.forEach(function (x) {
+        // Blocks are labeled with the class number (the id the student sees in the
+        // official timetable, e.g. "26HS.W-B-…/VR"), not the module code; clicking
+        // one jumps to its module in the list (data-nav).
         html += '<div class="tt-block' + (x.clash ? " clash" : "") +
+          '" data-nav="' + esc(x.m.code) +
           '" style="top:' + (((x.s - min) / span) * 100).toFixed(2) + "%;height:" + (((x.e - x.s) / span) * 100).toFixed(2) +
           "%;left:calc(" + (x.lane * laneW).toFixed(2) + "% + 2px);width:calc(" + laneW.toFixed(2) + "% - 4px)" +
           '" title="' + esc(locTitle(x.m) + " — " + lessonLabel(x.l)) + '">' +
-          "<strong>" + esc(x.m.code) + "</strong>" +
+          "<strong>" + esc((x.l && x.l.number) || x.m.code) + "</strong>" +
           '<span class="tt-time">' + esc(x.l.start + "–" + (x.l.end || "")) + "</span></div>";
       });
       html += "</div></div>";
@@ -962,6 +1000,23 @@
   }
 
   // ---------- actions ----------
+  // Timetable-block click → the module's row in the list: open the category (or
+  // the blocked section) holding it, then scroll to the row and flash it.
+  function navigateTo(code) {
+    var d = data();
+    if (!d) return;
+    groupByType(d.eligible || [], t()).forEach(function (c) {
+      if (c.entries.some(function (e) { return e.module.code === code; })) catOpen[c.label] = true;
+    });
+    if (blockedEntries().some(function (e) { return e.module.code === code; })) blockedOpen = true;
+    render();
+    var el = document.querySelector('li[data-mod="' + code.replace(/["\\]/g, "\\$&") + '"]');
+    if (el) {
+      el.classList.add("nav-flash");
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
   function toggle(code) {
     if (selected[code]) delete selected[code]; else selected[code] = true;
     persistState();
@@ -994,20 +1049,23 @@
     var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
     var lines = mods.map(function (m) {
       var slots = chosenLessons(m).filter(function (l) { return l.day; }).map(lessonLabel).join(", ");
-      return "- " + m.code + ": " + locTitle(m) + " (" + m.ects + " ECTS" + (slots ? ", " + slots : "") + ")";
+      var open = openPrereqOf(m.code);
+      return "- " + m.code + ": " + locTitle(m) + " (" + m.ects + " ECTS" + (slots ? ", " + slots : "") +
+        (open ? ", " + s.openPrereq(open) : "") + ")";
     }).join("\n");
     Host.sendMessage(s.followUp(data().semester, lines, sum, target));
   }
 
   // ---------- events ----------
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-details],[data-open],#send");
+    var el = ev.target.closest("[data-details],[data-open],[data-nav],#send");
     if (!el) return;
     if (el.hasAttribute("data-details")) { toggleDetails(el.getAttribute("data-details")); }
     else if (el.hasAttribute("data-open")) {
       ev.preventDefault();
       Host.openLink(el.getAttribute("data-open"));
     }
+    else if (el.hasAttribute("data-nav")) navigateTo(el.getAttribute("data-nav"));
     else if (el.id === "send") sendPlan();
   });
   // "toggle" does not bubble — listen in the capture phase. Without this, any

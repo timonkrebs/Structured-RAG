@@ -30,6 +30,16 @@ public static class WidgetResources
     // Unique origin identifying this app's widgets (ChatGPT sandboxes them under a
     // domain derived from it; required for app-store submission). The deployment's
     // public origin — update if the service moves.
+    //
+    // About the "CSP off" badge ChatGPT shows under these widgets: that is HOST
+    // behavior for apps running in developer mode. ChatGPT only enforces (and
+    // reflects) the declared widget CSP once an app is published/verified; until
+    // then the badge stays "CSP off" no matter what is declared (see OpenAI
+    // community threads 1371258 and 1372222 — resolved only by publishing). The
+    // CSP here is already declared in both the standard (_meta.ui.csp) and legacy
+    // (openai/widgetCSP) shapes, at the resources/list AND resources/read level,
+    // with empty allowlists (the widgets are fully self-contained) — there is
+    // nothing more the server can do to remove the badge.
     private const string WidgetDomain = "https://structured-rag-69g2.onrender.com";
 
     private const string PlannerDescription =

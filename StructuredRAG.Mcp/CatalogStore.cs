@@ -212,7 +212,10 @@ public class CatalogStore
         // them, joined with " + "); different numbers are parallel classes — the student
         // attends exactly one, so alternatives join with " or ". Flattening them into a
         // single list would make a parallel-class module look like it occupies every
-        // slot at once, and a model would flag valid proposals as clashes.
+        // slot at once, and a model would flag valid proposals as clashes. Parallel
+        // alternatives carry their class number in [brackets]: that is the id a client
+        // passes to plan_semester's proposedClasses to pin the exact class its
+        // proposal reasoned about.
         static string SlotText(IReadOnlyList<Lesson> lessons)
         {
             var groups = new List<List<Lesson>>();
@@ -224,7 +227,13 @@ public class CatalogStore
                 g.Add(l);
             }
             return string.Join(" or ", groups
-                .Select(g => string.Join(" + ", g.Select(SlotLabel).Distinct()))
+                .Select(g =>
+                {
+                    var label = string.Join(" + ", g.Select(SlotLabel).Distinct());
+                    return groups.Count > 1 && !string.IsNullOrEmpty(g[0].Number)
+                        ? $"{label} [{g[0].Number}]"
+                        : label;
+                })
                 .Distinct());
         }
 
