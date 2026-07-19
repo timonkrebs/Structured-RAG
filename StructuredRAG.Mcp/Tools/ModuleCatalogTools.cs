@@ -217,13 +217,16 @@ public static class ModuleCatalogTools
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
-        [Description("Module codes the student has already completed")] string[]? completedModules = null,
+        [Description("Module codes the student has already completed. A completed module also counts for its equivalent language variants — the sibling edition is treated as completed too")] string[]? completedModules = null,
         [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null,
         [Description("The student's target ECTS for the semester; echoed into the result and used to initialize the plan-builder widget (default 30)")] int? ectsTarget = null,
         [Description("Your concrete plan proposal: module codes to preselect in the plan-builder widget. Assemble it from get_catalog_overview — eligible modules matching the student's interests and ECTS target without overlapping lesson times. Codes that turn out not eligible are dropped and reported in proposedDropped.")] string[]? proposedModules = null)
     {
         semester = ValidateSemester(semester);
-        var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        // Expanded with equivalent language variants: a completed variant both satisfies
+        // prerequisite groups and takes its sibling edition out of the eligible list —
+        // otherwise the plan proposes retaking the same course in the other language.
+        var completed = store.ExpandWithVariants(completedModules ?? Array.Empty<string>());
         var interests = (interestTags ?? Array.Empty<string>())
             .Select(store.ResolveTagName).Where(t => t != null).Select(t => t!).ToList();
 
@@ -340,14 +343,17 @@ public static class ModuleCatalogTools
     public static PathPlanData PlanPath(
         CatalogStore store,
         [Description("Target module code the student wants to reach, e.g. 'mldm'")] string targetModule,
-        [Description("Module codes the student has already completed")] string[]? completedModules = null,
+        [Description("Module codes the student has already completed. A completed module also counts for its equivalent language variants")] string[]? completedModules = null,
         [Description("First semester available for planning: concrete id like '26HS' (real semester labels) or type 'HS'/'FS' (generic labels). Default 'HS'.")] string? startSemester = null)
     {
         var target = store.GetModule(targetModule.Trim())
             ?? throw new McpException($"No module with code '{targetModule}'. Use search or search_modules to find valid codes.");
-        var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-        if (completed.Contains(target.Code))
+        var literalCompleted = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        if (literalCompleted.Contains(target.Code))
             throw new McpException($"'{target.Code}' is already in the completed modules — there is no path to plan.");
+        // Expanded with equivalent language variants: a completed variant satisfies
+        // prerequisites exactly like the course itself.
+        var completed = store.ExpandWithVariants(literalCompleted);
 
         var start = ValidateSemester(startSemester ?? "HS");
         var concrete = start.Length == 4;
@@ -356,6 +362,50 @@ public static class ModuleCatalogTools
 
         var notes = new List<string>();
         var alreadyCompleted = new List<string>();
+        if (completed.Contains(target.Code))
+            notes.Add($"An equivalent language variant of '{target.Code}' is already completed — taking it again is normally unnecessary.");
+
+        // First slot >= the given one that matches the module's offering rhythm
+        // (modules without offering info are unconstrained; the scheduling loop
+        // reports those separately).
+        int FitSlot(CompiledModule m, int slot)
+        {
+            var types = m.OfferedIn.Count > 0
+                ? m.OfferedIn
+                : m.Offerings.Select(o => SourceModuleMapper.SemesterTypeOf(o.SemesterId))
+                    .Where(t => t != null).Select(t => t!).Distinct().ToList();
+            if (types.Count > 0)
+            {
+                while (!types.Contains(SlotType(slot), StringComparer.OrdinalIgnoreCase)) slot++;
+            }
+            return slot;
+        }
+
+        // Earliest slot each module could be completed in (memoized). A group is
+        // available as soon as its FASTEST member is: alternatives can differ in
+        // offering rhythm (HS/FS) and in their own prerequisite chains, so picking
+        // a fixed group member could miss the fastest path.
+        var earliest = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var computing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int Earliest(CompiledModule m)
+        {
+            if (earliest.TryGetValue(m.Code, out var known)) return known;
+            if (!computing.Add(m.Code))
+                throw new McpException($"Prerequisite cycle detected around '{m.Code}'. " +
+                                       "The catalog data needs fixing before a path can be planned.");
+            var slot = 0;
+            foreach (var group in m.EffectivePrerequisiteGroups())
+            {
+                if (group.Any(completed.Contains)) continue;
+                var members = group.Select(store.GetModule).Where(x => x != null).Select(x => x!).ToList();
+                if (members.Count == 0) continue; // dangling codes are reported during Visit
+                slot = Math.Max(slot, members.Min(Earliest) + 1);
+            }
+            slot = FitSlot(m, slot);
+            computing.Remove(m.Code);
+            earliest[m.Code] = slot;
+            return slot;
+        }
 
         // Missing-prerequisite closure of the target, in topological order (prereqs first).
         // Completed modules cut the recursion — their own prerequisites are irrelevant.
@@ -368,24 +418,30 @@ public static class ModuleCatalogTools
             path.Add(m.Code);
             foreach (var group in m.EffectivePrerequisiteGroups())
             {
-                // ANY completed member satisfies the group (interchangeable language variants).
-                var completedMember = group.FirstOrDefault(completed.Contains);
+                // ANY completed member satisfies the group (interchangeable language
+                // variants). Report the code the student actually completed, not the
+                // expanded sibling variant.
+                var completedMember = group.FirstOrDefault(literalCompleted.Contains)
+                    ?? group.FirstOrDefault(completed.Contains);
                 if (completedMember != null)
                 {
                     if (!alreadyCompleted.Contains(completedMember, StringComparer.OrdinalIgnoreCase))
                         alreadyCompleted.Add(completedMember);
                     continue;
                 }
-                // Schedule exactly ONE representative per group: reuse a variant another
-                // module already pulled onto the path, else take the code the requirement
-                // originally referenced (first in the group).
-                var p = group.FirstOrDefault(c => state.ContainsKey(c)) ?? group[0];
-                var pm = store.GetModule(p);
-                if (pm is null)
+                // Schedule exactly ONE representative per group: the fastest-completing
+                // alternative wins; ties prefer a variant another module already pulled
+                // onto the path (no duplicate variants across dependents), then the
+                // order the requirement referenced them in.
+                var candidates = group.Select(store.GetModule).Where(x => x != null).Select(x => x!).ToList();
+                if (candidates.Count == 0)
                 {
-                    notes.Add($"{m.Code}: prerequisite '{p}' is not in this catalog — verify it manually.");
+                    notes.Add($"{m.Code}: prerequisite '{group[0]}' is not in this catalog — verify it manually.");
                     continue;
                 }
+                var best = candidates.Min(Earliest);
+                var pm = candidates.FirstOrDefault(c => Earliest(c) == best && state.ContainsKey(c.Code))
+                    ?? candidates.First(c => Earliest(c) == best);
                 if (group.Count > 1)
                     notes.Add($"{m.Code}: '{string.Join("' / '", group)}' are equivalent variants — " +
                               $"the path schedules '{pm.Code}'; any one of them satisfies the requirement.");

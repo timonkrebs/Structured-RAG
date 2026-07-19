@@ -26,6 +26,7 @@ public class CatalogStore
     private List<TagDefinition> _taxonomy = new();
     private List<CompiledModule> _modules = new();
     private Dictionary<string, CompiledModule> _byCode = new();
+    private Dictionary<string, List<string>> _variantClasses = new(StringComparer.OrdinalIgnoreCase);
     private DateTime _loadedManifestWriteTime = DateTime.MinValue;
 
     public CatalogStore(IConfiguration configuration, ILogger<CatalogStore> logger)
@@ -52,6 +53,24 @@ public class CatalogStore
     public CatalogManifest Manifest { get { EnsureFresh(); return _manifest; } }
     public IReadOnlyList<TagDefinition> Taxonomy { get { EnsureFresh(); return _taxonomy; } }
     public IReadOnlyList<CompiledModule> Modules { get { EnsureFresh(); return _modules; } }
+
+    /// <summary>The given codes plus every equivalent language variant of each: a
+    /// completed variant counts as the course itself, so eligibility checks must not
+    /// treat the sibling edition as still open (nobody should be offered a retake of
+    /// Statistics 1 in the other language).</summary>
+    public HashSet<string> ExpandWithVariants(IEnumerable<string> codes)
+    {
+        EnsureFresh();
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var code in codes)
+        {
+            var c = code.Trim();
+            if (c.Length == 0) continue;
+            set.Add(c);
+            if (_variantClasses.TryGetValue(c, out var cls)) set.UnionWith(cls);
+        }
+        return set;
+    }
 
     public CompiledModule? GetModule(string code)
     {
@@ -302,6 +321,7 @@ public class CatalogStore
                 _taxonomy = taxonomy;
                 _modules = modules;
                 _byCode = modules.ToDictionary(m => m.Code, StringComparer.OrdinalIgnoreCase);
+                _variantClasses = PrerequisiteGrouping.BuildEquivalenceClasses(modules);
                 _loadedManifestWriteTime = writeTime;
             }
             catch (Exception ex) when (ex is JsonException or IOException)
