@@ -263,9 +263,10 @@
       msgCompleted: function (codes) { return codes.length ? "Bereits abgeschlossen: " + codes.join(", ") + "." : "Ich habe noch keine Module abgeschlossen."; },
       msgPlan: function (ects, completed) {
         return "Plane mein nächstes Semester mit Ziel " + ects + " ECTS. " + completed +
-          " Berücksichtige meine Interessen aus diesem Chat (frag kurz nach, falls du sie nicht kennst), " +
-          "stelle aus dem Katalogüberblick einen konkreten, überschneidungsfreien Plan zusammen " +
-          "und übergib ihn als proposedModules an plan_semester.";
+          " Berücksichtige meine Interessen, falls du sie aus diesem Chat kennst — sonst frag mich nicht aus, " +
+          "sondern schlage direkt einen ausgewogenen Plan vor (Pflicht- und Grundlagenmodule zuerst) und nenne " +
+          "kurz deine Annahmen. Stelle aus dem Katalogüberblick einen konkreten, überschneidungsfreien Plan " +
+          "zusammen und übergib ihn als proposedModules an plan_semester.";
       },
       msgPath: function (completed) {
         return "Ich möchte auf ein Zielmodul hinarbeiten. " + completed +
@@ -302,8 +303,9 @@
       msgCompleted: function (codes) { return codes.length ? "Already completed: " + codes.join(", ") + "." : "I have not completed any modules yet."; },
       msgPlan: function (ects, completed) {
         return "Plan my next semester with a target of " + ects + " ECTS. " + completed +
-          " Consider my interests from this chat (ask briefly if you don't know them yet), " +
-          "assemble a concrete clash-free plan from the catalog overview " +
+          " Consider my interests if you know them from this chat — otherwise don't quiz me: " +
+          "propose a balanced plan directly (mandatory and foundational modules first) and state " +
+          "your assumptions briefly. Assemble a concrete clash-free plan from the catalog overview " +
           "and pass it as proposedModules to plan_semester.";
       },
       msgPath: function (completed) {
