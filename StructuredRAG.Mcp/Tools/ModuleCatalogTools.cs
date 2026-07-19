@@ -213,7 +213,7 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. You are advising the one student you are chatting with; if their interests or level are unknown, do not interrogate them — propose a sensible plan (mandatory/foundational modules first), state your assumptions briefly, and let them adjust in the widget. If you do not even know which modules they completed and the request is vague, call get_started first: its widget collects completed modules and the ECTS target without chat questions. In ChatGPT this renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Prerequisites are evaluated as GROUPS of interchangeable alternatives (language variants of the same course, e.g. 'Statistik 1' de/en) — completing any ONE member satisfies a group; blocked modules report missingPrerequisiteGroups in that shape. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. You are advising the one student you are chatting with; if their interests or level are unknown, do not interrogate them — propose a sensible plan (mandatory/foundational modules first), state your assumptions briefly, and let them adjust in the widget. If you do not even know which modules they completed and the request is vague, call get_started first: its widget collects completed modules and the ECTS target without chat questions. In ChatGPT this renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
@@ -240,7 +240,12 @@ public static class ModuleCatalogTools
             if (completed.Contains(m.Code)) { completedCount++; continue; }
             if (!MatchesSemester(m, semester)) { notOffered++; continue; }
 
-            var missing = m.Prerequisites.Where(p => !completed.Contains(p)).ToList();
+            // Group semantics: ANY completed member satisfies a group — its members are
+            // interchangeable language variants of the same course (issue #21).
+            var missing = m.EffectivePrerequisiteGroups()
+                .Where(g => !g.Any(completed.Contains))
+                .Select(g => (IReadOnlyList<string>)g)
+                .ToList();
             var interestMatches = m.Tags.Intersect(interests, StringComparer.OrdinalIgnoreCase).ToList();
 
             if (missing.Count == 0)
@@ -284,7 +289,9 @@ public static class ModuleCatalogTools
             ProposedDropped: proposedDropped,
             Note: "Structured prerequisites are LLM-extracted from the official requirement texts and validated against " +
                   "this catalog; per-module 'prerequisiteNotes' may contain additional requirements that could not be " +
-                  "resolved to module codes — take them into account when planning.");
+                  "resolved to module codes — take them into account when planning. 'missingPrerequisiteGroups' lists " +
+                  "GROUPS of interchangeable codes (language variants of the same course): completing any ONE member " +
+                  "unlocks that group.");
     }
 
     [McpServerTool(Name = "compare_modules", ReadOnly = true, UseStructuredContent = true)]
@@ -329,7 +336,7 @@ public static class ModuleCatalogTools
     [McpMeta("openai/widgetAccessible", true)] // the path widget re-plans when the student marks modules as completed
     [McpMeta("openai/toolInvocation/invoking", "Computing the fastest path…")]
     [McpMeta("openai/toolInvocation/invoked", "Path to target module ready")]
-    [Description("Compute the fastest way to reach ONE specific target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Call this only when the user explicitly asks how or when they can reach a particular module (e.g. 'When can I take X at the earliest?'); for planning a whole semester use plan_semester alone — do NOT call both for the same request unless the user asked for a path. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
+    [Description("Compute the fastest way to reach ONE specific target module: all transitive prerequisites the student is still missing, scheduled into the earliest possible semesters (prerequisite order + HS/FS offering rhythm), and the earliest semester the target itself can be taken. Interchangeable language variants of the same course count once — the path schedules one variant and notes the alternatives. Call this only when the user explicitly asks how or when they can reach a particular module (e.g. 'When can I take X at the earliest?'); for planning a whole semester use plan_semester alone — do NOT call both for the same request unless the user asked for a path. Deterministic graph scheduling — no inference. In ChatGPT/Claude this renders an interactive path-timeline widget.")]
     public static PathPlanData PlanPath(
         CatalogStore store,
         [Description("Target module code the student wants to reach, e.g. 'mldm'")] string targetModule,
@@ -359,19 +366,29 @@ public static class ModuleCatalogTools
         {
             state[m.Code] = false;
             path.Add(m.Code);
-            foreach (var p in m.Prerequisites)
+            foreach (var group in m.EffectivePrerequisiteGroups())
             {
-                if (completed.Contains(p))
+                // ANY completed member satisfies the group (interchangeable language variants).
+                var completedMember = group.FirstOrDefault(completed.Contains);
+                if (completedMember != null)
                 {
-                    if (!alreadyCompleted.Contains(p, StringComparer.OrdinalIgnoreCase)) alreadyCompleted.Add(p);
+                    if (!alreadyCompleted.Contains(completedMember, StringComparer.OrdinalIgnoreCase))
+                        alreadyCompleted.Add(completedMember);
                     continue;
                 }
+                // Schedule exactly ONE representative per group: reuse a variant another
+                // module already pulled onto the path, else take the code the requirement
+                // originally referenced (first in the group).
+                var p = group.FirstOrDefault(c => state.ContainsKey(c)) ?? group[0];
                 var pm = store.GetModule(p);
                 if (pm is null)
                 {
                     notes.Add($"{m.Code}: prerequisite '{p}' is not in this catalog — verify it manually.");
                     continue;
                 }
+                if (group.Count > 1)
+                    notes.Add($"{m.Code}: '{string.Join("' / '", group)}' are equivalent variants — " +
+                              $"the path schedules '{pm.Code}'; any one of them satisfies the requirement.");
                 if (state.TryGetValue(pm.Code, out var done))
                 {
                     if (!done)
@@ -394,8 +411,10 @@ public static class ModuleCatalogTools
         var slotOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var m in topo)
         {
-            var slot = m.Prerequisites
-                .Where(p => slotOf.ContainsKey(p))
+            // Per group only the scheduled representative appears in slotOf; a group whose
+            // requirement is met by a completed variant contributes no constraint.
+            var slot = m.EffectivePrerequisiteGroups()
+                .SelectMany(g => g.Where(slotOf.ContainsKey))
                 .Select(p => slotOf[p] + 1)
                 .DefaultIfEmpty(0)
                 .Max();
@@ -571,7 +590,8 @@ public record ModuleSummary(
     IReadOnlyList<string> Languages, IReadOnlyList<string> Weekdays,
     IReadOnlyList<Lesson> Lessons,
     IReadOnlyList<string> Tags, string Summary, string? SummaryEn, string Audience,
-    IReadOnlyList<string> Prerequisites, IReadOnlyList<string> Recommended,
+    IReadOnlyList<string> Prerequisites, IReadOnlyList<IReadOnlyList<string>> PrerequisiteGroups,
+    IReadOnlyList<string> Recommended,
     string? PrerequisiteNotes, string? Url)
 {
     public static ModuleSummary From(CompiledModule m) => new(
@@ -579,7 +599,9 @@ public record ModuleSummary(
         m.OfferedIn, m.Offerings, m.Languages, m.Weekdays,
         NewestLessons(m.Offerings),
         m.Tags, m.Summary, m.SummaryEn, m.Audience,
-        m.Prerequisites, m.Recommended, m.PrerequisiteNotes, m.Url);
+        m.Prerequisites,
+        m.EffectivePrerequisiteGroups().Select(g => (IReadOnlyList<string>)g).ToList(),
+        m.Recommended, m.PrerequisiteNotes, m.Url);
 
     /// <summary>Summary narrowed to the offerings matching the given semester: a module can
     /// meet on different weekdays in HS vs FS, and the module-level union would produce wrong
@@ -616,7 +638,9 @@ public record PlannableModule(
     IReadOnlyList<string> InterestMatches,
     IReadOnlyList<string> MissingRecommended);
 
-public record BlockedModule(string Code, string Title, int Ects, IReadOnlyList<string> MissingPrerequisites);
+/// <summary>Missing prerequisites as groups: the student must complete ONE module from each
+/// group — members of a group are interchangeable (language variants of the same course).</summary>
+public record BlockedModule(string Code, string Title, int Ects, IReadOnlyList<IReadOnlyList<string>> MissingPrerequisiteGroups);
 
 public record SemesterPlanData(
     string Semester,

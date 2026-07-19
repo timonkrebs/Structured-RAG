@@ -265,6 +265,7 @@
       noFixedDay: "unregelm.",
       tags: "Tags",
       prereqs: "Voraussetzungen",
+      orSep: " oder ",
       recommended: "Empfohlen",
       prereqNotes: "Hinweise",
       summary: "Kurzbeschreibung",
@@ -291,6 +292,7 @@
       noFixedDay: "irreg.",
       tags: "Tags",
       prereqs: "Prerequisites",
+      orSep: " or ",
       recommended: "Recommended",
       prereqNotes: "Notes",
       summary: "Summary",
@@ -443,8 +445,9 @@
       }));
     });
     html += row(s.prereqs, mods, function (m) {
-      var codes = m.prerequisites || [];
-      return codes.length ? chips(codes.map(function (c) { return { label: c }; })) : '<span class="cell-note">' + esc(s.none) + "</span>";
+      // One chip per group; interchangeable variants share a chip ("A oder B").
+      var groups = m.prerequisiteGroups || (m.prerequisites || []).map(function (c) { return [c]; });
+      return groups.length ? chips(groups.map(function (g) { return { label: g.join(s.orSep) }; })) : '<span class="cell-note">' + esc(s.none) + "</span>";
     });
     html += row(s.recommended, mods, function (m) {
       var codes = m.recommended || [];

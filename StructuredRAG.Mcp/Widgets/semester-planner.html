@@ -352,6 +352,7 @@
       official: "Offizielle Modulseite ↗",
       blocked: function (n) { return "Gesperrte Module (" + n + ")"; },
       missing: "fehlt: ",
+      orSep: " oder ",
       selectedSum: function (n, e) { return n + " Module · " + e + " ECTS gewählt"; },
       send: "Plan in den Chat senden",
       noData: "Keine Plandaten vorhanden — bitte zuerst plan_semester aufrufen.",
@@ -393,6 +394,7 @@
       official: "Official module page ↗",
       blocked: function (n) { return "Blocked modules (" + n + ")"; },
       missing: "missing: ",
+      orSep: " or ",
       selectedSum: function (n, e) { return n + " modules · " + e + " ECTS selected"; },
       send: "Send plan to chat",
       noData: "No planning data — call plan_semester first.",
@@ -735,9 +737,14 @@
     if ((d.blocked || []).length > 0) {
       html += '<details class="blocked"' + (blockedOpen ? " open" : "") + "><summary>" + esc(s.blocked(d.blocked.length)) + "</summary><ul class=\"modules\">";
       d.blocked.forEach(function (b) {
+        // Groups of interchangeable variants: one code per group suffices ("A oder B").
+        // Fallback: pre-groups payloads carried a flat missingPrerequisites list.
+        var groups = b.missingPrerequisiteGroups ||
+          (b.missingPrerequisites || []).map(function (c) { return [c]; });
+        var missingText = groups.map(function (g) { return g.join(s.orSep); }).join(", ");
         html += '<li><div class="mod-title">' + esc(b.title) + '<span class="code">' + esc(b.code) + "</span></div>" +
           '<div class="badges"><span class="chip ects">' + b.ects + " " + esc(s.ects) + "</span>" +
-          '<span class="chip">' + esc(s.missing) + esc((b.missingPrerequisites || []).join(", ")) + "</span></div></li>";
+          '<span class="chip">' + esc(s.missing) + esc(missingText) + "</span></div></li>";
       });
       html += "</ul></details>";
     }

@@ -1,4 +1,5 @@
 using StructuredRAG.Core.Models.Catalog;
+using StructuredRAG.Core.Services;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -291,6 +292,11 @@ public class CatalogStore
                 var manifest = Read<CatalogManifest>(manifestFile) ?? new CatalogManifest();
                 var taxonomy = Read<List<TagDefinition>>(Path.Combine(_compiledPath, "taxonomy.json")) ?? new();
                 var modules = Read<List<CompiledModule>>(Path.Combine(_compiledPath, "modules.json")) ?? new();
+
+                // Catalogs compiled before prerequisiteGroups existed carry only the flat
+                // AND-list — derive the OR-groups here so evaluation is uniformly
+                // group-based. No-op for modules that already have groups.
+                PrerequisiteGrouping.EnsureGroups(modules);
 
                 _manifest = manifest;
                 _taxonomy = taxonomy;

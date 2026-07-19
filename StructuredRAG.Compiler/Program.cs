@@ -11,6 +11,7 @@ using System.Text.Json;
 //   dotnet run --project StructuredRAG.Compiler -- ingest    # FHNW API -> data/modules.*.json
 //   dotnet run --project StructuredRAG.Compiler -- compile   # source JSON -> compiled artifacts
 //   dotnet run --project StructuredRAG.Compiler -- all       # both
+//   dotnet run --project StructuredRAG.Compiler -- regroup   # re-derive prerequisite OR-groups (no LLM)
 //
 // All settings can be overridden via appsettings.json, environment variables or
 // --Section:Key=value arguments (e.g. --Compiler:SourcePath=data/modules.ingested.json).
@@ -69,6 +70,7 @@ services.AddHttpClient<BariApiClient>(client => client.Timeout = TimeSpan.FromSe
 services.AddSingleton<KnowledgeCompilationService>();
 services.AddSingleton<IngestCommand>();
 services.AddSingleton<CompileCommand>();
+services.AddSingleton<RegroupCommand>();
 
 await using var provider = services.BuildServiceProvider();
 var logger = provider.GetRequiredService<ILogger<Program>>();
@@ -97,8 +99,11 @@ try
             var ingestedPath = await provider.GetRequiredService<IngestCommand>().RunAsync(jsonOptions);
             return await provider.GetRequiredService<CompileCommand>().RunAsync(jsonOptions, ingestedPath);
 
+        case "regroup":
+            return await provider.GetRequiredService<RegroupCommand>().RunAsync(jsonOptions);
+
         default:
-            logger.LogError("Unknown command '{Command}'. Use: ingest | compile | all", command);
+            logger.LogError("Unknown command '{Command}'. Use: ingest | compile | all | regroup", command);
             return 1;
     }
 }

@@ -23,6 +23,18 @@ public class CompiledModule
     /// source or extracted by the compiler from the free-text requirements (validated).</summary>
     public List<string> Prerequisites { get; set; } = new();
 
+    /// <summary>Prerequisites as evaluation groups: outer list = AND, inner list = interchangeable
+    /// module codes (OR) — e.g. the German and English variant of the same course. Derived
+    /// deterministically from <see cref="Prerequisites"/> (see PrerequisiteGrouping); the
+    /// authoritative shape for eligibility checks. Empty on catalogs compiled before this
+    /// field existed — consumers fall back via <see cref="EffectivePrerequisiteGroups"/>.</summary>
+    public List<List<string>> PrerequisiteGroups { get; set; } = new();
+
+    /// <summary>Groups when present, else one singleton group per flat prerequisite.
+    /// A method (not a property) so serialization never emits the derived view.</summary>
+    public IEnumerable<List<string>> EffectivePrerequisiteGroups() =>
+        PrerequisiteGroups.Count > 0 ? PrerequisiteGroups : Prerequisites.Select(p => new List<string> { p });
+
     /// <summary>Original free-text requirements that could not be (fully) resolved to module codes.
     /// Query-time clients should reason over these when planning.</summary>
     public string? PrerequisiteNotes { get; set; }

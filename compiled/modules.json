@@ -27,6 +27,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -112,6 +113,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Programmieren 1 \u002B 2, Requirements Engineering",
     "recommended": [],
     "studyPrograms": [
@@ -193,6 +195,7 @@
       "Saturday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -280,6 +283,12 @@
     ],
     "prerequisites": [
       "9776676"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9776676",
+        "9776665"
+      ]
     ],
     "prerequisiteNotes": "Advanced Programming",
     "recommended": [],
@@ -472,6 +481,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Mathematische und statistische Grundlagen auf dem Niveau der Berufsmaturit\u00E4t.",
     "recommended": [],
     "studyPrograms": [
@@ -625,6 +635,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Mathematische und statistische Grundlagen auf Berufsmaturit\u00E4tsniveau.",
     "recommended": [],
     "studyPrograms": [
@@ -707,6 +718,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -787,6 +799,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -857,6 +870,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Zur Bachelor Thesis ist zugelassen, wer sich \u00FCber mindestens 140 ECTS-Credits ausweisen kann.",
     "recommended": [],
     "studyPrograms": [
@@ -937,6 +951,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -1020,6 +1035,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -1091,6 +1107,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Teilzeitstudierende m\u00FCssen im Semester der Moduldurchf\u00FChrung durchschnittlich mindestens 50 % arbeiten (Nachweis erforderlich) und einer T\u00E4tigkeit nachgehen, die mit dem gew\u00E4hlten Reflexionsmodul verbunden werden kann. F\u00FCr die Reflexion darf nur ein bereits bestandenes Modul gew\u00E4hlt werden; zu einem Modul kann h\u00F6chstens eine Berufsreflexion verfasst werden. Es wird kein bestimmtes vorausgesetztes Modul genannt.",
     "recommended": [],
     "studyPrograms": [
@@ -1171,6 +1188,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Keine (Grundwissen bzgl. Software-Architektur, Datenbank-Technologien und finanziellem und betrieblichem Rechnungswesen wird vermittelt)",
     "recommended": [],
     "studyPrograms": [
@@ -1267,6 +1285,17 @@
       "9212342",
       "9827891"
     ],
+    "prerequisiteGroups": [
+      [
+        "9212220"
+      ],
+      [
+        "9212342"
+      ],
+      [
+        "9827891"
+      ]
+    ],
     "prerequisiteNotes": "Business Maths 1 and 2",
     "recommended": [],
     "studyPrograms": [
@@ -1350,6 +1379,7 @@
       "Monday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -1429,6 +1459,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -1500,6 +1531,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Sehr gute Englischkenntnisse (schriftlich B2, m\u00FCndlich C1); Kenntnisse in Mikro\u00F6konomie und Makro\u00F6konomie.",
     "recommended": [],
     "studyPrograms": [
@@ -1609,6 +1641,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Cambridge English Placement Test (CEPT) mit mindestens Niveau B2",
     "recommended": [],
     "studyPrograms": [
@@ -1696,6 +1729,7 @@
       "Saturday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Keine.\nEmpfehlungen:\n\n- Wirtschaftsmathematik 2\n- Datenbanken",
     "recommended": [
       "9212177"
@@ -1780,6 +1814,7 @@
       "Monday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -1865,6 +1900,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -1952,6 +1988,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -2049,6 +2086,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -2133,6 +2171,11 @@
     "prerequisites": [
       "9845636"
     ],
+    "prerequisiteGroups": [
+      [
+        "9845636"
+      ]
+    ],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -2216,6 +2259,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Wirtschaftskommunikation 1-3",
     "recommended": [],
     "studyPrograms": [
@@ -2350,6 +2394,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -2448,6 +2493,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Interesse an Datenmanagement",
     "recommended": [],
     "studyPrograms": [
@@ -2535,6 +2581,12 @@
     ],
     "prerequisites": [
       "9776665"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9776665",
+        "9776676"
+      ]
     ],
     "prerequisiteNotes": "Einf\u00FChrung Wirtschaftsinformatik",
     "recommended": [],
@@ -2628,6 +2680,12 @@
     "prerequisites": [
       "9776665"
     ],
+    "prerequisiteGroups": [
+      [
+        "9776665",
+        "9776676"
+      ]
+    ],
     "prerequisiteNotes": "Objektorientierte Programmierung",
     "recommended": [],
     "studyPrograms": [
@@ -2708,6 +2766,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -2781,6 +2840,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Motivation",
     "recommended": [],
     "studyPrograms": [
@@ -2851,6 +2911,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -2989,6 +3050,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3157,6 +3219,7 @@
       "Saturday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3246,6 +3309,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3325,6 +3389,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3415,6 +3480,12 @@
       "9774564",
       "9776613"
     ],
+    "prerequisiteGroups": [
+      [
+        "9774564",
+        "9776613"
+      ]
+    ],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3498,6 +3569,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3583,6 +3655,12 @@
     "prerequisites": [
       "9827912"
     ],
+    "prerequisiteGroups": [
+      [
+        "9827912",
+        "9827914"
+      ]
+    ],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3659,6 +3737,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3730,6 +3809,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Motivation",
     "recommended": [],
     "studyPrograms": [
@@ -3813,6 +3893,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -3915,6 +3996,22 @@
       "9776613",
       "9776655"
     ],
+    "prerequisiteGroups": [
+      [
+        "9776667"
+      ],
+      [
+        "9827891"
+      ],
+      [
+        "9776613",
+        "9774564"
+      ],
+      [
+        "9776655",
+        "9776631"
+      ]
+    ],
     "prerequisiteNotes": "Requirements Engineering",
     "recommended": [],
     "studyPrograms": [
@@ -3999,6 +4096,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4087,6 +4185,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4157,6 +4256,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Auswahl der Teilnehmenden aufgrund einer individuellen Bewerbung. Ausschreibung im Fr\u00FChlingssemester; Entscheid \u00FCber die Delegierten bis Juli.",
     "recommended": [],
     "studyPrograms": [
@@ -4230,6 +4330,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4325,6 +4426,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4417,6 +4519,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4498,6 +4601,7 @@
       "Monday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Beherrschen von Grammatik und Wortschatz auf einem Niveau B1",
     "recommended": [],
     "studyPrograms": [
@@ -4574,6 +4678,16 @@
       "9774578",
       "9776645"
     ],
+    "prerequisiteGroups": [
+      [
+        "9776620",
+        "9774578"
+      ],
+      [
+        "9776627",
+        "9776645"
+      ]
+    ],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4646,6 +4760,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4732,6 +4847,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4821,6 +4937,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -4903,6 +5020,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -5003,6 +5121,16 @@
       "9776613",
       "9776631",
       "9776655"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9774564",
+        "9776613"
+      ],
+      [
+        "9776631",
+        "9776655"
+      ]
     ],
     "prerequisiteNotes": null,
     "recommended": [],
@@ -5106,6 +5234,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -5186,6 +5315,7 @@
       "Monday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -5274,6 +5404,14 @@
     "prerequisites": [
       "9845636",
       "9845639"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9845636"
+      ],
+      [
+        "9845639"
+      ]
     ],
     "prerequisiteNotes": null,
     "recommended": [],
@@ -5374,6 +5512,12 @@
       "9774564",
       "9776613"
     ],
+    "prerequisiteGroups": [
+      [
+        "9774564",
+        "9776613"
+      ]
+    ],
     "prerequisiteNotes": "Business Communication",
     "recommended": [],
     "studyPrograms": [
@@ -5466,6 +5610,15 @@
       "9212177",
       "9776665"
     ],
+    "prerequisiteGroups": [
+      [
+        "9212177"
+      ],
+      [
+        "9776665",
+        "9776676"
+      ]
+    ],
     "prerequisiteNotes": "Einf\u00FChrung in die Wirtschaftsinformatik",
     "recommended": [],
     "studyPrograms": [
@@ -5531,6 +5684,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -5617,6 +5771,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "BIT assessment modules",
     "recommended": [],
     "studyPrograms": [
@@ -5699,6 +5854,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -5792,6 +5948,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -5877,6 +6034,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [
       "9845649"
@@ -5963,6 +6121,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6048,6 +6207,7 @@
       "Monday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Teilzeitstudierende m\u00FCssen w\u00E4hrend des Semesters durchschnittlich mindestens 50 % berufst\u00E4tig sein (Nachweis erforderlich); die berufliche T\u00E4tigkeit muss mit dem gew\u00E4hlten Reflexionsmodul verkn\u00FCpft werden k\u00F6nnen. Es d\u00FCrfen nur bereits bestandene Module gew\u00E4hlt werden. Pro Modul darf h\u00F6chstens eine Berufsreflexion verfasst werden.",
     "recommended": [],
     "studyPrograms": [
@@ -6226,6 +6386,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6311,6 +6472,7 @@
       "Tuesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6403,6 +6565,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6467,6 +6630,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Open to learn (Lernbereitschaft)",
     "recommended": [],
     "studyPrograms": [
@@ -6533,6 +6697,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6715,6 +6880,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6872,6 +7038,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -6946,6 +7113,11 @@
     "weekdays": [],
     "prerequisites": [
       "9212188"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9212188"
+      ]
     ],
     "prerequisiteNotes": null,
     "recommended": [],
@@ -7135,6 +7307,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7291,6 +7464,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7367,6 +7541,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7474,6 +7649,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7555,6 +7731,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7622,6 +7799,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7695,6 +7873,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Praktische Erfahrung in der Nutzung von Coding-Agents ist empfehlenswert.",
     "recommended": [],
     "studyPrograms": [
@@ -7780,6 +7959,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -7866,6 +8046,11 @@
     "prerequisites": [
       "9847298"
     ],
+    "prerequisiteGroups": [
+      [
+        "9847298"
+      ]
+    ],
     "prerequisiteNotes": "oder gleichwertige Vorkenntnisse",
     "recommended": [],
     "studyPrograms": [
@@ -7945,6 +8130,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Grundkenntnisse in Finanzbuchhaltung und Controlling sind n\u00F6tig. Kenntnisse der SAP-Software sind von Vorteil, aber kein Muss; die Navigation im System wird im Kurs behandelt.",
     "recommended": [],
     "studyPrograms": [
@@ -8008,6 +8194,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -8077,6 +8264,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -8163,6 +8351,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Englisch mindestens Niveau B2; m\u00FCndliche Kompetenz zur Teilnahme an Gruppen\u00FCbungen.",
     "recommended": [],
     "studyPrograms": [
@@ -8234,6 +8423,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -8325,6 +8515,14 @@
       "9212217",
       "9212177"
     ],
+    "prerequisiteGroups": [
+      [
+        "9212217"
+      ],
+      [
+        "9212177"
+      ]
+    ],
     "prerequisiteNotes": "Java (Programming 2): Programming 2 ist im verf\u00FCgbaren Modulkatalog nicht eindeutig zuordenbar.",
     "recommended": [],
     "studyPrograms": [
@@ -8388,6 +8586,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -8494,6 +8693,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -8593,6 +8793,11 @@
     "prerequisites": [
       "9845646"
     ],
+    "prerequisiteGroups": [
+      [
+        "9845646"
+      ]
+    ],
     "prerequisiteNotes": "Alternativ zu \u00ABSpanisch A1\u00BB: Grammatik und Wortschatz auf Niveau A1 sowie Grundvokabular zu pers\u00F6nlichen Angaben, Zeitangaben, Aussehen, Charaktereigenschaften, Transportmitteln, Ferien, Reisen und Wetter.",
     "recommended": [],
     "studyPrograms": [
@@ -8688,6 +8893,11 @@
     "prerequisites": [
       "9845647"
     ],
+    "prerequisiteGroups": [
+      [
+        "9845647"
+      ]
+    ],
     "prerequisiteNotes": "Alternativ: Grammatik und Wortschatz auf Niveau A2 sowie Grundvokabular zu pers\u00F6nlichen Angaben, Zeitangaben, Aussehen, Charaktereigenschaften, Transportmitteln, Ferien, Reisen und Wetter.",
     "recommended": [],
     "studyPrograms": [
@@ -8775,6 +8985,11 @@
     "prerequisites": [
       "9852233"
     ],
+    "prerequisiteGroups": [
+      [
+        "9852233"
+      ]
+    ],
     "prerequisiteNotes": "Alternativ beherrschen die Studierenden Grammatik und Wortschatz auf einem Niveau B1.",
     "recommended": [],
     "studyPrograms": [
@@ -8857,6 +9072,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -8929,6 +9145,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -9047,6 +9264,7 @@
       "Thursday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Mathematische Kenntnisse auf dem Niveau der Berufsmaturit\u00E4t.",
     "recommended": [],
     "studyPrograms": [
@@ -9162,6 +9380,16 @@
     "prerequisites": [
       "9776618",
       "9776620"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9776618",
+        "9774571"
+      ],
+      [
+        "9776620",
+        "9774578"
+      ]
     ],
     "prerequisiteNotes": "Mathematische und statistische Grundlagen auf Berufsmaturit\u00E4tsniveau",
     "recommended": [],
@@ -9307,6 +9535,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Mathematischer Wissenstand der Berufsmaturit\u00E4t.",
     "recommended": [],
     "studyPrograms": [
@@ -9454,6 +9683,16 @@
       "9774578",
       "9774571"
     ],
+    "prerequisiteGroups": [
+      [
+        "9774578",
+        "9776620"
+      ],
+      [
+        "9774571",
+        "9776618"
+      ]
+    ],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -9538,6 +9777,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Wirtschaftsmathematik 1",
     "recommended": [],
     "studyPrograms": [
@@ -9626,6 +9866,7 @@
       "Friday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -9722,6 +9963,7 @@
       "Wednesday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [
       "9776667",
@@ -9795,6 +10037,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -9881,6 +10124,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -9964,6 +10208,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -10032,6 +10277,7 @@
     "languages": [],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -10104,6 +10350,17 @@
       "9827891",
       "9212342",
       "9212220"
+    ],
+    "prerequisiteGroups": [
+      [
+        "9827891"
+      ],
+      [
+        "9212342"
+      ],
+      [
+        "9212220"
+      ]
     ],
     "prerequisiteNotes": "Business Math",
     "recommended": [],
@@ -10186,6 +10443,7 @@
       "Saturday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -10267,6 +10525,7 @@
       "Monday"
     ],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "BIT assessment modules",
     "recommended": [],
     "studyPrograms": [
@@ -10352,6 +10611,15 @@
       "9776665",
       "9212177"
     ],
+    "prerequisiteGroups": [
+      [
+        "9776665",
+        "9776676"
+      ],
+      [
+        "9212177"
+      ]
+    ],
     "prerequisiteNotes": "Objektorientierte Programmierung; Requirement Engineering",
     "recommended": [],
     "studyPrograms": [
@@ -10419,6 +10687,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -10502,6 +10771,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Wirtschaftsethik (1. Semester Grundlagen des verantwortungsbewussten Entscheidens)",
     "recommended": [],
     "studyPrograms": [
@@ -10573,6 +10843,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": null,
     "recommended": [],
     "studyPrograms": [
@@ -10644,6 +10915,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "Drei Wochen vor der Reise muss ein detailliertes Programm f\u00FCr den mindestens dreit\u00E4gigen Aufenthalt vom Dozenten genehmigt werden. Reiseziel, Reisedaten, Inhalte und Absprachen sind vollst\u00E4ndig eigeninitiativ zu organisieren; muss der Dozent hierzu nachfragen, gilt die Selbstorganisation und damit das Modul als nicht erf\u00FCllt. Die Reise muss an einen bisher nicht besuchten Ort in Osteuropa f\u00FChren, dessen Landessprache die studierende Person nicht spricht. Touristische Hotspots wie Prag und Budapest sind nur mit einem speziellen Programm oder begr\u00FCndeten Interesse zul\u00E4ssig. Vor Ort sind drei bis vier vorbereitete ausf\u00FChrliche Interviews sowie Besuche vorab ausgew\u00E4hlter Orte durchzuf\u00FChren; abschliessend ist die Reise zu dokumentieren.",
     "recommended": [],
     "studyPrograms": [
@@ -10717,6 +10989,7 @@
     ],
     "weekdays": [],
     "prerequisites": [],
+    "prerequisiteGroups": [],
     "prerequisiteNotes": "keine\nDas Modul kann man besuchen, auch wenn man in der Schweiz nicht abstimmen oder w\u00E4hlen kann, sich aber f\u00FCr das System interessiert.",
     "recommended": [],
     "studyPrograms": [

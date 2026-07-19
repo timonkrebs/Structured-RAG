@@ -466,6 +466,16 @@
     (current.steps || []).forEach(function (st) { (st.modules || []).forEach(function (m) { out.push(m); }); });
     return out;
   }
+  // Prerequisite codes with interchangeable variants flattened in: the plan holds at
+  // most ONE member per group (the server schedules a single representative, which may
+  // be a different variant than the one this module's flat list references), and only
+  // codes actually placed in the plan ever constrain anything here.
+  function prereqCodes(m) {
+    var groups = m.prerequisiteGroups || (m.prerequisites || []).map(function (p) { return [p]; });
+    var out = [];
+    groups.forEach(function (g) { g.forEach(function (p) { out.push(p); }); });
+    return out;
+  }
   function offeringTypes(m) {
     var types = (m.offeredIn || []).map(function (x) { return String(x).toUpperCase(); });
     if (types.length === 0) (m.offerings || []).forEach(function (o) {
@@ -486,7 +496,7 @@
     var placed = {};
     planModules().forEach(function (m) {
       var min = 0;
-      (m.prerequisites || []).forEach(function (p) {
+      prereqCodes(m).forEach(function (p) {
         var k = p.toLowerCase();
         if (placed[k] !== undefined) min = Math.max(min, placed[k] + 1);
       });
@@ -513,7 +523,7 @@
   // where its prerequisites currently sit) plus the next few offering-compatible ones.
   function slotChoices(m, view) {
     var min = 0;
-    (m.prerequisites || []).forEach(function (p) {
+    prereqCodes(m).forEach(function (p) {
       var k = p.toLowerCase();
       if (view.placed[k] !== undefined && k !== m.code.toLowerCase()) min = Math.max(min, view.placed[k] + 1);
     });
@@ -552,7 +562,8 @@
   function requiredForMap() {
     var map = {};
     planModules().forEach(function (m) {
-      (m.prerequisites || []).forEach(function (p) {
+      // Both variants of a group map to m — only the placed one's entry is ever read.
+      prereqCodes(m).forEach(function (p) {
         var k = p.toLowerCase();
         (map[k] = map[k] || []).push(m.code);
       });
