@@ -124,6 +124,12 @@
   details.blocked li { border: none; padding: 6px 2px 2px 8px; }
   details.blocked .mod-title { color: var(--ink-2); font-weight: 500; }
 
+  details.cat { border-top: 1px solid var(--hairline); margin-top: 8px; padding-top: 6px; }
+  details.cat > summary { cursor: pointer; font-size: 13px; }
+  details.cat > summary .cat-title { font-weight: 650; }
+  details.cat > summary .cat-count { color: var(--ink-2); font-size: 12px; margin-left: 6px; }
+  details.cat > .modules { margin-top: 4px; }
+
   .class-pick {
     font: inherit; font-size: 12px; color: var(--ink); background: var(--surface);
     border: 1px solid var(--ring); border-radius: 6px; padding: 2px 6px;
@@ -343,6 +349,10 @@
       chooseClass: "Anlass wählen",
       everyNDays: function (n) { return "alle " + n + " Tage"; },
       matchLegend: "★ = passt zu deinen Interessen",
+      otherCat: "Weitere Module",
+      catCount: function (n, sel, ects) {
+        return n + (n === 1 ? " Modul" : " Module") + (sel > 0 ? " · " + sel + " gewählt (" + ects + " ECTS)" : "");
+      },
       missingRec: function (codes) { return "Empfohlen, aber noch nicht absolviert: " + codes; },
       prereqNotes: "Hinweis zu Voraussetzungen: ",
       details: "Details",
@@ -385,6 +395,10 @@
       chooseClass: "Choose class",
       everyNDays: function (n) { return "every " + n + " days"; },
       matchLegend: "★ = matches your interests",
+      otherCat: "Other modules",
+      catCount: function (n, sel, ects) {
+        return n + (n === 1 ? " module" : " modules") + (sel > 0 ? " · " + sel + " selected (" + ects + " ECTS)" : "");
+      },
       missingRec: function (codes) { return "Recommended but not yet completed: " + codes; },
       prereqNotes: "Prerequisite note: ",
       details: "Details",
@@ -422,6 +436,8 @@
   var targetTouched = false;
   var stateRestored = false;
   var blockedOpen = false;  // survives re-renders (hosts re-render on any global change)
+  var catOpen = {};         // category label -> open (accordion state, survives re-renders)
+  var catInit = false;      // defaults computed once, afterwards purely student-driven
   var proposalApplied = false;  // the assistant's proposal initialized the selection
 
   function data() { return Host.toolOutput; }
@@ -620,6 +636,39 @@
     return out;
   }
 
+  // Category order in the accordion: mandatory first, then the elective tiers,
+  // then anything else alphabetically. Labels are the catalog's own type names.
+  var TYPE_RANK = { "pflichtmodul": 0, "wahlpflichtmodul": 1, "wahlmodul": 2 };
+  function groupByType(eligible, s) {
+    var map = {}, order = [];
+    eligible.forEach(function (e) {
+      var label = e.module.moduleType || s.otherCat;
+      if (!map[label]) { map[label] = []; order.push(label); }
+      map[label].push(e);
+    });
+    order.sort(function (a, b) {
+      var ra = TYPE_RANK[a.toLowerCase()], rb = TYPE_RANK[b.toLowerCase()];
+      ra = ra === undefined ? 9 : ra; rb = rb === undefined ? 9 : rb;
+      return ra - rb || a.localeCompare(b);
+    });
+    return order.map(function (label) { return { label: label, entries: map[label] }; });
+  }
+
+  // The first render with data decides which categories start open: those holding
+  // selected modules (a proposal opens exactly its categories); without any
+  // selection those with interest matches; else only the first. Afterwards the
+  // accordion is purely student-driven and survives host re-renders.
+  function initCatOpen(cats) {
+    if (catInit) return;
+    var hasSel = function (c) { return c.entries.some(function (e) { return selected[e.module.code]; }); };
+    var hasMatch = function (c) { return c.entries.some(function (e) { return (e.interestMatches || []).length > 0; }); };
+    var anySel = cats.some(hasSel), anyMatch = cats.some(hasMatch);
+    cats.forEach(function (c, i) {
+      catOpen[c.label] = anySel ? hasSel(c) : anyMatch ? hasMatch(c) : i === 0;
+    });
+    catInit = true;
+  }
+
   // ---------- rendering ----------
   function render() {
     hostRenderDeferred = false; // any render satisfies a pending host update
@@ -689,45 +738,64 @@
 
     if (anyMatches) html += '<div class="legend">' + esc(s.matchLegend) + "</div>";
 
-    // Eligible modules
+    // Eligible modules. One <li> per module; inside the category accordion the
+    // per-module type chip is dropped — the category header already names it.
+    function moduleLi(e, hideTypeChip) {
+      var m = e.module;
+      var isSel = !!selected[m.code];
+      var matches = {};
+      (e.interestMatches || []).forEach(function (tag) { matches[tag.toLowerCase()] = true; });
+
+      return '<li class="' + (isSel ? "selected" : "") + '">' +
+        '<div class="mod-row">' +
+        '<input type="checkbox" data-toggle="' + esc(m.code) + '"' + (isSel ? " checked" : "") + ">" +
+        '<div class="mod-main">' +
+        '<div class="mod-title">' + esc(locTitle(m)) + '<span class="code">' + esc(m.code) + "</span></div>" +
+        '<div class="badges">' +
+        '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
+        (m.moduleType && !hideTypeChip ? '<span class="chip">' + esc(m.moduleType) + "</span>" : "") +
+        scheduleChips(m) +
+        (m.tags || []).map(function (tag) {
+          var hit = matches[tag.toLowerCase()];
+          return '<span class="chip' + (hit ? " match" : "") + '">' + (hit ? "★ " : "") + esc(tag) + "</span>";
+        }).join("") +
+        "</div>" +
+        (isSel && lessonGroups(m).length > 1 ? classPicker(m) : "") +
+        '<div class="mod-summary">' + esc(locSummary(m)) + "</div>" +
+        ((e.missingRecommended || []).length
+          ? '<div class="mod-note warn-note">' + esc(s.missingRec(e.missingRecommended.join(", "))) + "</div>" : "") +
+        (m.prerequisiteNotes
+          ? '<div class="mod-note warn-note">' + esc(s.prereqNotes) + esc(m.prerequisiteNotes) + "</div>" : "") +
+        "</div>" +
+        '<div class="mod-actions"><button data-details="' + esc(m.code) + '">' +
+        esc(expanded[m.code] ? s.hide : s.details) + "</button></div>" +
+        "</div>" +
+        detailsPanel(m) +
+        "</li>";
+    }
+
     if ((d.eligible || []).length === 0) {
       html += '<div class="empty">' + esc(s.noEligible) + "</div>";
     } else {
-      html += '<ul class="modules">';
-      d.eligible.forEach(function (e) {
-        var m = e.module;
-        var isSel = !!selected[m.code];
-        var matches = {};
-        (e.interestMatches || []).forEach(function (tag) { matches[tag.toLowerCase()] = true; });
-
-        html += '<li class="' + (isSel ? "selected" : "") + '">' +
-          '<div class="mod-row">' +
-          '<input type="checkbox" data-toggle="' + esc(m.code) + '"' + (isSel ? " checked" : "") + ">" +
-          '<div class="mod-main">' +
-          '<div class="mod-title">' + esc(locTitle(m)) + '<span class="code">' + esc(m.code) + "</span></div>" +
-          '<div class="badges">' +
-          '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
-          (m.moduleType ? '<span class="chip">' + esc(m.moduleType) + "</span>" : "") +
-          scheduleChips(m) +
-          (m.tags || []).map(function (tag) {
-            var hit = matches[tag.toLowerCase()];
-            return '<span class="chip' + (hit ? " match" : "") + '">' + (hit ? "★ " : "") + esc(tag) + "</span>";
-          }).join("") +
-          "</div>" +
-          (isSel && lessonGroups(m).length > 1 ? classPicker(m) : "") +
-          '<div class="mod-summary">' + esc(locSummary(m)) + "</div>" +
-          ((e.missingRecommended || []).length
-            ? '<div class="mod-note warn-note">' + esc(s.missingRec(e.missingRecommended.join(", "))) + "</div>" : "") +
-          (m.prerequisiteNotes
-            ? '<div class="mod-note warn-note">' + esc(s.prereqNotes) + esc(m.prerequisiteNotes) + "</div>" : "") +
-          "</div>" +
-          '<div class="mod-actions"><button data-details="' + esc(m.code) + '">' +
-          esc(expanded[m.code] ? s.hide : s.details) + "</button></div>" +
-          "</div>" +
-          detailsPanel(m) +
-          "</li>";
-      });
-      html += "</ul>";
+      var cats = groupByType(d.eligible, s);
+      initCatOpen(cats);
+      if (cats.length === 1) {
+        // A single category (e.g. catalogs without module types) needs no accordion.
+        html += '<ul class="modules">' + cats[0].entries.map(function (e) { return moduleLi(e, false); }).join("") + "</ul>";
+      } else {
+        cats.forEach(function (c) {
+          var selCount = 0, selEcts = 0;
+          c.entries.forEach(function (e) {
+            if (selected[e.module.code]) { selCount++; selEcts += e.module.ects || 0; }
+          });
+          var catMatch = c.entries.some(function (e) { return (e.interestMatches || []).length > 0; });
+          html += '<details class="cat" data-cat="' + esc(c.label) + '"' + (catOpen[c.label] ? " open" : "") + ">" +
+            '<summary><span class="cat-title">' + (catMatch ? "★ " : "") + esc(c.label) + "</span>" +
+            '<span class="cat-count">' + esc(s.catCount(c.entries.length, selCount, selEcts)) + "</span></summary>" +
+            '<ul class="modules">' + c.entries.map(function (e) { return moduleLi(e, true); }).join("") + "</ul>" +
+            "</details>";
+        });
+      }
     }
 
     html += timetableHtml(mods);
@@ -946,7 +1014,9 @@
   // re-render (hosts fire global updates constantly) rebuilds the <details>
   // element in its default collapsed state right after the user opens it.
   document.getElementById("root").addEventListener("toggle", function (ev) {
-    if (ev.target.matches && ev.target.matches("details.blocked")) blockedOpen = ev.target.open;
+    if (!ev.target.matches) return;
+    if (ev.target.matches("details.blocked")) blockedOpen = ev.target.open;
+    else if (ev.target.matches("details.cat")) catOpen[ev.target.getAttribute("data-cat")] = ev.target.open;
   }, true);
   document.getElementById("root").addEventListener("change", function (ev) {
     var el = ev.target;
