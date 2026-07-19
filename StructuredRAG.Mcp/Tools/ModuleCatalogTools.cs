@@ -423,6 +423,11 @@ public static class ModuleCatalogTools
         var state = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase); // false = in progress, true = done
         var path = new List<string>();
         var topo = new List<CompiledModule>();
+        // Per module: the representatives Visit chose for its UNSATISFIED groups. Only
+        // these constrain the module's slot — a sibling variant scheduled for another
+        // module's group must not delay a group satisfied by a completed or faster
+        // alternative.
+        var repOf = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         void Visit(CompiledModule m)
         {
             state[m.Code] = false;
@@ -453,6 +458,8 @@ public static class ModuleCatalogTools
                 var best = candidates.Min(Earliest);
                 var pm = candidates.FirstOrDefault(c => Earliest(c) == best && state.ContainsKey(c.Code))
                     ?? candidates.First(c => Earliest(c) == best);
+                if (!repOf.TryGetValue(m.Code, out var reps)) repOf[m.Code] = reps = new List<string>();
+                reps.Add(pm.Code);
                 if (group.Count > 1)
                     notes.Add($"{m.Code}: '{string.Join("' / '", group)}' are equivalent variants — " +
                               $"the path schedules '{pm.Code}'; any one of them satisfies the requirement.");
@@ -478,10 +485,10 @@ public static class ModuleCatalogTools
         var slotOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var m in topo)
         {
-            // Per group only the scheduled representative appears in slotOf; a group whose
-            // requirement is met by a completed variant contributes no constraint.
-            var slot = m.EffectivePrerequisiteGroups()
-                .SelectMany(g => g.Where(slotOf.ContainsKey))
+            // Only the representatives Visit chose for THIS module constrain it; groups
+            // satisfied by a completed variant contributed no representative at all.
+            var slot = (repOf.TryGetValue(m.Code, out var mReps) ? mReps : (IReadOnlyList<string>)Array.Empty<string>())
+                .Where(slotOf.ContainsKey)
                 .Select(p => slotOf[p] + 1)
                 .DefaultIfEmpty(0)
                 .Max();
