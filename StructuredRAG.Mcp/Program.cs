@@ -87,6 +87,9 @@ builder.Services.AddOptions<McpServerOptions>().PostConfigure<CatalogStore>((opt
            via the MCP Apps extension), plan_semester, compare_modules and plan_path
            additionally render interactive widgets (semester plan builder / comparison
            table / path timeline); other clients simply use the structured JSON results.
+           EVERY call of a widget tool renders a NEW widget: never call the same
+           widget tool twice for one request (prepare inputs first, then call once) —
+           back-to-back calls show the student duplicate widgets.
         The compiled catalog has a compilation date (see manifest / catalog info); for
         authoritative current details always rely on fetch results and the official URL.
 
