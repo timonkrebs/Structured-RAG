@@ -348,7 +348,9 @@ public static class ModuleCatalogTools
     {
         var target = store.GetModule(targetModule.Trim())
             ?? throw new McpException($"No module with code '{targetModule}'. Use search or search_modules to find valid codes.");
-        var literalCompleted = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+        var literalCompleted = new HashSet<string>(
+            (completedModules ?? Array.Empty<string>()).Select(c => c?.Trim()).Where(c => !string.IsNullOrEmpty(c)).Select(c => c!),
+            StringComparer.OrdinalIgnoreCase);
         if (literalCompleted.Contains(target.Code))
             throw new McpException($"'{target.Code}' is already in the completed modules — there is no path to plan.");
         // Expanded with equivalent language variants: a completed variant satisfies
@@ -529,7 +531,10 @@ public static class ModuleCatalogTools
             EarliestSemester: labels[slotOf[target.Code]],
             SemesterCount: slotOf[target.Code] + 1,
             TotalEcts: topo.Sum(m => m.Ects),
-            CompletedModules: completed.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
+            // The LITERAL input codes, not the variant-expanded set: the path widget
+            // round-trips this list as its Mark-done/Undo state — an expanded sibling
+            // would survive an undo and keep the prerequisite silently satisfied.
+            CompletedModules: literalCompleted.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
             AlreadyCompleted: alreadyCompleted.OrderBy(c => c, StringComparer.OrdinalIgnoreCase).ToList(),
             Steps: steps,
             Notes: notes);
