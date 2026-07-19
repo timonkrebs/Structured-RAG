@@ -158,8 +158,8 @@ public class CatalogStore
         var sb = new StringBuilder();
         sb.AppendLine($"# Module catalog index ({_manifest.ModuleCount} modules, compiled {_manifest.CompiledAt:yyyy-MM-dd})");
         sb.AppendLine();
-        sb.AppendLine("| Code | Title | ECTS | Level | Type | Offered | Lang | Tags |");
-        sb.AppendLine("|------|-------|------|-------|------|---------|------|------|");
+        sb.AppendLine("| Code | Title | ECTS | Level | Type | Offered | Schedule | Lang | Tags |");
+        sb.AppendLine("|------|-------|------|-------|------|---------|----------|------|------|");
         foreach (var m in _modules.OrderBy(m => m.Title, StringComparer.OrdinalIgnoreCase))
         {
             var title = string.IsNullOrWhiteSpace(m.TitleEn) || m.TitleEn == m.Title
@@ -168,9 +168,57 @@ public class CatalogStore
             var offered = m.Offerings.Count > 0
                 ? string.Join("/", m.Offerings.Select(o => o.SemesterId))
                 : string.Join("/", m.OfferedIn);
-            sb.AppendLine($"| {m.Code} | {title} | {m.Ects} | {m.Level} | {m.ModuleType} | {offered} | {string.Join(",", m.Languages)} | {string.Join(", ", m.Tags)} |");
+            sb.AppendLine($"| {m.Code} | {title} | {m.Ects} | {m.Level} | {m.ModuleType} | {offered} | {ScheduleText(m)} | {string.Join(",", m.Languages)} | {string.Join(", ", m.Tags)} |");
         }
         return sb.ToString();
+    }
+
+    /// <summary>Compact schedule for the index as "Ddd HH:MM-HH:MM" slots (deduped;
+    /// "irregular" when no weekday is published), falling back to plain weekdays.
+    /// Schedules can differ between a module's offerings (pmgt meets Fri in 26HS but
+    /// Mon in 27FS), so when they do — or when only some offerings publish lessons —
+    /// each slot list is prefixed with its semester id. This is what lets a client
+    /// model assemble a clash-free proposal for a SPECIFIC semester directly from the
+    /// overview, without per-module calls.</summary>
+    private static string ScheduleText(CompiledModule m)
+    {
+        static string SlotLabel(Lesson l)
+        {
+            var day = string.IsNullOrEmpty(l.Day) ? "irregular" : l.Day[..Math.Min(3, l.Day.Length)];
+            return string.IsNullOrEmpty(l.Start) ? day : $"{day} {l.Start}-{l.End}";
+        }
+
+        // Slots sharing a class number belong to ONE class (the student attends all of
+        // them, joined with " + "); different numbers are parallel classes — the student
+        // attends exactly one, so alternatives join with " or ". Flattening them into a
+        // single list would make a parallel-class module look like it occupies every
+        // slot at once, and a model would flag valid proposals as clashes.
+        static string SlotText(IReadOnlyList<Lesson> lessons)
+        {
+            var groups = new List<List<Lesson>>();
+            var byNum = new Dictionary<string, List<Lesson>>();
+            foreach (var l in lessons)
+            {
+                var key = string.IsNullOrEmpty(l.Number) ? $"~{groups.Count}" : l.Number;
+                if (!byNum.TryGetValue(key, out var g)) { g = new List<Lesson>(); byNum[key] = g; groups.Add(g); }
+                g.Add(l);
+            }
+            return string.Join(" or ", groups
+                .Select(g => string.Join(" + ", g.Select(SlotLabel).Distinct()))
+                .Distinct());
+        }
+
+        var parts = m.Offerings
+            .Where(o => o.Lessons.Count > 0)
+            .Select(o => (o.SemesterId, Text: SlotText(o.Lessons)))
+            .ToList();
+        if (parts.Count == 0) return string.Join(",", m.Weekdays);
+        if (m.Offerings.Count == 1
+            || (parts.Count == m.Offerings.Count && parts.Select(p => p.Text).Distinct().Count() == 1))
+        {
+            return parts[0].Text;
+        }
+        return string.Join("; ", parts.Select(p => $"{p.SemesterId}: {p.Text}"));
     }
 
     /// <summary>Compact catalog snapshot for the MCP initialize instructions: size,

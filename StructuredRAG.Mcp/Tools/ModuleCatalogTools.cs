@@ -170,8 +170,39 @@ public static class ModuleCatalogTools
     public static IReadOnlyList<TagDefinition> ListTags(CatalogStore store) =>
         store.Taxonomy.OrderByDescending(t => t.ModuleCount).ToList();
 
+    [McpServerTool(Name = "get_started", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/outputTemplate", "ui://widget/start.html")] // OpenAI Apps SDK (ChatGPT)
+    [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/start"}""")] // MCP Apps (Claude, ...)
+    [McpMeta("openai/toolInvocation/invoking", "Preparing the module advisor…")]
+    [McpMeta("openai/toolInvocation/invoked", "Module advisor ready")]
+    [Description("Interactive getting-started widget for new or undecided students: a snapshot of the study program's catalog, a one-time picker for the modules the student has already completed, an ECTS target, and buttons that start a flow (plan the next semester, compute the path to a target module, or explore the catalog) as a chat message. Call this when a student greets, is new, or asks vaguely for help with their studies — NOT when they already made a specific request. Takes no arguments.")]
+    public static StartData GetStarted(CatalogStore store)
+    {
+        var program = store.Modules
+            .SelectMany(m => m.StudyPrograms)
+            .GroupBy(p => p, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefault() ?? "FHNW module catalog";
+        var semesters = store.Modules
+            .SelectMany(m => m.Offerings.Select(o => o.SemesterId))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return new StartData(
+            Program: program,
+            ModuleCount: store.Modules.Count,
+            TagCount: store.Taxonomy.Count,
+            CompiledAt: store.Manifest.CompiledAt.ToString("yyyy-MM-dd"),
+            Semesters: semesters,
+            Modules: store.Modules
+                .OrderBy(m => m.Title, StringComparer.OrdinalIgnoreCase)
+                .Select(m => new StartModule(m.Code, m.Title, m.TitleEn, m.Ects))
+                .ToList());
+    }
+
     [McpServerTool(Name = "get_catalog_overview", ReadOnly = true, UseStructuredContent = true)]
-    [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, tags) plus the tag taxonomy. Ideal first call to load the full catalog into context, especially for semester planning.")]
+    [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, schedule, tags) plus the tag taxonomy. Schedule semantics: ' + ' joins slots of the same class (the student attends all of them), ' or ' separates parallel classes (the student attends exactly one — no clash if one alternative is free); semester-prefixed entries apply to that semester only. Ideal first call to load the full catalog into context, especially before proposing a semester plan.")]
     public static string GetCatalogOverview(CatalogStore store) =>
         store.TaxonomyMarkdown() + "\n\n" + store.IndexMarkdown();
 
@@ -182,13 +213,14 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published — combine everything with the student's interests and ECTS target to propose a clash-free timetable. In ChatGPT this also renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. In ChatGPT this renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
         [Description("Module codes the student has already completed")] string[]? completedModules = null,
         [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null,
-        [Description("The student's target ECTS for the semester; echoed into the result and used to initialize the plan-builder widget (default 30)")] int? ectsTarget = null)
+        [Description("The student's target ECTS for the semester; echoed into the result and used to initialize the plan-builder widget (default 30)")] int? ectsTarget = null,
+        [Description("Your concrete plan proposal: module codes to preselect in the plan-builder widget. Assemble it from get_catalog_overview — eligible modules matching the student's interests and ECTS target without overlapping lesson times. Codes that turn out not eligible are dropped and reported in proposedDropped.")] string[]? proposedModules = null)
     {
         semester = ValidateSemester(semester);
         var completed = new HashSet<string>(completedModules ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
@@ -222,6 +254,21 @@ public static class ModuleCatalogTools
             }
         }
 
+        // The client model's proposal is only forwarded where it can actually be
+        // selected — everything else is echoed back so the model can correct itself.
+        // Accepted codes are returned in the catalog's canonical casing: the widget
+        // preselects by exact code match, so an accepted "MLDM" must become "mldm".
+        var canonicalEligible = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var e in eligible) canonicalEligible[e.Module.Code] = e.Module.Code;
+        var proposedInput = (proposedModules ?? Array.Empty<string>())
+            .Select(c => c?.Trim()).Where(c => !string.IsNullOrEmpty(c)).Select(c => c!)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var proposed = proposedInput
+            .Where(canonicalEligible.ContainsKey)
+            .Select(c => canonicalEligible[c])
+            .ToList();
+        var proposedDropped = proposedInput.Where(c => !canonicalEligible.ContainsKey(c)).ToList();
+
         return new SemesterPlanData(
             Semester: semester,
             Eligible: eligible
@@ -233,6 +280,8 @@ public static class ModuleCatalogTools
             EctsTarget: ectsTarget is > 0 ? ectsTarget.Value : 30,
             NotOfferedCount: notOffered,
             CompletedCount: completedCount,
+            Proposed: proposed,
+            ProposedDropped: proposedDropped,
             Note: "Structured prerequisites are LLM-extracted from the official requirement texts and validated against " +
                   "this catalog; per-module 'prerequisiteNotes' may contain additional requirements that could not be " +
                   "resolved to module codes — take them into account when planning.");
@@ -577,11 +626,25 @@ public record SemesterPlanData(
     int EctsTarget,
     int NotOfferedCount,
     int CompletedCount,
+    IReadOnlyList<string> Proposed,
+    IReadOnlyList<string> ProposedDropped,
     string Note);
 
 public record ModuleComparisonData(
     IReadOnlyList<ModuleSummary> Modules,
     IReadOnlyList<string> NotFound);
+
+/// <summary>Minimal module row for the start widget's completed-modules and target
+/// pickers — enough for client-side autocomplete without further tool calls.</summary>
+public record StartModule(string Code, string Title, string? TitleEn, int Ects);
+
+public record StartData(
+    string Program,
+    int ModuleCount,
+    int TagCount,
+    string CompiledAt,
+    IReadOnlyList<string> Semesters,
+    IReadOnlyList<StartModule> Modules);
 
 public record PathStep(string Semester, int Slot, IReadOnlyList<ModuleSummary> Modules, int Ects);
 

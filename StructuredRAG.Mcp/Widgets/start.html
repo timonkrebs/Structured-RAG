@@ -1,0 +1,521 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* Role tokens; dark mode is its own selected set, not an automatic flip.
+     The body is transparent so the host's card background shows through;
+     --surface is only for elements that need an opaque fill, and --plane is
+     a translucent overlay that adapts to any host background — raised in
+     dark mode (lighter), recessed in light mode (darker). */
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --plane: rgba(0, 0, 0, 0.04);
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --hairline: #e1e0d9;
+    --ring: rgba(11, 11, 11, 0.10);
+    --accent: #2a78d6;
+    --accent-soft: #cde2fb;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface: #212121;
+    --plane: rgba(255, 255, 255, 0.06);
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --hairline: #3a3a38;
+    --ring: rgba(255, 255, 255, 0.14);
+    --accent: #3987e5;
+    --accent-soft: #184f95;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  #root { padding: 14px 16px 14px; }
+  button {
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--ring);
+    border-radius: 8px;
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--plane); }
+
+  .header h1 { font-size: 15px; font-weight: 650; margin: 0; }
+  .header .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .info-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 2px; }
+  .chip {
+    display: inline-block; font-size: 11.5px; color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 9px; padding: 0 7px; line-height: 18px;
+    white-space: nowrap;
+  }
+  .chip.ects { font-variant-numeric: tabular-nums; color: var(--ink); border-color: var(--ring); font-weight: 600; }
+
+  .section { border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 10px; }
+  .section h2 { font-size: 13px; font-weight: 650; margin: 0 0 6px; }
+  .section .desc { font-size: 12px; color: var(--muted); margin: -2px 0 6px; }
+
+  .picker { position: relative; }
+  .picker input {
+    width: 100%; font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 8px; padding: 5px 9px;
+  }
+  .suggestions {
+    position: absolute; left: 0; right: 0; top: 100%; z-index: 5;
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px;
+    margin-top: 2px; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  }
+  .suggestions button {
+    display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left;
+    border: none; border-radius: 0; padding: 6px 9px; font-size: 12.5px;
+  }
+  .suggestions button .code { color: var(--muted); font-size: 11.5px; flex: none; }
+  .suggestions button .ects { color: var(--muted); font-size: 11.5px; margin-left: auto; flex: none; }
+  .sel-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .sel-chips .chip { display: inline-flex; align-items: center; gap: 4px; }
+  .sel-chips .chip button {
+    border: none; padding: 0 2px; font-size: 12px; color: var(--muted); background: none; line-height: 1;
+  }
+  .sel-chips .chip button:hover { color: var(--ink); background: none; }
+  .none-note { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  .target-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .target-row label { font-size: 12.5px; color: var(--ink-2); }
+  .target-row input {
+    width: 60px; font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--ring); border-radius: 6px; padding: 3px 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flows { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 4px; }
+  @media (min-width: 480px) { .flows { grid-template-columns: 1fr 1fr 1fr; } }
+  .flow {
+    text-align: left; padding: 9px 11px; border-radius: 10px;
+    border: 1px solid var(--hairline); display: block;
+  }
+  .flow:hover { border-color: var(--accent); background: var(--plane); }
+  .flow .flow-title { font-weight: 650; font-size: 13px; }
+  .flow .flow-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- host bridge ----------
+  // Abstracts the two widget host conventions over one interface:
+  //  - OpenAI Apps SDK (ChatGPT): window.openai globals + methods
+  //  - MCP Apps extension (Claude, ...): JSON-RPC 2.0 over postMessage (spec 2026-01-26)
+  var Host = (function () {
+    var h = {
+      mode: "none",
+      ready: false,
+      theme: null,
+      locale: null,
+      toolOutput: null,
+      widgetState: null,
+      onchange: null,
+      setState: function () {},
+      sendMessage: function () {},
+      reportSize: function () {}
+    };
+    function notify() { if (h.onchange) h.onchange(); }
+
+    if (window.openai) {
+      var api = window.openai;
+      h.mode = "openai";
+      h.ready = true;
+      h.theme = api.theme || null;
+      h.locale = api.locale || null;
+      h.toolOutput = api.toolOutput || null;
+      h.widgetState = api.widgetState || null;
+      h.setState = function (state, summary) {
+        // Widget state persists between renders but is NOT reliably model-visible in
+        // ChatGPT. Mirror the model-facing summary into the state snapshot and, where
+        // the host supports ui/update-model-context, push it there too — otherwise a
+        // profile recorded here never reaches the model unless a flow button is used.
+        var snapshot = summary ? Object.assign({}, state, { modelSummary: summary }) : state;
+        if (typeof api.setWidgetState === "function") api.setWidgetState(snapshot);
+        // Always push — an empty summary must CLEAR previously pushed context
+        // (a cleared draft would otherwise stay model-visible), like the MCP branch.
+        if (typeof api.updateModelContext === "function") {
+          try { api.updateModelContext({ content: summary ? [{ type: "text", text: summary }] : [] }); } catch (e) {}
+        }
+      };
+      h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
+      // ChatGPT fires set_globals for many reasons (scroll, keyboard, layout
+      // changes — very frequently on mobile). Re-rendering on every event snaps
+      // open dropdowns shut mid-pick, so only notify when something the widget
+      // actually renders from has changed.
+      var sigOf = function () {
+        var ws; try { ws = JSON.stringify(h.widgetState || null); } catch (e) { ws = ""; }
+        return [h.theme, h.locale, ws].join("|");
+      };
+      var lastSig = sigOf();
+      window.addEventListener("openai:set_globals", function () {
+        var toolChanged = !!api.toolOutput && api.toolOutput !== h.toolOutput;
+        h.theme = api.theme || h.theme;
+        h.locale = api.locale || h.locale;
+        h.toolOutput = api.toolOutput || h.toolOutput;
+        h.widgetState = api.widgetState || h.widgetState;
+        var sig = sigOf();
+        if (!toolChanged && sig === lastSig) return;
+        lastSig = sig;
+        notify();
+      });
+    } else if (window.parent && window.parent !== window) {
+      h.mode = "mcp";
+      var nextId = 1, pending = {};
+      var post = function (msg) { window.parent.postMessage(msg, "*"); };
+      var request = function (method, params) {
+        return new Promise(function (resolve, reject) {
+          var id = nextId++;
+          pending[id] = { resolve: resolve, reject: reject };
+          post({ jsonrpc: "2.0", id: id, method: method, params: params });
+        });
+      };
+      window.addEventListener("message", function (ev) {
+        var m = ev.data;
+        if (!m || m.jsonrpc !== "2.0") return;
+        if (m.id !== undefined && m.method === undefined) {
+          var p = pending[m.id];
+          if (!p) return;
+          delete pending[m.id];
+          if (m.error) p.reject(new Error(m.error.message || "host error")); else p.resolve(m.result);
+          return;
+        }
+        if (m.method === "ui/notifications/tool-result") {
+          var pr = m.params || {};
+          if (pr.structuredContent) { h.toolOutput = pr.structuredContent; h.ready = true; notify(); }
+        } else if (m.method === "ui/notifications/host-context-changed") {
+          var c = m.params || {};
+          if (c.theme) h.theme = c.theme;
+          if (c.locale) h.locale = c.locale;
+          notify();
+        }
+      });
+      h.setState = function (state, summary) {
+        request("ui/update-model-context", {
+          structuredContent: state,
+          content: summary ? [{ type: "text", text: summary }] : []
+        }).catch(function () {});
+      };
+      h.sendMessage = function (text) {
+        // MCP Apps expects content as a ContentBlock ARRAY — validating hosts
+        // reject a bare object, and the send-to-chat buttons silently do nothing.
+        request("ui/message", { role: "user", content: [{ type: "text", text: text }] }).catch(function () {});
+      };
+      h.reportSize = function () {
+        post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
+               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+      };
+      request("ui/initialize", {
+        protocolVersion: "2026-01-26",
+        clientInfo: { name: "module-catalog-widget", version: "1.0.0" },
+        capabilities: {},
+        appCapabilities: {}
+      }).then(function (res) {
+        var ctx = (res && res.hostContext) || {};
+        if (ctx.theme) h.theme = ctx.theme;
+        if (ctx.locale) h.locale = ctx.locale;
+        notify();
+      }).catch(function () { notify(); });
+    }
+    return h;
+  })();
+
+  // ---------- i18n ----------
+  function isDe() {
+    var loc = Host.locale || "de";
+    return String(loc).toLowerCase().indexOf("de") === 0;
+  }
+  var STR = {
+    de: {
+      title: "Modul-Berater",
+      catalogInfo: function (d) { return d.moduleCount + " Module · " + d.tagCount + " Themen · Katalog vom " + d.compiledAt; },
+      completedTitle: "Bereits abgeschlossene Module",
+      completedDesc: "Einmal erfassen — sie fliessen in jede Planung ein.",
+      searchPlaceholder: "Modul suchen (Code oder Titel)…",
+      noneYet: "Noch keine erfasst — auch ok, dann plane ich ab Studienbeginn.",
+      removeTitle: "Entfernen",
+      ectsLabel: "ECTS-Ziel pro Semester",
+      flowsTitle: "Was möchtest du tun?",
+      flowPlan: "📅 Nächstes Semester planen",
+      flowPlanDesc: "Konkreter Vorschlag passend zu deinen Interessen",
+      flowPath: "🎯 Zielmodul erreichen",
+      flowPathDesc: "Schnellster Weg zu einem Wunschmodul",
+      flowExplore: "🔍 Katalog entdecken",
+      flowExploreDesc: "Themen und passende Module kennenlernen",
+      msgCompleted: function (codes) { return codes.length ? "Bereits abgeschlossen: " + codes.join(", ") + "." : "Ich habe noch keine Module abgeschlossen."; },
+      msgPlan: function (ects, completed) {
+        return "Plane mein nächstes Semester mit Ziel " + ects + " ECTS. " + completed +
+          " Berücksichtige meine Interessen aus diesem Chat (frag kurz nach, falls du sie nicht kennst), " +
+          "stelle aus dem Katalogüberblick einen konkreten, überschneidungsfreien Plan zusammen " +
+          "und übergib ihn als proposedModules an plan_semester.";
+      },
+      msgPath: function (completed) {
+        return "Ich möchte auf ein Zielmodul hinarbeiten. " + completed +
+          " Hilf mir zuerst, das passende Zielmodul zu finden (frag nach meinen Interessen), " +
+          "und zeige mir dann mit plan_path den schnellsten Weg dorthin.";
+      },
+      msgExplore: function (completed) {
+        return "Gib mir einen Überblick über den Modulkatalog: Welche Themenbereiche gibt es, " +
+          "und welche Module könnten zu mir passen? " + completed +
+          " Stelle mir gerne 2-3 Fragen zu meinen Interessen.";
+      },
+      profileSummary: function (codes, ects) {
+        return "Student profile from the start widget — completed modules: " +
+          (codes.length ? codes.join(", ") : "none") + "; ECTS target: " + ects + ".";
+      },
+      noData: "Keine Daten — bitte zuerst get_started aufrufen."
+    },
+    en: {
+      title: "Module advisor",
+      catalogInfo: function (d) { return d.moduleCount + " modules · " + d.tagCount + " topics · catalog of " + d.compiledAt; },
+      completedTitle: "Modules you already completed",
+      completedDesc: "Record them once — every planning flow uses them.",
+      searchPlaceholder: "Search module (code or title)…",
+      noneYet: "None yet — that's fine, I'll plan from the start of your studies.",
+      removeTitle: "Remove",
+      ectsLabel: "ECTS target per semester",
+      flowsTitle: "What would you like to do?",
+      flowPlan: "📅 Plan my next semester",
+      flowPlanDesc: "A concrete proposal matching your interests",
+      flowPath: "🎯 Reach a target module",
+      flowPathDesc: "Fastest path to a module you want",
+      flowExplore: "🔍 Explore the catalog",
+      flowExploreDesc: "Discover topics and matching modules",
+      msgCompleted: function (codes) { return codes.length ? "Already completed: " + codes.join(", ") + "." : "I have not completed any modules yet."; },
+      msgPlan: function (ects, completed) {
+        return "Plan my next semester with a target of " + ects + " ECTS. " + completed +
+          " Consider my interests from this chat (ask briefly if you don't know them yet), " +
+          "assemble a concrete clash-free plan from the catalog overview " +
+          "and pass it as proposedModules to plan_semester.";
+      },
+      msgPath: function (completed) {
+        return "I want to work toward a target module. " + completed +
+          " First help me choose a fitting target module (ask about my interests), " +
+          "then show me the fastest path to it with plan_path.";
+      },
+      msgExplore: function (completed) {
+        return "Give me an overview of the module catalog: what topic areas exist, " +
+          "and which modules could fit me? " + completed +
+          " Feel free to ask me 2-3 questions about my interests.";
+      },
+      profileSummary: function (codes, ects) {
+        return "Student profile from the start widget — completed modules: " +
+          (codes.length ? codes.join(", ") : "none") + "; ECTS target: " + ects + ".";
+      },
+      noData: "No data — call get_started first."
+    }
+  };
+  function t() { return isDe() ? STR.de : STR.en; }
+
+  // ---------- state ----------
+  var completed = {};   // code -> true
+  var ects = 30;
+  var query = "";
+  var stateRestored = false;
+
+  function data() { return Host.toolOutput; }
+
+  function restoreState() {
+    if (stateRestored) return;
+    var ws = Host.widgetState;
+    if (ws) {
+      (ws.completed || []).forEach(function (c) { completed[c] = true; });
+      if (typeof ws.ectsTarget === "number" && ws.ectsTarget > 0) ects = ws.ectsTarget;
+    }
+    if (data()) stateRestored = true;
+  }
+
+  function persistState() {
+    var s = t();
+    var codes = Object.keys(completed);
+    Host.setState({ completed: codes, ectsTarget: ects }, s.profileSummary(codes, ects));
+  }
+
+  // ---------- helpers ----------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
+  function moduleByCode(code) {
+    var d = data();
+    if (!d) return null;
+    for (var i = 0; i < d.modules.length; i++) {
+      if (d.modules[i].code.toLowerCase() === code.toLowerCase()) return d.modules[i];
+    }
+    return null;
+  }
+  function matches(q) {
+    var d = data();
+    if (!d || !q) return [];
+    var needle = q.toLowerCase();
+    return d.modules.filter(function (m) {
+      return !completed[m.code] && (
+        m.code.toLowerCase().indexOf(needle) === 0 ||
+        (m.title || "").toLowerCase().indexOf(needle) >= 0 ||
+        (m.titleEn || "").toLowerCase().indexOf(needle) >= 0);
+    }).slice(0, 8);
+  }
+  function completedSummary() {
+    return t().msgCompleted(Object.keys(completed));
+  }
+
+  // ---------- rendering ----------
+  function render() {
+    hostRenderDeferred = false; // any render satisfies a pending host update
+    restoreState();
+    var root = document.getElementById("root");
+    var d = data();
+    var s = t();
+    if (!d || !Array.isArray(d.modules)) {
+      root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
+      Host.reportSize();
+      return;
+    }
+
+    var html = '<div class="header"><h1>' + esc(s.title) + "</h1>" +
+      '<div class="sub">' + esc(d.program) + "</div></div>";
+    html += '<div class="info-chips">' +
+      '<span class="chip">' + esc(s.catalogInfo(d)) + "</span>" +
+      (d.semesters || []).map(function (x) { return '<span class="chip">' + esc(x) + "</span>"; }).join("") +
+      "</div>";
+
+    // Completed modules: search + chips
+    html += '<div class="section"><h2>' + esc(s.completedTitle) + "</h2>" +
+      '<div class="desc">' + esc(s.completedDesc) + "</div>" +
+      '<div class="picker"><input id="search" type="text" placeholder="' + esc(s.searchPlaceholder) +
+      '" value="' + esc(query) + '" autocomplete="off">';
+    var sugg = matches(query);
+    if (sugg.length > 0) {
+      html += '<div class="suggestions">' + sugg.map(function (m) {
+        return '<button data-add="' + esc(m.code) + '"><span class="code">' + esc(m.code) + "</span>" +
+          esc(locTitle(m)) + '<span class="ects">' + m.ects + " ECTS</span></button>";
+      }).join("") + "</div>";
+    }
+    html += "</div>";
+    var codes = Object.keys(completed);
+    if (codes.length > 0) {
+      html += '<div class="sel-chips">' + codes.map(function (c) {
+        var m = moduleByCode(c);
+        return '<span class="chip">' + esc(m ? locTitle(m) : c) +
+          '<button data-remove="' + esc(c) + '" title="' + esc(s.removeTitle) + '">×</button></span>';
+      }).join("") + "</div>";
+    } else {
+      html += '<div class="none-note">' + esc(s.noneYet) + "</div>";
+    }
+    html += '<div class="target-row"><label for="ects">' + esc(s.ectsLabel) + "</label>" +
+      '<input id="ects" type="number" min="1" max="90" step="1" value="' + ects + '"></div>';
+    html += "</div>";
+
+    // Flows
+    html += '<div class="section"><h2>' + esc(s.flowsTitle) + "</h2><div class=\"flows\">" +
+      '<button class="flow" data-flow="plan"><span class="flow-title">' + esc(s.flowPlan) +
+      '</span><div class="flow-desc">' + esc(s.flowPlanDesc) + "</div></button>" +
+      '<button class="flow" data-flow="path"><span class="flow-title">' + esc(s.flowPath) +
+      '</span><div class="flow-desc">' + esc(s.flowPathDesc) + "</div></button>" +
+      '<button class="flow" data-flow="explore"><span class="flow-title">' + esc(s.flowExplore) +
+      '</span><div class="flow-desc">' + esc(s.flowExploreDesc) + "</div></button>" +
+      "</div></div>";
+
+    root.innerHTML = html;
+    // Keep typing fluid: restore focus/caret after innerHTML rebuild.
+    var input = document.getElementById("search");
+    if (query && input) { input.focus(); input.setSelectionRange(query.length, query.length); }
+    Host.reportSize();
+  }
+
+  // ---------- events ----------
+  document.getElementById("root").addEventListener("click", function (ev) {
+    var el = ev.target.closest("[data-add],[data-remove],[data-flow]");
+    if (!el) return;
+    var s = t();
+    if (el.hasAttribute("data-add")) {
+      completed[el.getAttribute("data-add")] = true;
+      query = "";
+      persistState();
+      render();
+    } else if (el.hasAttribute("data-remove")) {
+      delete completed[el.getAttribute("data-remove")];
+      persistState();
+      render();
+    } else if (el.hasAttribute("data-flow")) {
+      var flow = el.getAttribute("data-flow");
+      var summary = completedSummary();
+      if (flow === "plan") Host.sendMessage(s.msgPlan(ects, summary));
+      else if (flow === "path") Host.sendMessage(s.msgPath(summary));
+      else Host.sendMessage(s.msgExplore(summary));
+    }
+  });
+  document.getElementById("root").addEventListener("input", function (ev) {
+    var el = ev.target;
+    if (el.id === "search") { query = el.value; render(); }
+    else if (el.id === "ects") {
+      var v = parseInt(el.value, 10);
+      if (v > 0) { ects = v; persistState(); }
+    }
+  });
+
+  function applyTheme() {
+    var theme = Host.theme ||
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.dataset.theme = theme;
+  }
+
+  // Host-triggered re-renders must never destroy a form control the student is
+  // using: replacing an open <select> closes it before a choice can be made.
+  // Defer the render until the control is committed or left; our own event
+  // handlers keep calling render() directly (the dropdown is closed by then).
+  var hostRenderDeferred = false;
+  function hostRender() {
+    var root = document.getElementById("root");
+    var active = document.activeElement;
+    if (active && root.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT")) {
+      if (hostRenderDeferred) return;
+      hostRenderDeferred = true;
+      var done = function (ev) {
+        active.removeEventListener("blur", done);
+        active.removeEventListener("change", done);
+        hostRenderDeferred = false;
+        // Focus moving to another element inside the widget (e.g. clicking an
+        // autocomplete suggestion or a button): rendering right now would replace
+        // the click target mid-gesture — let the click land first, then refresh.
+        if (ev && ev.type === "blur" && ev.relatedTarget && root.contains(ev.relatedTarget)) {
+          setTimeout(hostRender, 150);
+          return;
+        }
+        render();
+      };
+      active.addEventListener("blur", done);
+      active.addEventListener("change", done);
+      return;
+    }
+    render();
+  }
+
+  Host.onchange = function () { applyTheme(); hostRender(); };
+
+  applyTheme();
+  render();
+})();
+</script>
+</body>
+</html>

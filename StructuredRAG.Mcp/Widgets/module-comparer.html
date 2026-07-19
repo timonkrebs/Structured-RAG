@@ -143,18 +143,43 @@
       h.toolOutput = api.toolOutput || null;
       h.widgetState = api.widgetState || null;
       h.canCall = typeof api.callTool === "function";
-      h.setState = function (state) { if (typeof api.setWidgetState === "function") api.setWidgetState(state); };
+      h.setState = function (state, summary) {
+        // Widget state persists between renders but is NOT reliably model-visible in
+        // ChatGPT. Mirror the model-facing summary into the state snapshot and, where
+        // the host supports ui/update-model-context, push it there too — otherwise a
+        // profile recorded here never reaches the model unless a flow button is used.
+        var snapshot = summary ? Object.assign({}, state, { modelSummary: summary }) : state;
+        if (typeof api.setWidgetState === "function") api.setWidgetState(snapshot);
+        // Always push — an empty summary must CLEAR previously pushed context
+        // (a cleared draft would otherwise stay model-visible), like the MCP branch.
+        if (typeof api.updateModelContext === "function") {
+          try { api.updateModelContext({ content: summary ? [{ type: "text", text: summary }] : [] }); } catch (e) {}
+        }
+      };
       h.callTool = function (name, args) { return api.callTool(name, args); };
       h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
       h.openLink = function (url) {
         if (typeof api.openExternal === "function") api.openExternal({ href: url });
         else window.open(url, "_blank", "noopener");
       };
+      // ChatGPT fires set_globals for many reasons (scroll, keyboard, layout
+      // changes — very frequently on mobile). Re-rendering on every event snaps
+      // open dropdowns shut mid-pick, so only notify when something the widget
+      // actually renders from has changed.
+      var sigOf = function () {
+        var ws; try { ws = JSON.stringify(h.widgetState || null); } catch (e) { ws = ""; }
+        return [h.theme, h.locale, ws].join("|");
+      };
+      var lastSig = sigOf();
       window.addEventListener("openai:set_globals", function () {
+        var toolChanged = !!api.toolOutput && api.toolOutput !== h.toolOutput;
         h.theme = api.theme || h.theme;
         h.locale = api.locale || h.locale;
         h.toolOutput = api.toolOutput || h.toolOutput;
         h.widgetState = api.widgetState || h.widgetState;
+        var sig = sigOf();
+        if (!toolChanged && sig === lastSig) return;
+        lastSig = sig;
         notify();
       });
     } else if (window.parent && window.parent !== window) {
@@ -199,7 +224,9 @@
       };
       h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
       h.sendMessage = function (text) {
-        request("ui/message", { role: "user", content: { type: "text", text: text } }).catch(function () {});
+        // MCP Apps expects content as a ContentBlock ARRAY — validating hosts
+        // reject a bare object, and the send-to-chat buttons silently do nothing.
+        request("ui/message", { role: "user", content: [{ type: "text", text: text }] }).catch(function () {});
       };
       h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
       h.reportSize = function () {
@@ -357,6 +384,7 @@
 
   // ---------- rendering ----------
   function render() {
+    hostRenderDeferred = false; // any render satisfies a pending host update
     init();
     var root = document.getElementById("root");
     var s = t();
@@ -525,7 +553,38 @@
     document.documentElement.dataset.theme = theme;
   }
 
-  Host.onchange = function () { applyTheme(); render(); };
+  // Host-triggered re-renders must never destroy a form control the student is
+  // using: replacing an open <select> closes it before a choice can be made.
+  // Defer the render until the control is committed or left; our own event
+  // handlers keep calling render() directly (the dropdown is closed by then).
+  var hostRenderDeferred = false;
+  function hostRender() {
+    var root = document.getElementById("root");
+    var active = document.activeElement;
+    if (active && root.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT")) {
+      if (hostRenderDeferred) return;
+      hostRenderDeferred = true;
+      var done = function (ev) {
+        active.removeEventListener("blur", done);
+        active.removeEventListener("change", done);
+        hostRenderDeferred = false;
+        // Focus moving to another element inside the widget (e.g. clicking an
+        // autocomplete suggestion or a button): rendering right now would replace
+        // the click target mid-gesture — let the click land first, then refresh.
+        if (ev && ev.type === "blur" && ev.relatedTarget && root.contains(ev.relatedTarget)) {
+          setTimeout(hostRender, 150);
+          return;
+        }
+        render();
+      };
+      active.addEventListener("blur", done);
+      active.addEventListener("change", done);
+      return;
+    }
+    render();
+  }
+
+  Host.onchange = function () { applyTheme(); hostRender(); };
 
   applyTheme();
   render();
