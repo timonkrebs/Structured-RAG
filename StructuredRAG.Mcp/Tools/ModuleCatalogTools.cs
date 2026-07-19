@@ -202,7 +202,7 @@ public static class ModuleCatalogTools
     }
 
     [McpServerTool(Name = "get_catalog_overview", ReadOnly = true, UseStructuredContent = true)]
-    [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, schedule, tags) plus the tag taxonomy. Schedule semantics: ' + ' joins slots of the same class (the student attends all of them), ' or ' separates parallel classes (the student attends exactly one — no clash if one alternative is free); semester-prefixed entries apply to that semester only. Ideal first call to load the full catalog into context, especially before proposing a semester plan.")]
+    [Description("Compact markdown overview of the whole catalog (all modules with code, title, ECTS, type, semesters, schedule, tags) plus the tag taxonomy. Schedule semantics: ' + ' joins slots of the same class (the student attends all of them), ' or ' separates parallel classes (the student attends exactly one — no clash if one alternative is free); the class number in [brackets] identifies each alternative — pass it to plan_semester's proposedClasses to pin that class; semester-prefixed entries apply to that semester only. Ideal first call to load the full catalog into context, especially before proposing a semester plan.")]
     public static string GetCatalogOverview(CatalogStore store) =>
         store.TaxonomyMarkdown() + "\n\n" + store.IndexMarkdown();
 
@@ -213,14 +213,15 @@ public static class ModuleCatalogTools
     [McpMeta("ui", JsonValue = """{"resourceUri":"ui://module-catalog/semester-planner"}""")] // MCP Apps (Claude, ...)
     [McpMeta("openai/toolInvocation/invoking", "Collecting eligible modules…")]
     [McpMeta("openai/toolInvocation/invoked", "Semester planning data ready")]
-    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Prerequisites are evaluated as GROUPS of interchangeable alternatives (language variants of the same course, e.g. 'Statistik 1' de/en) — completing any ONE member satisfies a group; blocked modules report missingPrerequisiteGroups in that shape. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. Call plan_semester exactly ONCE per planning request, with the proposal already included: every call renders its own plan-builder widget, so calling it again in the same turn (e.g. first without and then with proposedModules) shows the student two duplicate widgets. Prepare first, then make the one call; re-call only when the request itself changes (different semester, newly completed modules). You are advising the one student you are chatting with; if their interests or level are unknown, do not interrogate them — propose a sensible plan (mandatory/foundational modules first), state your assumptions briefly, and let them adjust in the widget. If you do not even know which modules they completed and the request is vague, call get_started first: its widget collects completed modules and the ECTS target without chat questions. In ChatGPT this renders an interactive plan-builder widget.")]
+    [Description("Get semester planning data for a student: which modules they are eligible for (structured prerequisites met, offered in the given semester) and which are blocked and why. Prerequisites are evaluated as GROUPS of interchangeable alternatives (language variants of the same course, e.g. 'Statistik 1' de/en) — completing any ONE member satisfies a group; blocked modules report missingPrerequisiteGroups in that shape. Results include free-text prerequisite notes, weekdays and lesson time slots (day, start-end; one entry per weekly slot, slots sharing a class number form one parallel class) where published. When the student wants a concrete plan or suggestion, work one out YOURSELF first — get_catalog_overview lists every module with ECTS, semesters, schedule and tags in one call — and pass it as proposedModules so the plan-builder widget opens with your proposal preselected. When a proposed module runs several parallel classes (Durchführungen), also pass the exact class number via proposedClasses — the schedule the widget opens with must match the day/time you told the student, not an arbitrary first class. Call plan_semester exactly ONCE per planning request, with the proposal already included: every call renders its own plan-builder widget, so calling it again in the same turn (e.g. first without and then with proposedModules) shows the student two duplicate widgets. Prepare first, then make the one call; re-call only when the request itself changes (different semester, newly completed modules). You are advising the one student you are chatting with; if their interests or level are unknown, do not interrogate them — propose a sensible plan (mandatory/foundational modules first), state your assumptions briefly, and let them adjust in the widget. If you do not even know which modules they completed and the request is vague, call get_started first: its widget collects completed modules and the ECTS target without chat questions. In ChatGPT this renders an interactive plan-builder widget.")]
     public static SemesterPlanData PlanSemester(
         CatalogStore store,
         [Description("Semester to plan: type 'HS'/'FS' or concrete id like '26HS'")] string semester,
         [Description("Module codes the student has already completed. A completed module also counts for its equivalent language variants — the sibling edition is treated as completed too")] string[]? completedModules = null,
         [Description("Optional tags (German or English) describing the student's interests, used to annotate results")] string[]? interestTags = null,
         [Description("The student's target ECTS for the semester; echoed into the result and used to initialize the plan-builder widget (default 30)")] int? ectsTarget = null,
-        [Description("Your concrete plan proposal: module codes to preselect in the plan-builder widget. Assemble it from get_catalog_overview — eligible modules matching the student's interests and ECTS target without overlapping lesson times. Codes that turn out not eligible are dropped and reported in proposedDropped.")] string[]? proposedModules = null)
+        [Description("Your concrete plan proposal: module codes to preselect in the plan-builder widget. Assemble it from get_catalog_overview — eligible modules matching the student's interests and ECTS target without overlapping lesson times. Blocked modules may be proposed deliberately (e.g. the student credibly meets a requirement in another way); they are preselected too but flagged with their open prerequisites. Codes that are neither eligible nor blocked are dropped and reported in proposedDropped.")] string[]? proposedModules = null,
+        [Description("Class numbers pinning WHICH parallel class (Durchführung) of a proposed module to preselect, e.g. '26HS.W-B-WIBIT-050721S1.SN/VR' — exactly the lesson 'number' values (get_catalog_overview annotates them in [brackets] per alternative). Pass one whenever a proposed module runs several parallel classes and your reasoning refers to a specific day/time — without it the widget auto-picks a class, which may contradict what you told the student. Numbers that match no class of this semester are reported in proposedDropped.")] string[]? proposedClasses = null)
     {
         semester = ValidateSemester(semester);
         // Expanded with equivalent language variants: a completed variant both satisfies
@@ -258,24 +259,53 @@ public static class ModuleCatalogTools
             }
             else
             {
-                blocked.Add(new BlockedModule(m.Code, m.Title, m.Ects, missing));
+                blocked.Add(new BlockedModule(ModuleSummary.From(m, semester), missing));
             }
         }
 
         // The client model's proposal is only forwarded where it can actually be
         // selected — everything else is echoed back so the model can correct itself.
-        // Accepted codes are returned in the catalog's canonical casing: the widget
-        // preselects by exact code match, so an accepted "MLDM" must become "mldm".
-        var canonicalEligible = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var e in eligible) canonicalEligible[e.Module.Code] = e.Module.Code;
+        // Blocked modules ARE selectable (the widget flags their open prerequisites;
+        // a student may meet a requirement without the strict modules), so a proposal
+        // may name them deliberately. Accepted codes are returned in the catalog's
+        // canonical casing: the widget preselects by exact code match, so an accepted
+        // "MLDM" must become "mldm".
+        var canonicalSelectable = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var b in blocked) canonicalSelectable[b.Module.Code] = b.Module.Code;
+        foreach (var e in eligible) canonicalSelectable[e.Module.Code] = e.Module.Code;
         var proposedInput = (proposedModules ?? Array.Empty<string>())
             .Select(c => c?.Trim()).Where(c => !string.IsNullOrEmpty(c)).Select(c => c!)
             .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var proposed = proposedInput
-            .Where(canonicalEligible.ContainsKey)
-            .Select(c => canonicalEligible[c])
+            .Where(canonicalSelectable.ContainsKey)
+            .Select(c => canonicalSelectable[c])
             .ToList();
-        var proposedDropped = proposedInput.Where(c => !canonicalEligible.ContainsKey(c)).ToList();
+        var proposedDropped = proposedInput.Where(c => !canonicalSelectable.ContainsKey(c)).ToList();
+
+        // Pin the exact parallel class (Durchführung) the proposal reasoned about:
+        // the widget would otherwise auto-pick a class, and the opened schedule could
+        // contradict the day/time the assistant told the student (issue #30). Numbers
+        // resolve against the lesson slots of THIS semester's offerings; a pinned
+        // class implies its module is proposed even when proposedModules missed it.
+        var proposedClassPins = new Dictionary<string, string>();
+        var selectableModules = eligible.Select(e => e.Module).Concat(blocked.Select(b => b.Module)).ToList();
+        var proposedClassInput = (proposedClasses ?? Array.Empty<string>())
+            .Select(c => c?.Trim()).Where(c => !string.IsNullOrEmpty(c)).Select(c => c!)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+        foreach (var classNumber in proposedClassInput)
+        {
+            var owner = selectableModules.FirstOrDefault(mod =>
+                mod.Lessons.Any(l => classNumber.Equals(l.Number, StringComparison.OrdinalIgnoreCase)));
+            var canonicalNumber = owner?.Lessons
+                .First(l => classNumber.Equals(l.Number, StringComparison.OrdinalIgnoreCase)).Number;
+            if (owner is null || canonicalNumber is null)
+            {
+                proposedDropped.Add(classNumber);
+                continue;
+            }
+            proposedClassPins[owner.Code] = canonicalNumber;
+            if (!proposed.Contains(owner.Code, StringComparer.OrdinalIgnoreCase)) proposed.Add(owner.Code);
+        }
 
         return new SemesterPlanData(
             Semester: semester,
@@ -283,18 +313,20 @@ public static class ModuleCatalogTools
                 .OrderByDescending(e => e.InterestMatches.Count)
                 .ThenBy(e => e.Module.Code)
                 .ToList(),
-            Blocked: blocked.OrderBy(b => b.Code).ToList(),
+            Blocked: blocked.OrderBy(b => b.Module.Code).ToList(),
             TotalEligibleEcts: eligible.Sum(e => e.Module.Ects),
             EctsTarget: ectsTarget is > 0 ? ectsTarget.Value : 30,
             NotOfferedCount: notOffered,
             CompletedCount: completedCount,
             Proposed: proposed,
             ProposedDropped: proposedDropped,
+            ProposedClasses: proposedClassPins,
             Note: "Structured prerequisites are LLM-extracted from the official requirement texts and validated against " +
                   "this catalog; per-module 'prerequisiteNotes' may contain additional requirements that could not be " +
                   "resolved to module codes — take them into account when planning. 'missingPrerequisiteGroups' lists " +
                   "GROUPS of interchangeable codes (language variants of the same course): completing any ONE member " +
-                  "unlocks that group.");
+                  "unlocks that group. Blocked modules remain selectable in the widget — a student may satisfy a " +
+                  "requirement in a way this catalog cannot verify; flag the open prerequisites instead of hiding the module.");
     }
 
     [McpServerTool(Name = "compare_modules", ReadOnly = true, UseStructuredContent = true)]
@@ -715,9 +747,13 @@ public record PlannableModule(
     IReadOnlyList<string> InterestMatches,
     IReadOnlyList<string> MissingRecommended);
 
-/// <summary>Missing prerequisites as groups: the student must complete ONE module from each
-/// group — members of a group are interchangeable (language variants of the same course).</summary>
-public record BlockedModule(string Code, string Title, int Ects, IReadOnlyList<IReadOnlyList<string>> MissingPrerequisiteGroups);
+/// <summary>A module whose structured prerequisites are not met yet. Carries the full
+/// ModuleSummary: blocked modules stay selectable in the planner widget (a student may
+/// satisfy a requirement in a way the strict module graph cannot see), so the widget
+/// needs lessons and ECTS exactly like an eligible module. MissingPrerequisiteGroups
+/// lists the open groups: the student must complete ONE module from each group —
+/// members of a group are interchangeable (language variants of the same course).</summary>
+public record BlockedModule(ModuleSummary Module, IReadOnlyList<IReadOnlyList<string>> MissingPrerequisiteGroups);
 
 public record SemesterPlanData(
     string Semester,
@@ -729,6 +765,7 @@ public record SemesterPlanData(
     int CompletedCount,
     IReadOnlyList<string> Proposed,
     IReadOnlyList<string> ProposedDropped,
+    IReadOnlyDictionary<string, string> ProposedClasses,
     string Note);
 
 public record ModuleComparisonData(
