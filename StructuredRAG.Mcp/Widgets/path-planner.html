@@ -4,127 +4,212 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* Role tokens; dark mode is its own selected set, not an automatic flip.
-     The body is transparent so the host's card background shows through;
-     --surface is only for elements that need an opaque fill, and --plane is
-     a translucent overlay that adapts to any host background — raised in
-     dark mode (lighter), recessed in light mode (darker). */
+  /* FHNW design system × modern glass. Keep the token block in sync across
+     all four widgets (start, module-comparer, path-planner, semester-planner).
+     Palette and type cues come from fhnw.ch: yellow #fde70e (hover #fef16e),
+     ink #141414, muted #767676, dark-olive #716800 as the yellow-on-white
+     text stand-in, Poppins/Inter type stacks. Glassmorphism adds translucent,
+     blurred panels, soft shadows and rounded geometry. Dark mode is its own
+     selected set, not an automatic flip. The body stays transparent so the
+     host's card background shows through; --surface is only for elements
+     that need an opaque fill (inputs). */
   :root {
     color-scheme: light;
     --surface: #ffffff;
-    --plane: rgba(0, 0, 0, 0.04);
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --hairline: #e1e0d9;
-    --ring: rgba(11, 11, 11, 0.10);
-    --accent: #2a78d6;
-    --accent-soft: #cde2fb;
-    --good-text: #006300;
+    --glass: rgba(255, 255, 255, 0.58);
+    --glass-hi: rgba(255, 255, 255, 0.82);
+    --glass-border: rgba(20, 20, 20, 0.10);
+    --plane: rgba(20, 20, 20, 0.045);
+    --ink: #141414;
+    --ink-2: #535353;
+    --muted: #767676;
+    --hairline: rgba(20, 20, 20, 0.12);
+    --ring: rgba(20, 20, 20, 0.22);
+    --accent: #fde70e;
+    --accent-hover: #fef16e;
+    --accent-ink: #141414;
+    --accent-text: #716800;
+    --accent-soft: rgba(253, 231, 14, 0.16);
+    --accent-edge: rgba(20, 20, 20, 0.35);
+    --check: #141414;
+    --warn: #e8a000;
+    --good-text: #3d8730;
+    --blur: saturate(1.6) blur(14px);
+    --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
+    --shadow-soft: 0 6px 18px rgba(20, 20, 20, 0.06);
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --surface: #212121;
-    --plane: rgba(255, 255, 255, 0.06);
+    --surface: #1f1f1f;
+    --glass: rgba(30, 30, 30, 0.55);
+    --glass-hi: rgba(48, 48, 48, 0.74);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --plane: rgba(255, 255, 255, 0.055);
     --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --muted: #898781;
-    --hairline: #3a3a38;
-    --ring: rgba(255, 255, 255, 0.14);
-    --accent: #3987e5;
-    --accent-soft: #184f95;
-    --good-text: #0ca30c;
+    --ink-2: #c9c9c9;
+    --muted: #999999;
+    --hairline: rgba(255, 255, 255, 0.13);
+    --ring: rgba(255, 255, 255, 0.24);
+    --accent: #fde70e;
+    --accent-hover: #feec38;
+    --accent-ink: #141414;
+    --accent-text: #fde70e;
+    --accent-soft: rgba(253, 231, 14, 0.14);
+    --accent-edge: rgba(253, 231, 14, 0.50);
+    --check: #fde70e;
+    --warn: #fab219;
+    --good-text: #5ccb48;
+    --shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.35);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: transparent;
     color: var(--ink);
-    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  #root { padding: 14px 16px 12px; }
+  /* Brand glow behind the glass — a hint of FHNW yellow for panels to
+     refract; low alpha keeps the host card readable underneath. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(420px 240px at 95% -70px, rgba(253, 231, 14, 0.16), transparent 70%),
+      radial-gradient(360px 260px at -90px 110%, rgba(253, 231, 14, 0.08), transparent 70%);
+  }
+  #root { padding: 16px 18px 14px; }
   button {
     font: inherit;
     color: var(--ink);
-    background: transparent;
-    border: 1px solid var(--ring);
-    border-radius: 8px;
-    padding: 4px 10px;
+    background: var(--plane);
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    padding: 5px 12px;
     cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
   }
-  button:hover { background: var(--plane); }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.primary:hover { filter: brightness(1.08); background: var(--accent); }
-  button:disabled { opacity: 0.5; cursor: default; }
+  button:hover { background: var(--glass-hi); border-color: var(--ring); transform: translateY(-1px); }
+  button:active { transform: none; }
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: none;
+    border-color: var(--accent-ink);
+    box-shadow: 0 0 0 3px rgba(253, 231, 14, 0.45);
+  }
+  /* FHNW signature CTA: yellow fill, near-black text. */
+  button.primary {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    font-weight: 600; box-shadow: 0 4px 14px rgba(253, 231, 14, 0.35);
+  }
+  button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  button:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
 
-  .header h1 { font-size: 15px; font-weight: 650; margin: 0; }
+  .header h1 {
+    position: relative; padding-left: 13px;
+    font-family: "Poppins", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15.5px; font-weight: 600; letter-spacing: -0.01em; margin: 0;
+  }
+  /* Yellow brand bar — echoes the mark in the FHNW logo. */
+  .header h1::before {
+    content: ""; position: absolute; left: 0; top: 0.16em; bottom: 0.12em;
+    width: 5px; border-radius: 3px;
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+  }
   .header h1 .code { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
-  .headline-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 2px; }
+  .headline-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 9px 0 2px; }
   .chip {
     display: inline-block; font-size: 11.5px; color: var(--ink-2);
-    border: 1px solid var(--hairline); border-radius: 9px; padding: 0 7px; line-height: 18px;
-    white-space: nowrap;
+    border: 1px solid var(--hairline); border-radius: 999px; padding: 0 8px; line-height: 18px;
+    white-space: nowrap; background: var(--plane);
   }
-  .chip.key { border-color: var(--accent); color: var(--accent); font-weight: 600; }
-  .chip.ects { font-variant-numeric: tabular-nums; color: var(--ink); border-color: var(--ring); font-weight: 600; }
+  .chip.key {
+    border-color: var(--accent-text); color: var(--accent-text);
+    background: var(--accent-soft); font-weight: 600;
+  }
+  .chip.ects {
+    font-variant-numeric: tabular-nums; font-weight: 600;
+    background: #141414; color: #fde70e; border-color: transparent;
+  }
   .chip.day { background: var(--plane); }
-  .chip.req { border-color: var(--accent); color: var(--accent); }
+  .chip.req { border-color: var(--accent-text); color: var(--accent-text); background: var(--accent-soft); }
   .sem-pick {
     font: inherit; font-size: 12px; color: var(--ink); background: var(--surface);
-    border: 1px solid var(--ring); border-radius: 6px; padding: 2px 6px;
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 3px 7px;
     margin-top: 4px; max-width: 100%;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
   }
+  .sem-pick:hover { border-color: var(--accent); }
   #resetseq { font-size: 12px; padding: 3px 9px; }
   .done-line { font-size: 12.5px; color: var(--good-text); margin: 6px 0 0; }
   .done-line .undo {
     border: none; padding: 0 3px; color: var(--muted); font-size: 12px; cursor: pointer; background: none;
   }
-  .done-line .undo:hover { color: var(--ink); background: none; }
+  .done-line .undo:hover { color: var(--ink); background: none; transform: none; }
 
-  .timeline { margin-top: 10px; }
-  .step { border-top: 1px solid var(--hairline); padding: 8px 0 4px; }
+  .timeline { margin-top: 12px; }
+  .step { border-top: 1px solid var(--hairline); padding: 9px 0 4px; }
   .step-head { display: flex; align-items: baseline; gap: 8px; }
-  .step-sem { font-weight: 650; }
+  .step-sem {
+    font-family: "Poppins", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-weight: 600; letter-spacing: -0.01em;
+  }
   .step-ects { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
   .gap {
     border-top: 1px solid var(--hairline); color: var(--muted);
-    font-size: 12px; padding: 6px 0; text-align: center;
+    font-size: 12px; padding: 7px 0; text-align: center;
   }
   .card {
-    border: 1px solid var(--hairline); border-radius: 10px;
-    padding: 8px 10px; margin: 7px 0;
+    border: 1px solid var(--glass-border); border-radius: 14px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    padding: 10px 12px; margin: 8px 0;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   }
-  .card.target { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+  .card.target { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent), var(--shadow-soft); }
+  .card.target:hover { box-shadow: inset 4px 0 0 var(--accent), var(--shadow); }
   .card-row { display: flex; align-items: flex-start; gap: 8px; }
   .card-main { flex: 1 1 auto; min-width: 0; }
   .card-title { font-weight: 600; }
   .card-title .code { color: var(--muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
-  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
   .card-summary { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
   .card-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .card-actions { flex: none; display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
   .card-actions button { font-size: 12px; padding: 3px 9px; white-space: nowrap; }
 
   .details-panel {
-    margin-top: 8px; padding: 8px 10px; font-size: 12.5px;
-    border: 1px solid var(--hairline); border-radius: 8px;
+    margin-top: 8px; padding: 9px 11px; font-size: 12.5px;
+    border: 1px solid var(--glass-border); border-radius: 12px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
     overflow-wrap: break-word; max-height: 260px; overflow-y: auto;
   }
-  .details-panel a { color: var(--accent); }
+  .details-panel a { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
   .details-panel p { margin: 0 0 6px; }
   .details-panel p:last-child { margin-bottom: 0; }
   .details-panel ul { margin: 0 0 6px; padding-left: 18px; }
   .details-panel li { margin: 2px 0; }
-  .details-panel .md-h { font-weight: 650; margin: 8px 0 4px; }
+  .details-panel .md-h { font-weight: 600; margin: 8px 0 4px; }
   .details-panel .md-h:first-child { margin-top: 0; }
 
-  details.notes { margin-top: 10px; border-top: 1px solid var(--hairline); padding-top: 8px; }
+  details.notes { margin-top: 12px; border-top: 1px solid var(--hairline); padding-top: 9px; }
   details.notes summary { cursor: pointer; color: var(--ink-2); font-weight: 600; font-size: 13px; }
   details.notes li { font-size: 12.5px; color: var(--ink-2); margin: 4px 0; }
 
   .footer {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 10px;
+    border-top: 1px solid var(--hairline); margin-top: 14px; padding-top: 11px;
   }
   .footer .err { font-size: 12.5px; color: var(--ink-2); }
   .footer .spacer { flex: 1 1 auto; }

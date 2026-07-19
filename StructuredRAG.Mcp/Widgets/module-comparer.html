@@ -4,63 +4,131 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* Role tokens; dark mode is its own selected set, not an automatic flip.
-     The body is transparent so the host's card background shows through;
-     --surface is only for elements that need an opaque fill (inputs, the
-     sticky row-label column), and --plane is a translucent overlay that
-     adapts to any host background — raised in dark mode (lighter),
-     recessed in light mode (darker). */
+  /* FHNW design system × modern glass. Keep the token block in sync across
+     all four widgets (start, module-comparer, path-planner, semester-planner).
+     Palette and type cues come from fhnw.ch: yellow #fde70e (hover #fef16e),
+     ink #141414, muted #767676, dark-olive #716800 as the yellow-on-white
+     text stand-in, Poppins/Inter type stacks. Glassmorphism adds translucent,
+     blurred panels, soft shadows and rounded geometry. Dark mode is its own
+     selected set, not an automatic flip. The body stays transparent so the
+     host's card background shows through; --surface is only for elements
+     that need an opaque fill (inputs, the sticky row-label column). */
   :root {
     color-scheme: light;
     --surface: #ffffff;
-    --plane: rgba(0, 0, 0, 0.04);
-    --ink: #0b0b0b;
-    --ink-2: #52514e;
-    --muted: #898781;
-    --hairline: #e1e0d9;
-    --ring: rgba(11, 11, 11, 0.10);
-    --accent: #2a78d6;
-    --accent-soft: #cde2fb;
+    --glass: rgba(255, 255, 255, 0.58);
+    --glass-hi: rgba(255, 255, 255, 0.82);
+    --glass-border: rgba(20, 20, 20, 0.10);
+    --plane: rgba(20, 20, 20, 0.045);
+    --ink: #141414;
+    --ink-2: #535353;
+    --muted: #767676;
+    --hairline: rgba(20, 20, 20, 0.12);
+    --ring: rgba(20, 20, 20, 0.22);
+    --accent: #fde70e;
+    --accent-hover: #fef16e;
+    --accent-ink: #141414;
+    --accent-text: #716800;
+    --accent-soft: rgba(253, 231, 14, 0.16);
+    --accent-edge: rgba(20, 20, 20, 0.35);
+    --check: #141414;
+    --warn: #e8a000;
+    --good-text: #3d8730;
+    --blur: saturate(1.6) blur(14px);
+    --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
+    --shadow-soft: 0 6px 18px rgba(20, 20, 20, 0.06);
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
-    --surface: #212121;
-    --plane: rgba(255, 255, 255, 0.06);
+    --surface: #1f1f1f;
+    --glass: rgba(30, 30, 30, 0.55);
+    --glass-hi: rgba(48, 48, 48, 0.74);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --plane: rgba(255, 255, 255, 0.055);
     --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --muted: #898781;
-    --hairline: #3a3a38;
-    --ring: rgba(255, 255, 255, 0.14);
-    --accent: #3987e5;
-    --accent-soft: #184f95;
+    --ink-2: #c9c9c9;
+    --muted: #999999;
+    --hairline: rgba(255, 255, 255, 0.13);
+    --ring: rgba(255, 255, 255, 0.24);
+    --accent: #fde70e;
+    --accent-hover: #feec38;
+    --accent-ink: #141414;
+    --accent-text: #fde70e;
+    --accent-soft: rgba(253, 231, 14, 0.14);
+    --accent-edge: rgba(253, 231, 14, 0.50);
+    --check: #fde70e;
+    --warn: #fab219;
+    --good-text: #5ccb48;
+    --shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.35);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: transparent;
     color: var(--ink);
-    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+    font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  #root { padding: 14px 16px 12px; }
-  h1 { font-size: 15px; font-weight: 650; margin: 0 0 8px; }
+  /* Brand glow behind the glass — a hint of FHNW yellow for panels to
+     refract; low alpha keeps the host card readable underneath. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(420px 240px at 95% -70px, rgba(253, 231, 14, 0.16), transparent 70%),
+      radial-gradient(360px 260px at -90px 110%, rgba(253, 231, 14, 0.08), transparent 70%);
+  }
+  #root { padding: 16px 18px 14px; }
+  h1 {
+    position: relative; padding-left: 13px;
+    font-family: "Poppins", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 15.5px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 10px;
+  }
+  /* Yellow brand bar — echoes the mark in the FHNW logo. */
+  h1::before {
+    content: ""; position: absolute; left: 0; top: 0.16em; bottom: 0.12em;
+    width: 5px; border-radius: 3px;
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+  }
   button {
     font: inherit;
     color: var(--ink);
-    background: transparent;
-    border: 1px solid var(--ring);
-    border-radius: 8px;
-    padding: 4px 10px;
+    background: var(--plane);
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    padding: 5px 12px;
     cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
   }
-  button:hover { background: var(--plane); }
-  button:disabled { opacity: 0.5; cursor: default; }
+  button:hover { background: var(--glass-hi); border-color: var(--ring); transform: translateY(-1px); }
+  button:active { transform: none; }
+  button:focus-visible, input:focus-visible {
+    outline: none;
+    border-color: var(--accent-ink);
+    box-shadow: 0 0 0 3px rgba(253, 231, 14, 0.45);
+  }
+  button:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
 
   .notice { font-size: 12.5px; color: var(--ink-2); margin: 0 0 8px; }
 
-  .table-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 10px; }
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--glass-border); border-radius: 14px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    box-shadow: var(--shadow-soft);
+  }
   table { border-collapse: collapse; width: 100%; min-width: 420px; }
   th, td {
-    text-align: left; vertical-align: top; padding: 7px 10px;
+    text-align: left; vertical-align: top; padding: 8px 11px;
     border-top: 1px solid var(--hairline); font-weight: 400;
     min-width: 150px; max-width: 260px;
   }
@@ -81,28 +149,41 @@
   .col-title .code { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; }
   .col-remove {
     flex: none; border: none; color: var(--muted); padding: 0 4px; font-size: 15px; line-height: 1;
+    background: none;
   }
-  .col-remove:hover { color: var(--ink); background: transparent; }
+  .col-remove:hover { color: var(--ink); background: transparent; transform: none; }
   .num { font-variant-numeric: tabular-nums; }
   .chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .chip {
     display: inline-block; font-size: 11.5px; color: var(--ink-2);
-    border: 1px solid var(--hairline); border-radius: 9px; padding: 0 7px; line-height: 17px;
-    white-space: nowrap;
+    border: 1px solid var(--hairline); border-radius: 999px; padding: 0 8px; line-height: 17px;
+    white-space: nowrap; background: var(--plane);
   }
-  .chip.shared { border-color: var(--accent); color: var(--accent); }
+  .chip.shared {
+    border-color: var(--accent-text); color: var(--accent-text);
+    background: var(--accent-soft);
+  }
   .cell-note { color: var(--muted); font-size: 12px; }
   .summary { font-size: 12.5px; color: var(--ink-2); }
-  a { color: var(--accent); }
+  a { color: var(--accent-text); text-decoration: underline; text-underline-offset: 2px; }
   .dash { color: var(--muted); }
 
   .legend { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
-  .footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
   .footer input {
     font: inherit; color: var(--ink); background: var(--surface);
-    border: 1px solid var(--ring); border-radius: 8px; padding: 4px 8px; width: 180px;
+    border: 1px solid var(--hairline); border-radius: 9px; padding: 5px 9px; width: 180px;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
   }
+  .footer input:hover { border-color: var(--accent); }
   .footer .err { font-size: 12.5px; color: var(--ink-2); }
+  /* FHNW signature CTA: yellow fill, near-black text. */
+  button#add {
+    background: var(--accent); border-color: var(--accent);
+    color: var(--accent-ink); font-weight: 600;
+    box-shadow: 0 4px 14px rgba(253, 231, 14, 0.35);
+  }
+  button#add:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
   .empty { color: var(--muted); padding: 18px 0; text-align: center; }
 </style>
 </head>
