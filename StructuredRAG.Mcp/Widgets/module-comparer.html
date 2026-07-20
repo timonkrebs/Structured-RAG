@@ -699,6 +699,9 @@
     var q = value.trim();
     if (searchTimer) clearTimeout(searchTimer);
     if (!Host.canCall || q.length < 2) {
+      // Invalidate any in-flight search for the previous query — its late
+      // response must not repopulate the dropdown for a cleared/short input.
+      addSeq++;
       if (addSugg.length > 0) { addSugg = []; render(); }
       return;
     }
