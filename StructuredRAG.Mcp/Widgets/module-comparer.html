@@ -32,7 +32,7 @@
     --accent-soft: rgba(253, 231, 14, 0.16);
     --accent-edge: rgba(20, 20, 20, 0.35);
     --check: #141414;
-    --warn: #e8a000;
+    --warn: #b87e00;
     --good-text: #3d8730;
     --blur: saturate(1.6) blur(14px);
     --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
@@ -116,8 +116,15 @@
     * { transition: none !important; animation: none !important; }
   }
 
+  /* Alert strips: yellow brand bar on the left, like the headings. */
+  .notice, .footer .err {
+    border-left: 3px solid var(--accent);
+    background: var(--plane); border-radius: 0 8px 8px 0;
+    padding: 5px 9px;
+  }
   .notice { font-size: 12.5px; color: var(--ink-2); margin: 0 0 8px; }
 
+  .table-outer { position: relative; }
   .table-wrap {
     overflow-x: auto;
     border: 1px solid var(--glass-border); border-radius: 14px;
@@ -125,7 +132,28 @@
     -webkit-backdrop-filter: var(--blur);
     backdrop-filter: var(--blur);
     box-shadow: var(--shadow-soft);
+    -webkit-mask-image: var(--mask, none);
+    mask-image: var(--mask, none);
   }
+  /* Edge fades while columns are hidden (set by updateScrollFade). */
+  .table-outer.can-scroll-r .table-wrap {
+    --mask: linear-gradient(90deg, #000 calc(100% - 44px), transparent 100%);
+  }
+  .table-outer.scrolled-l .table-wrap {
+    --mask: linear-gradient(90deg, transparent 0, #000 44px);
+  }
+  .table-outer.can-scroll-r.scrolled-l .table-wrap {
+    --mask: linear-gradient(90deg, transparent 0, #000 44px, #000 calc(100% - 44px), transparent 100%);
+  }
+  .scroll-hint {
+    display: none; position: absolute; right: 8px; top: 8px; z-index: 3;
+    font-size: 11px; padding: 2px 9px; border-radius: 999px;
+    background: var(--glass-hi);
+    -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); color: var(--ink-2);
+    box-shadow: var(--shadow-soft); pointer-events: none; white-space: nowrap;
+  }
+  .table-outer.can-scroll-r .scroll-hint { display: block; }
   table { border-collapse: collapse; width: 100%; min-width: 420px; }
   th, td {
     text-align: left; vertical-align: top; padding: 8px 11px;
@@ -177,6 +205,21 @@
   }
   .footer input:hover { border-color: var(--accent); }
   .footer .err { font-size: 12.5px; color: var(--ink-2); }
+  .add-wrap { position: relative; }
+  .add-wrap .sugg {
+    position: absolute; left: 0; bottom: calc(100% + 4px); z-index: 5; min-width: 260px; max-width: 90vw;
+    background: var(--glass-hi);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 12px;
+    overflow: hidden; box-shadow: var(--shadow);
+  }
+  .add-wrap .sugg button {
+    display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left;
+    background: transparent; border: none; border-radius: 0; padding: 7px 10px; font-size: 12.5px;
+  }
+  .add-wrap .sugg button:hover { background: var(--accent-soft); border: none; transform: none; }
+  .add-wrap .sugg .code { color: var(--muted); font-size: 11.5px; flex: none; }
   /* FHNW signature CTA: yellow fill, near-black text. */
   button#add {
     background: var(--accent); border-color: var(--accent);
@@ -357,6 +400,7 @@
       notFound: function (codes) { return "⚠ Nicht im Katalog gefunden: " + codes; },
       addPlaceholder: "Modulcode hinzufügen…",
       add: "Vergleichen",
+      scrollHint: "Weitere Spalten →",
       swapFailed: "Vergleich konnte nicht aktualisiert werden — Tabelle unverändert.",
       removeTitle: "Aus dem Vergleich entfernen",
       noData: "Keine Vergleichsdaten — bitte zuerst compare_modules aufrufen.",
@@ -384,6 +428,7 @@
       notFound: function (codes) { return "⚠ Not found in the catalog: " + codes; },
       addPlaceholder: "Add module code…",
       add: "Compare",
+      scrollHint: "More columns →",
       swapFailed: "Could not update the comparison — table unchanged.",
       removeTitle: "Remove from comparison",
       noData: "No comparison data — call compare_modules first.",
@@ -402,6 +447,9 @@
   var busy = false;
   var errorMsg = null;
   var initialized = false;
+  var addQuery = "";       // live text of the add-module input (drives the typeahead)
+  var addSugg = [];        // typeahead suggestions: [{id, title}]
+  var addSeq = 0;          // search-request counter — stale responses are dropped
 
   function init() {
     if (initialized) return;
@@ -484,9 +532,9 @@
 
     var html = "<h1>" + esc(s.title) + "</h1>";
     if ((current.notFound || []).length > 0)
-      html += '<div class="notice">' + esc(s.notFound(current.notFound.join(", "))) + "</div>";
+      html += '<div class="notice" role="status">' + esc(s.notFound(current.notFound.join(", "))) + "</div>";
 
-    html += '<div class="table-wrap"><table>';
+    html += '<div class="table-outer"><div class="table-wrap"><table>';
 
     // Header row: module titles + remove buttons
     html += '<thead><tr><th class="rowlabel"></th>';
@@ -542,18 +590,50 @@
       return m.url ? '<a href="' + esc(m.url) + '" data-open="' + esc(m.url) + '">' + esc(s.official) + "</a>" : "";
     });
 
-    html += "</tbody></table></div>";
+    html += "</tbody></table></div>" +
+      '<div class="scroll-hint" aria-hidden="true">' + esc(s.scrollHint) + "</div></div>";
 
     if (anyShared) html += '<div class="legend">' + esc(s.sharedLegend) + "</div>";
 
     html += '<div class="footer">' +
-      '<input id="add-code" placeholder="' + esc(s.addPlaceholder) + '"' + (busy ? " disabled" : "") + ">" +
+      '<div class="add-wrap">' +
+      '<input id="add-code" placeholder="' + esc(s.addPlaceholder) + '" value="' + esc(addQuery) + '"' +
+      (busy ? " disabled" : "") + ' autocomplete="off">' +
+      suggHtml() +
+      "</div>" +
       '<button id="add"' + (busy ? " disabled" : "") + ">" + esc(s.add) + "</button>" +
-      (errorMsg ? '<span class="err">' + esc(errorMsg) + "</span>" : "") +
+      (errorMsg ? '<span class="err" role="alert">' + esc(errorMsg) + "</span>" : "") +
       "</div>";
 
     root.innerHTML = html;
+    // Keep typing fluid: restore focus/caret after innerHTML rebuild.
+    var ai = document.getElementById("add-code");
+    if (addQuery && ai) { ai.focus(); ai.setSelectionRange(addQuery.length, addQuery.length); }
+    updateScrollFade();
     Host.reportSize();
+  }
+
+  function suggHtml() {
+    if (addSugg.length === 0) return "";
+    return '<div class="sugg">' + addSugg.map(function (r) {
+      return '<button data-addcode="' + esc(r.id) + '"><span class="code">' + esc(r.id) + "</span>" +
+        esc(r.title) + "</button>";
+    }).join("") + "</div>";
+  }
+
+  // Scroll affordance: mask-fades the table edge(s) that hide columns and
+  // shows the "more columns" pill while scrolling right is possible.
+  function updateScrollFade() {
+    var wrap = document.querySelector(".table-wrap");
+    var outer = document.querySelector(".table-outer");
+    if (!wrap || !outer) return;
+    var upd = function () {
+      outer.classList.toggle("can-scroll-r",
+        wrap.scrollWidth > wrap.clientWidth + 4 && wrap.scrollLeft + wrap.clientWidth < wrap.scrollWidth - 4);
+      outer.classList.toggle("scrolled-l", wrap.scrollLeft > 4);
+    };
+    wrap.addEventListener("scroll", upd);
+    upd();
   }
 
   // A row is skipped entirely when no column has a value (sample catalogs
@@ -595,13 +675,46 @@
     });
   }
 
-  function addModule() {
-    var input = document.getElementById("add-code");
-    var code = (input && input.value || "").trim();
+  function addCode(code) {
     if (!code || busy) return;
     if (codes().length >= 4) { errorMsg = t().maxCols; render(); return; }
-    if (codes().some(function (c) { return c.toLowerCase() === code.toLowerCase(); })) { input.value = ""; return; }
+    if (codes().some(function (c) { return c.toLowerCase() === code.toLowerCase(); })) {
+      addQuery = ""; addSugg = []; render(); return;
+    }
+    addQuery = ""; addSugg = [];
     refresh(codes().concat([code]));
+  }
+
+  function addModule() {
+    var input = document.getElementById("add-code");
+    addCode((input && input.value || "").trim());
+  }
+
+  // Typeahead: debounced free-text search; stale responses are dropped so a
+  // slow earlier request never overwrites suggestions for the current query.
+  var searchTimer = null;
+  function onAddInput(value) {
+    addQuery = value;
+    errorMsg = null;
+    var q = value.trim();
+    if (searchTimer) clearTimeout(searchTimer);
+    if (!Host.canCall || q.length < 2) {
+      if (addSugg.length > 0) { addSugg = []; render(); }
+      return;
+    }
+    var seq = ++addSeq;
+    searchTimer = setTimeout(function () {
+      Host.callTool("search", { query: q }).then(function (res) {
+        if (seq !== addSeq) return;
+        var sc = extractStructured(res);
+        var have = {};
+        codes().forEach(function (c) { have[c.toLowerCase()] = true; });
+        addSugg = ((sc && sc.results) || [])
+          .filter(function (r) { return r && r.id && !have[String(r.id).toLowerCase()]; })
+          .slice(0, 6);
+        render();
+      }).catch(function () {});
+    }, 250);
   }
 
   function removeModule(code) {
@@ -618,17 +731,21 @@
 
   // ---------- events ----------
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-remove],[data-open],#add");
+    var el = ev.target.closest("[data-remove],[data-open],[data-addcode],#add");
     if (!el) return;
     if (el.hasAttribute("data-remove")) removeModule(el.getAttribute("data-remove"));
     else if (el.hasAttribute("data-open")) {
       ev.preventDefault();
       Host.openLink(el.getAttribute("data-open"));
     }
+    else if (el.hasAttribute("data-addcode")) addCode(el.getAttribute("data-addcode"));
     else if (el.id === "add") addModule();
   });
   document.getElementById("root").addEventListener("keydown", function (ev) {
     if (ev.target.id === "add-code" && ev.key === "Enter") addModule();
+  });
+  document.getElementById("root").addEventListener("input", function (ev) {
+    if (ev.target.id === "add-code") onAddInput(ev.target.value);
   });
 
   function applyTheme() {
