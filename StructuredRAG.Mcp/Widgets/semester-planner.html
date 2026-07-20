@@ -32,7 +32,7 @@
     --accent-soft: rgba(253, 231, 14, 0.16);
     --accent-edge: rgba(20, 20, 20, 0.35);
     --check: #141414;
-    --warn: #e8a000;
+    --warn: #b87e00;
     --good-text: #3d8730;
     --blur: saturate(1.6) blur(14px);
     --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
@@ -151,6 +151,14 @@
   .target-wrap input:hover { border-color: var(--accent); }
   .hint { font-size: 12.5px; color: var(--ink-2); margin: 3px 0; }
   .hint.reached { color: var(--good-text); }
+  /* Clash warning as an alert strip (warn bar on the left) with quick fixes. */
+  .hint.clash-line {
+    border-left: 3px solid var(--warn);
+    background: var(--plane); border-radius: 0 8px 8px 0;
+    padding: 5px 9px; margin: 6px 0;
+  }
+  .clash-fixes { display: inline-flex; gap: 5px; margin-left: 6px; flex-wrap: wrap; }
+  .clash-fix { font-size: 11.5px; padding: 1px 8px; }
 
   .legend { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
 
@@ -266,9 +274,17 @@
   /* Overlaps are also always reported as a text hint above the list — never color alone. */
   .tt-block.clash { border-color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); }
 
+  /* Sticky glass action bar: the selection summary + send CTA stay visible
+     while scrolling through long module lists. */
   .footer {
+    position: sticky; bottom: 6px; z-index: 6;
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    border-top: 1px solid var(--hairline); margin-top: 14px; padding-top: 11px;
+    margin-top: 14px; padding: 8px 10px;
+    background: var(--glass-hi);
+    -webkit-backdrop-filter: var(--blur);
+    backdrop-filter: var(--blur);
+    border: 1px solid var(--glass-border); border-radius: 14px;
+    box-shadow: var(--shadow);
   }
   .footer .spacer { flex: 1 1 auto; }
   .empty { color: var(--muted); padding: 18px 0; text-align: center; }
@@ -441,6 +457,7 @@
       flexNote: "Tipp: Module mit unregelmässigen Terminen belegen keinen festen Wochenslot — konkrete Blocktermine auf der Modulseite prüfen, Überschneidungen bleiben möglich.",
       clash: function (day, titles) { return "⚠ Zeitkonflikt (" + day + "): " + titles; },
       clashSoft: function (day, titles) { return "△ Gleicher Wochentag (" + day + "), Zeiten unvollständig: " + titles; },
+      unselect: function (code) { return code + " abwählen"; },
       timetable: "Stundenplan",
       chooseClass: "Anlass wählen",
       everyNDays: function (n) { return "alle " + n + " Tage"; },
@@ -488,6 +505,7 @@
       flexNote: "Tip: modules with irregular dates take no fixed weekly slot — check their actual block dates on the module page, overlaps remain possible.",
       clash: function (day, titles) { return "⚠ Time clash (" + day + "): " + titles; },
       clashSoft: function (day, titles) { return "△ Same weekday (" + day + "), times incomplete: " + titles; },
+      unselect: function (code) { return "drop " + code; },
       timetable: "Timetable",
       chooseClass: "Choose class",
       everyNDays: function (n) { return "every " + n + " days"; },
@@ -835,7 +853,7 @@
     var basePct = sum <= target ? (target > 0 ? (sum / target) * 100 : 0) : (target / sum) * 100;
     var overPct = sum > target ? ((sum - target) / sum) * 100 : 0;
     html += '<div class="meter-row">' +
-      '<span class="meter-label">' + sum + ' <span class="of">/ ' + target + " " + esc(s.ects) + "</span></span>" +
+      '<span class="meter-label" aria-live="polite">' + sum + ' <span class="of">/ ' + target + " " + esc(s.ects) + "</span></span>" +
       '<div class="meter"><div class="fill" style="width:' + basePct.toFixed(1) + '%"></div>' +
       (overPct > 0 ? '<div class="over" style="width:' + overPct.toFixed(1) + '%"></div>' : "") + "</div>" +
       '<label class="target-wrap">' + esc(s.target) +
@@ -857,7 +875,12 @@
         return locTitle(x.m) + (x.l && x.l.start ? " (" + x.l.start + "–" + (x.l.end || "?") + ")" : "");
       };
       var titles = part(c.a) + " + " + part(c.b);
-      html += '<div class="hint">' + esc((c.hard ? s.clash : s.clashSoft)(day(c.day), titles)) + "</div>";
+      // Quick-fix right in the warning: each clashing module gets a drop button.
+      html += '<div class="hint clash-line" role="alert">' + esc((c.hard ? s.clash : s.clashSoft)(day(c.day), titles)) +
+        '<span class="clash-fixes">' +
+        '<button class="clash-fix" data-unselect="' + esc(c.a.m.code) + '">' + esc(s.unselect(c.a.m.code)) + "</button>" +
+        '<button class="clash-fix" data-unselect="' + esc(c.b.m.code) + '">' + esc(s.unselect(c.b.m.code)) + "</button>" +
+        "</span></div>";
     });
 
     if (anyMatches) html += '<div class="legend">' + esc(s.matchLegend) + "</div>";
@@ -940,7 +963,7 @@
 
     // Footer
     html += '<div class="footer">' +
-      '<span class="sub" style="color:var(--ink-2)">' + esc(s.selectedSum(mods.length, sum)) + "</span>" +
+      '<span class="sub" style="color:var(--ink-2)" aria-live="polite">' + esc(s.selectedSum(mods.length, sum)) + "</span>" +
       '<span class="spacer"></span>' +
       '<button id="send" class="primary"' + (mods.length === 0 ? " disabled" : "") + ">" + esc(s.send) + "</button>" +
       "</div>";
@@ -1042,14 +1065,17 @@
         "to bottom, var(--hairline) 0, var(--hairline) 1px, transparent 1px, transparent " + hourPx.toFixed(2) + 'px)">';
       colSlots.forEach(function (x) {
         // Blocks are labeled with the class number (the id the student sees in the
-        // official timetable, e.g. "26HS.W-B-…/VR"), not the module code; clicking
-        // one jumps to its module in the list (data-nav).
+        // official timetable, e.g. "26HS.W-B-…/VR"); the redundant semester prefix
+        // is dropped inside the widget ("oop1/a"). The full id stays in the title,
+        // and clicking a block jumps to its module in the list (data-nav).
+        var num = (x.l && x.l.number) || x.m.code;
+        var shortNum = String(num).replace(/^\d{2}(?:HS|FS)[.-]?/i, "") || num;
         html += '<div class="tt-block' + (x.clash ? " clash" : "") +
           '" data-nav="' + esc(x.m.code) +
           '" style="top:' + (((x.s - min) / span) * 100).toFixed(2) + "%;height:" + (((x.e - x.s) / span) * 100).toFixed(2) +
           "%;left:calc(" + (x.lane * laneW).toFixed(2) + "% + 2px);width:calc(" + laneW.toFixed(2) + "% - 4px)" +
           '" title="' + esc(locTitle(x.m) + " — " + lessonLabel(x.l)) + '">' +
-          "<strong>" + esc((x.l && x.l.number) || x.m.code) + "</strong>" +
+          "<strong>" + esc(shortNum) + "</strong>" +
           '<span class="tt-time">' + esc(x.l.start + "–" + (x.l.end || "")) + "</span></div>";
       });
       html += "</div></div>";
@@ -1113,6 +1139,14 @@
     render();
   }
 
+  // One-way uncheck, used by the clash quick-fix buttons.
+  function unselect(code) {
+    if (!selected[code]) return;
+    delete selected[code];
+    persistState();
+    render();
+  }
+
   function toggleDetails(code) {
     if (expanded[code]) { delete expanded[code]; render(); return; }
     expanded[code] = true;
@@ -1148,7 +1182,7 @@
 
   // ---------- events ----------
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-details],[data-open],[data-nav],#send");
+    var el = ev.target.closest("[data-details],[data-open],[data-nav],[data-unselect],#send");
     if (!el) return;
     if (el.hasAttribute("data-details")) { toggleDetails(el.getAttribute("data-details")); }
     else if (el.hasAttribute("data-open")) {
@@ -1156,6 +1190,7 @@
       Host.openLink(el.getAttribute("data-open"));
     }
     else if (el.hasAttribute("data-nav")) navigateTo(el.getAttribute("data-nav"));
+    else if (el.hasAttribute("data-unselect")) unselect(el.getAttribute("data-unselect"));
     else if (el.id === "send") sendPlan();
   });
   // "toggle" does not bubble — listen in the capture phase. Without this, any

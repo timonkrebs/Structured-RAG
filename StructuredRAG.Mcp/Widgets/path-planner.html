@@ -32,7 +32,7 @@
     --accent-soft: rgba(253, 231, 14, 0.16);
     --accent-edge: rgba(20, 20, 20, 0.35);
     --check: #141414;
-    --warn: #e8a000;
+    --warn: #b87e00;
     --good-text: #3d8730;
     --blur: saturate(1.6) blur(14px);
     --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
@@ -148,6 +148,12 @@
   .sem-pick:hover { border-color: var(--accent); }
   #resetseq { font-size: 12px; padding: 3px 9px; }
   .done-line { font-size: 12.5px; color: var(--good-text); margin: 6px 0 0; }
+  /* Alert strip: yellow brand bar on the left, like the heading. */
+  .footer .err {
+    border-left: 3px solid var(--accent);
+    background: var(--plane); border-radius: 0 8px 8px 0;
+    padding: 5px 9px;
+  }
   .done-line .undo {
     border: none; padding: 0 3px; color: var(--muted); font-size: 12px; cursor: pointer; background: none;
   }
@@ -695,7 +701,7 @@
       "</div>";
 
     if ((current.alreadyCompleted || []).length > 0) {
-      html += '<div class="done-line">' + esc(s.alreadyDone) +
+      html += '<div class="done-line" role="status">' + esc(s.alreadyDone) +
         current.alreadyCompleted.map(function (c) {
           return esc(c) + '<button class="undo" data-undo="' + esc(c) + '" title="' + esc(s.undoTitle) + '">×</button>';
         }).join(", ") + "</div>";
@@ -747,7 +753,7 @@
     }
 
     html += '<div class="footer">' +
-      (errorMsg ? '<span class="err">' + esc(errorMsg) + "</span>" : "") +
+      (errorMsg ? '<span class="err" role="alert">' + esc(errorMsg) + "</span>" : "") +
       '<span class="spacer"></span>' +
       '<button id="send" class="primary"' + (busy ? " disabled" : "") + ">" + esc(s.send) + "</button>" +
       "</div>";

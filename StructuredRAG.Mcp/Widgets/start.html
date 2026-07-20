@@ -32,7 +32,7 @@
     --accent-soft: rgba(253, 231, 14, 0.16);
     --accent-edge: rgba(20, 20, 20, 0.35);
     --check: #141414;
-    --warn: #e8a000;
+    --warn: #b87e00;
     --good-text: #3d8730;
     --blur: saturate(1.6) blur(14px);
     --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
@@ -157,12 +157,19 @@
     color: var(--muted); font-size: 11.5px; margin-left: auto; flex: none;
     font-variant-numeric: tabular-nums;
   }
-  .sel-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .sel-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; align-items: center; }
   .sel-chips .chip { display: inline-flex; align-items: center; gap: 4px; }
+  .sel-chips .chip .chip-code { color: var(--muted); font-size: 10.5px; letter-spacing: 0.03em; }
+  .sel-chips .chip .chip-ects { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
   .sel-chips .chip button {
     border: none; padding: 0 2px; font-size: 12px; color: var(--muted); background: none; line-height: 1;
   }
   .sel-chips .chip button:hover { color: var(--ink); background: none; transform: none; }
+  .clear-all {
+    border: none; background: none; color: var(--muted); font-size: 12px; padding: 0 4px;
+    text-decoration: underline; text-underline-offset: 2px;
+  }
+  .clear-all:hover { color: var(--ink); background: none; transform: none; }
   .none-note { color: var(--muted); font-size: 12px; margin-top: 6px; }
 
   .target-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
@@ -195,7 +202,8 @@
     transform: translateY(-2px); box-shadow: var(--shadow);
   }
   .flow:hover::before { opacity: 1; }
-  .flow .flow-title { font-weight: 600; font-size: 13px; }
+  .flow .flow-title { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+  .flow .flow-ico { color: var(--accent-text); flex: none; display: inline-flex; }
   .flow .flow-desc { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
   .empty { color: var(--muted); padding: 18px 0; text-align: center; }
 </style>
@@ -342,13 +350,14 @@
       searchPlaceholder: "Modul suchen (Code oder Titel)…",
       noneYet: "Noch keine erfasst — auch ok, dann plane ich ab Studienbeginn.",
       removeTitle: "Entfernen",
+      clearAll: "Alle entfernen",
       ectsLabel: "ECTS-Ziel pro Semester",
       flowsTitle: "Was möchtest du tun?",
-      flowPlan: "📅 Nächstes Semester planen",
+      flowPlan: "Nächstes Semester planen",
       flowPlanDesc: "Konkreter Vorschlag passend zu deinen Interessen",
-      flowPath: "🎯 Zielmodul erreichen",
+      flowPath: "Zielmodul erreichen",
       flowPathDesc: "Schnellster Weg zu einem Wunschmodul",
-      flowExplore: "🔍 Katalog entdecken",
+      flowExplore: "Katalog entdecken",
       flowExploreDesc: "Themen und passende Module kennenlernen",
       msgCompleted: function (codes) { return codes.length ? "Bereits abgeschlossen: " + codes.join(", ") + "." : "Ich habe noch keine Module abgeschlossen."; },
       msgPlan: function (ects, completed) {
@@ -382,13 +391,14 @@
       searchPlaceholder: "Search module (code or title)…",
       noneYet: "None yet — that's fine, I'll plan from the start of your studies.",
       removeTitle: "Remove",
+      clearAll: "Remove all",
       ectsLabel: "ECTS target per semester",
       flowsTitle: "What would you like to do?",
-      flowPlan: "📅 Plan my next semester",
+      flowPlan: "Plan my next semester",
       flowPlanDesc: "A concrete proposal matching your interests",
-      flowPath: "🎯 Reach a target module",
+      flowPath: "Reach a target module",
       flowPathDesc: "Fastest path to a module you want",
-      flowExplore: "🔍 Explore the catalog",
+      flowExplore: "Explore the catalog",
       flowExploreDesc: "Discover topics and matching modules",
       msgCompleted: function (codes) { return codes.length ? "Already completed: " + codes.join(", ") + "." : "I have not completed any modules yet."; },
       msgPlan: function (ects, completed) {
@@ -416,6 +426,14 @@
     }
   };
   function t() { return isDe() ? STR.de : STR.en; }
+
+  // Monochrome flow icons (inline SVG, currentColor) — platform-consistent,
+  // unlike emoji which render differently on every host OS.
+  var ICONS = {
+    plan: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="1.8" y="3" width="12.4" height="11.2" rx="2"/><path d="M1.8 7h12.4M5.2 1.6v2.8M10.8 1.6v2.8"/></svg>',
+    path: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="5.6"/><circle cx="8" cy="8" r="2" fill="currentColor" stroke="none"/></svg>',
+    explore: '<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.6"/><path d="M10.4 10.4 14.4 14.4"/></svg>'
+  };
 
   // ---------- state ----------
   var completed = {};   // code -> true
@@ -508,9 +526,15 @@
     if (codes.length > 0) {
       html += '<div class="sel-chips">' + codes.map(function (c) {
         var m = moduleByCode(c);
-        return '<span class="chip">' + esc(m ? locTitle(m) : c) +
+        return '<span class="chip"><span class="chip-code">' + esc(c) + "</span>" +
+          esc(m ? locTitle(m) : c) +
+          (m ? '<span class="chip-ects">' + m.ects + " ECTS</span>" : "") +
           '<button data-remove="' + esc(c) + '" title="' + esc(s.removeTitle) + '">×</button></span>';
-      }).join("") + "</div>";
+      }).join("") +
+      (codes.length > 1
+        ? '<button class="clear-all" data-clear="1">' + esc(s.clearAll) + "</button>"
+        : "") +
+      "</div>";
     } else {
       html += '<div class="none-note">' + esc(s.noneYet) + "</div>";
     }
@@ -520,11 +544,11 @@
 
     // Flows
     html += '<div class="section"><h2>' + esc(s.flowsTitle) + "</h2><div class=\"flows\">" +
-      '<button class="flow" data-flow="plan"><span class="flow-title">' + esc(s.flowPlan) +
+      '<button class="flow" data-flow="plan"><span class="flow-title"><span class="flow-ico" aria-hidden="true">' + ICONS.plan + "</span>" + esc(s.flowPlan) +
       '</span><div class="flow-desc">' + esc(s.flowPlanDesc) + "</div></button>" +
-      '<button class="flow" data-flow="path"><span class="flow-title">' + esc(s.flowPath) +
+      '<button class="flow" data-flow="path"><span class="flow-title"><span class="flow-ico" aria-hidden="true">' + ICONS.path + "</span>" + esc(s.flowPath) +
       '</span><div class="flow-desc">' + esc(s.flowPathDesc) + "</div></button>" +
-      '<button class="flow" data-flow="explore"><span class="flow-title">' + esc(s.flowExplore) +
+      '<button class="flow" data-flow="explore"><span class="flow-title"><span class="flow-ico" aria-hidden="true">' + ICONS.explore + "</span>" + esc(s.flowExplore) +
       '</span><div class="flow-desc">' + esc(s.flowExploreDesc) + "</div></button>" +
       "</div></div>";
 
@@ -537,7 +561,7 @@
 
   // ---------- events ----------
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-add],[data-remove],[data-flow]");
+    var el = ev.target.closest("[data-add],[data-remove],[data-clear],[data-flow]");
     if (!el) return;
     var s = t();
     if (el.hasAttribute("data-add")) {
@@ -547,6 +571,10 @@
       render();
     } else if (el.hasAttribute("data-remove")) {
       delete completed[el.getAttribute("data-remove")];
+      persistState();
+      render();
+    } else if (el.hasAttribute("data-clear")) {
+      completed = {};
       persistState();
       render();
     } else if (el.hasAttribute("data-flow")) {

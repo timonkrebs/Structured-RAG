@@ -21,6 +21,7 @@ namespace StructuredRAG.Mcp.Tools;
 public static class ModuleCatalogTools
 {
     [McpServerTool(Name = "search", ReadOnly = true, UseStructuredContent = true)]
+    [McpMeta("openai/widgetAccessible", true)] // the comparer widget's add-module typeahead calls this
     [Description("Search study modules by free-text query (German or English). Returns matching modules with id, title and summary. For precise filtering by tags, ECTS, semester or level use search_modules instead.")]
     public static SearchResults Search(
         CatalogStore store,
