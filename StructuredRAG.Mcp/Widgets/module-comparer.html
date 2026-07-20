@@ -677,6 +677,11 @@
 
   function addCode(code) {
     if (!code || busy) return;
+    // The input is being cleared — cancel a pending debounce and drop any
+    // in-flight typeahead response, or stale suggestions would reappear
+    // over the empty (or busy) input after the module was added.
+    if (searchTimer) { clearTimeout(searchTimer); searchTimer = null; }
+    addSeq++;
     if (codes().length >= 4) { errorMsg = t().maxCols; render(); return; }
     if (codes().some(function (c) { return c.toLowerCase() === code.toLowerCase(); })) {
       addQuery = ""; addSugg = []; render(); return;
