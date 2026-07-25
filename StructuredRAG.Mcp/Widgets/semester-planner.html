@@ -415,8 +415,17 @@
       };
       h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
       h.reportSize = function () {
+        // Height comes from the content root's scrollHeight, and returns what was
+        // sent so callers can track it. documentElement.scrollHeight is floored at
+        // the viewport — a widget measuring that way could never ask for a SMALLER
+        // frame, so collapsing a section would leave a blank card in the chat —
+        // while the root's bounding box would miss absolutely positioned overflow
+        // such as the autocomplete list. scrollHeight covers both.
+        var root = document.getElementById("root");
+        var height = root ? root.scrollHeight : document.documentElement.scrollHeight;
         post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
-               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+               params: { width: document.documentElement.scrollWidth, height: height } });
+        return height;
       };
       request("ui/initialize", {
         protocolVersion: "2026-01-26",
@@ -822,7 +831,7 @@
       // In MCP Apps the tool result arrives asynchronously after ui/initialize —
       // don't flash the "no data" message while waiting.
       root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
-      Host.reportSize();
+      reportSize();
       return;
     }
 
@@ -969,7 +978,10 @@
       "</div>";
 
     root.innerHTML = html;
-    Host.reportSize();
+    reportSize();
+    // The row a timetable click is navigating to was just rebuilt — re-apply the
+    // flash and, if the frame has caught up with the reported size, the scroll.
+    revealNav();
   }
 
   // Day/time chips: with lesson slots each class slot gets a chip incl. times;
@@ -1118,6 +1130,57 @@
   // ---------- actions ----------
   // Timetable-block click → the module's row in the list: open the category (or
   // the blocked section) holding it, then scroll to the row and flash it.
+  //
+  // Opening a collapsed accordion is what used to break this (issue #35).
+  // Auto-sizing hosts learn the widget's height from the size report we send at
+  // the end of render() and grow the frame one message later, so right after the
+  // render the document still overflows its frame: scrollIntoView() then moves
+  // the widget's OWN scroller, which the host resets to 0 as soon as the frame
+  // grows — dumping the student at the top of the widget instead of on the row.
+  // So the target is kept as state and the scroll waits for the frame to catch
+  // up; keeping it as state also survives the re-renders that host updates
+  // trigger at any time (they would otherwise replace the row mid-scroll).
+  var navCode = null;         // module row still to be revealed, null when idle
+  var navScrolled = false;    // scroll already done — later renders only re-flash
+  var navOwnScroller = false; // capped frame: the widget scrolls itself
+  var navHardStop = 0;        // ...but never defer the scroll indefinitely
+  var navTimer = null;
+  var navSeq = 0;
+  // How long a host gets to act on a size report before we accept that it will
+  // not resize. Measured per report, not per click: a host update re-rendering
+  // the widget mid-navigation sends a NEWER size, and scrolling while that one
+  // is still in flight is exactly the race this whole change is about.
+  var NAV_FRAME_WAIT_MS = 1200;
+  // Renders can keep arriving, so the per-report wait alone could stall forever.
+  var NAV_HARD_STOP_MS = 4000;
+
+  // Scrolling is safe as soon as the document fits the frame: the scroll then
+  // propagates to the host page instead of moving the widget's own scroller, and
+  // a host page's scroll survives the frame being resized underneath it — only
+  // the widget's internal scroll gets clamped. Overflow is the dangerous state,
+  // and it does NOT mean the host will never grow the frame.
+  var askedHeight = 0, askedAt = 0;
+
+  function reportSize() {
+    // Record the height the host was actually asked for — frameIsCapped() compares
+    // the frame against it, so measuring it differently here would misjudge the
+    // host (a shrink leaves documentElement.scrollHeight stuck at the old frame).
+    // Hosts that observe our size instead of being told get the same measurement.
+    var root = document.getElementById("root");
+    askedHeight = Host.reportSize() ||
+      (root ? root.scrollHeight : document.documentElement.scrollHeight);
+    askedAt = Date.now();
+  }
+  // A host that has had the full wait and still keeps the frame smaller than we
+  // asked caps the widget in a scrollable frame: no resize is coming, so its own
+  // scroller is the one to move. Deliberately the SAME threshold as the wait —
+  // a shorter one classifies a slow host's pending resize as "capped" while the
+  // wait still considers it in flight, and then scrolls into the resize.
+  function frameIsCapped() {
+    return askedHeight > 0 && Date.now() - askedAt >= NAV_FRAME_WAIT_MS &&
+      window.innerHeight < askedHeight - 2;
+  }
+
   function navigateTo(code) {
     var d = data();
     if (!d) return;
@@ -1125,12 +1188,46 @@
       if (c.entries.some(function (e) { return e.module.code === code; })) catOpen[c.label] = true;
     });
     if (blockedEntries().some(function (e) { return e.module.code === code; })) blockedOpen = true;
-    render();
-    var el = document.querySelector('li[data-mod="' + code.replace(/["\\]/g, "\\$&") + '"]');
-    if (el) {
-      el.classList.add("nav-flash");
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
+    // Classified BEFORE the render, while the reference still describes a frame
+    // the host has settled on — the render below asks for a new size and starts
+    // that clock over.
+    navOwnScroller = frameIsCapped();
+    navCode = code;
+    navScrolled = false;
+    navSeq++;
+    navHardStop = Date.now() + NAV_HARD_STOP_MS;
+    if (navTimer) { clearTimeout(navTimer); navTimer = null; }
+    render(); // ends in revealNav()
+  }
+
+  // Flash the pending row and, once the frame geometry has settled, scroll to it.
+  // Called after every render and re-armed by its own timer while we wait.
+  function revealNav() {
+    if (!navCode) return;
+    var el = document.querySelector('li[data-mod="' + navCode.replace(/["\\]/g, "\\$&") + '"]');
+    if (!el) { endNav(); return; }
+    el.classList.add("nav-flash");
+    if (navScrolled) return; // already in view — a re-render must not yank the page
+    if (navTimer) { clearTimeout(navTimer); navTimer = null; }
+    // askedAt is refreshed by every render, so the wait below always tracks the
+    // most recent size report rather than the click that started the navigation.
+    var now = Date.now();
+    var settled = navOwnScroller ||
+      document.documentElement.scrollHeight <= window.innerHeight + 2 ||
+      now - askedAt >= NAV_FRAME_WAIT_MS ||
+      now >= navHardStop;
+    if (!settled) { navTimer = setTimeout(revealNav, 40); return; }
+    navScrolled = true;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Keep the target around for the length of the flash so a re-render during
+    // the scroll can restore the cue, then let go of the student's viewport.
+    var seq = navSeq;
+    setTimeout(function () { if (navSeq === seq) endNav(); }, 2000);
+  }
+
+  function endNav() {
+    if (navTimer) { clearTimeout(navTimer); navTimer = null; }
+    navCode = null;
   }
 
   function toggle(code) {
@@ -1200,6 +1297,11 @@
     if (!ev.target.matches) return;
     if (ev.target.matches("details.blocked")) blockedOpen = ev.target.open;
     else if (ev.target.matches("details.cat")) catOpen[ev.target.getAttribute("data-cat")] = ev.target.open;
+    else return;
+    // The native expansion changes the widget's height without going through
+    // render(), so the host would never hear about it: an auto-sizing frame
+    // stays at its old size and clips the category the student just opened.
+    reportSize();
   }, true);
   document.getElementById("root").addEventListener("change", function (ev) {
     var el = ev.target;

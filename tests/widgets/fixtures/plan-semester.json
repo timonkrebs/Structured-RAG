@@ -1,0 +1,3321 @@
+{
+ "semester": "26HS",
+ "eligible": [
+  {
+   "module": {
+    "code": "9212220",
+    "title": "Statistik und Wahrscheinlichkeit",
+    "titleEn": "Statistics and Probability",
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBB-050113S1.SN/BB24",
+        "day": "Friday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBB-050113S1.SN/BB24",
+      "day": "Friday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Statistik",
+     "Datenanalyse",
+     "Programmierung"
+    ],
+    "summary": "Das Modul vermittelt Grundlagen der Wahrscheinlichkeitsrechnung, deskriptiven und analytischen Statistik sowie der Korrelations- und Regressionsanalyse. Studier",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende der Wirtschaftsinformatik, die Daten systematisch analysieren und quantitative Aussagen fundiert beurteilen möchten. Hilfreich sind mathematisches Grundverständnis, logisches Denken und Interesse an datenbasierten Fragestellungen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Wirtschaftsmathematik 1",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212220?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9212225",
+    "title": "Logistik und Supply Chain Management",
+    "titleEn": "Logistics and Supply Chain Management",
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Tuesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBB-050205S1.SN/BB24",
+        "day": "Tuesday",
+        "start": "17:30",
+        "end": "21:15",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Tuesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBB-050205S1.SN/BB24",
+      "day": "Tuesday",
+      "start": "17:30",
+      "end": "21:15",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Prozessmanagement",
+     "Digitale Transformation",
+     "Nachhaltigkeit Klima",
+     "Internationales Geschäft",
+     "Datenanalyse"
+    ],
+    "summary": "Das Modul vermittelt grundlegende Begriffe, Konzepte, Methoden und Instrumente der Logistik und des Supply Chain Managements. Studierende lernen, Waren-, Inform",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die globale Lieferketten, vernetzte Geschäftsabläufe und nachhaltige Wertschöpfung verstehen und gestalten möchten. Besonders passend ist es für Interessen an Digitalisierung, Prozesszusammenhängen, Supply-Chain-Analytik sowie Kunden- und Lieferantenbeziehungen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212225?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9212275",
+    "title": "Topics in Business Information Technology",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Saturday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBB-050503S1.SN/BB24",
+        "day": "Saturday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Saturday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBB-050503S1.SN/BB24",
+      "day": "Saturday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Zukunftstechnologien",
+     "Digitale Transformation",
+     "Studienkompetenzen",
+     "Kommunikation Auftreten",
+     "Fremdsprachen"
+    ],
+    "summary": "Das Seminar vermittelt, wie sich Studierende selbstständig in ein aktuelles Thema der Wirtschaftsinformatik einarbeiten, Technologien und Trends hinsichtlich ih",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende der Wirtschaftsinformatik, die neue IT-Trends vertieft untersuchen und deren geschäftlichen Nutzen beurteilen möchten. Es passt besonders zu Studierenden, die selbstständig arbeiten sowie ihr wissenschaftliches Schreiben und professionelles Auftreten auf Englisch verbessern wollen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212275?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9212342",
+    "title": "Business Intelligence",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Saturday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBB-050406S1.SN/BB24",
+        "day": "Saturday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Saturday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBB-050406S1.SN/BB24",
+      "day": "Saturday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Datenanalyse",
+     "Datenbanken",
+     "Maschinelles Lernen",
+     "Künstliche Intelligenz",
+     "Kommunikation Auftreten"
+    ],
+    "summary": "Das Modul vermittelt, wie Rohdaten durch Data Warehousing, multidimensionale Datenmodellierung, Machine Learning und visuelles Data Storytelling in verlässliche",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende, die betriebliche Entscheidungen mit Daten unterstützen und Business Intelligence praktisch kennenlernen möchten. Hilfreich sind Interesse an analytischem Denken sowie Vorkenntnisse in Wirtschaftsmathematik und Datenbanken.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [
+     "9212177"
+    ],
+    "prerequisiteNotes": "Keine.\nEmpfehlungen:\n\n- Wirtschaftsmathematik 2\n- Datenbanken",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212342?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9312101",
+    "title": "Bswiss - Swiss International Business Summer School",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [],
+      "lessons": []
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [],
+    "lessons": [],
+    "tags": [
+     "Internationales Geschäft",
+     "Internationaler Austausch",
+     "Unternehmertum Innovation",
+     "Volkswirtschaft Weltordnung",
+     "Politik Institutionen"
+    ],
+    "summary": "Das Modul untersucht am Beispiel der Schweiz, wie Institutionen, Innovation, Migration, Politik und nachhaltige Entwicklung die internationale Wettbewerbsfähigk",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende mit Interesse an der Schweizer Wirtschaft, internationaler Wettbewerbsfähigkeit, Innovation, Globalisierung und Migration. Erwartet werden gute mikro- und makroökonomische Grundlagen sowie sehr gute Englischkenntnisse.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Sehr gute Englischkenntnisse (schriftlich B2, mündlich C1); Kenntnisse in Mikroökonomie und Makroökonomie.",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9312101?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9376104",
+    "title": "FHNW Summer School Entrepreneurship",
+    "titleEn": null,
+    "ects": 2,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [],
+      "lessons": []
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [],
+    "lessons": [],
+    "tags": [
+     "Unternehmertum Innovation",
+     "Management Grundlagen",
+     "Finanzmanagement",
+     "Kommunikation Auftreten",
+     "Praxislernen"
+    ],
+    "summary": "Die einwöchige Summer School vermittelt praxisnahe Grundlagen des Unternehmertums – von der Entwicklung und Evaluation eines Geschäftsmodells über Markteintritt",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende aller FHNW-Hochschulen, die sich für Start-ups, innovative Geschäftsmodelle oder eine mögliche Selbständigkeit interessieren. Besonders passend ist es für Personen, die praxisnah lernen, reale Gründungserfahrungen kennenlernen und ihre eigene Eignung als Unternehmerin oder Unternehmer prüfen möchten.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9376104?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9491769",
+    "title": "Machine Learning with Python",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-050701S1.SN/VR_EN",
+        "day": "Thursday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Windisch",
+        "language": "en",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WIBIT-050701S1.SN/VR_DE",
+        "day": "Thursday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "en",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-050701S1.SN/VR_EN",
+      "day": "Thursday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Windisch",
+      "language": "en",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WIBIT-050701S1.SN/VR_DE",
+      "day": "Thursday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "en",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Maschinelles Lernen",
+     "Programmierung",
+     "Datenanalyse",
+     "Künstliche Intelligenz"
+    ],
+    "summary": "Das Modul vermittelt die Grundlagen von Python und führt systematisch in zentrale Verfahren des maschinellen Lernens ein. Studierende lernen unter anderem Varia",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die Python erlernen und damit Daten analysieren sowie erste Machine-Learning-Modelle entwickeln möchten. Es eignet sich besonders für Interesse an Programmierung, Data Science und analytischer Problemlösung; Vorkenntnisse sind nicht erforderlich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9491769?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9491795",
+    "title": "Strategic Digital Management",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en",
+       "de"
+      ],
+      "weekdays": [
+       "Monday",
+       "Wednesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-050713S1.SN/VR",
+        "day": "Monday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "en",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WIBIT-000733S1.SN/VR",
+        "day": "Wednesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en",
+     "de"
+    ],
+    "weekdays": [
+     "Monday",
+     "Wednesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-050713S1.SN/VR",
+      "day": "Monday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "en",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WIBIT-000733S1.SN/VR",
+      "day": "Wednesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Digitale Transformation",
+     "Management Grundlagen",
+     "Unternehmertum Innovation",
+     "Unternehmenssysteme",
+     "Projektmanagement"
+    ],
+    "summary": "Das Modul vermittelt, wie Unternehmen ihre Digital- und IT-Strategie an der Geschäftsstrategie ausrichten und Informationssysteme gezielt für Innovation und lan",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die digitale Transformation aus einer strategischen Managementperspektive verstehen und später an der Schnittstelle zwischen Business und IT arbeiten möchten. Vorkenntnisse in Projekt- und Geschäftsprozessmanagement sind besonders hilfreich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [
+     "9776667",
+     "9212188"
+    ],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9491795?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9491802",
+    "title": "Agile Application Lifecycle Management",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-050721S1.SN/VR",
+        "day": "Thursday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-050721S1.SN/VR",
+      "day": "Thursday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Software Engineering",
+     "Programmierung",
+     "Webtechnologien",
+     "Projektmanagement"
+    ],
+    "summary": "Das Modul vermittelt die Kernprozesse des Application Lifecycle Managements von Analyse und Design über Implementierung bis zum Test und verbindet sie mit agile",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende mit Programmiererfahrung, die moderne Softwareentwicklungsprozesse, DevOps, Automatisierung und Cloud-Deployment praxisnah kennenlernen möchten. Besonders geeignet ist es für angehende Software Engineers, DevOps Engineers und technische Projektmitarbeitende.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Programmieren 1 + 2, Requirements Engineering",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9491802?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9577523",
+    "title": "Data Privacy",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de",
+       "en"
+      ],
+      "weekdays": [
+       "Monday",
+       "Wednesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-050731S1.SN/VR",
+        "day": "Monday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Basel, Windisch, Online",
+        "language": "en",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WIBIT-050731S1.SN/VR",
+        "day": "Wednesday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de",
+     "en"
+    ],
+    "weekdays": [
+     "Monday",
+     "Wednesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-050731S1.SN/VR",
+      "day": "Monday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Basel, Windisch, Online",
+      "language": "en",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WIBIT-050731S1.SN/VR",
+      "day": "Wednesday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Cybersecurity Datenschutz",
+     "Recht Justiz",
+     "Ethik Verantwortung",
+     "Verantwortungsvolle KI",
+     "Datenbanken"
+    ],
+    "summary": "Das Modul vermittelt die Grundlagen des Datenschutzrechts in der Schweiz und der EU und betrachtet Datenschutz aus individueller, organisatorischer, technischer",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende mit Interesse an Datenmanagement, Datenschutz, Compliance und verantwortungsvoller KI-Nutzung. Es eignet sich besonders für alle, die praxisnah lernen möchten, wie Organisationen personenbezogene Daten rechtskonform und verantwortungsvoll schützen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Interesse an Datenmanagement",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9577523?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9716287",
+    "title": "Content is King – das Spiel um Identität, Aufmerksamkeit und Macht",
+    "titleEn": "Content is King - when identity, attention and power are at stake",
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Tuesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BÖK-040769S1.SN/a",
+        "day": "Tuesday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Tuesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BÖK-040769S1.SN/a",
+      "day": "Tuesday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Digitales Marketing",
+     "Kommunikation Auftreten",
+     "Gesellschaft Kultur",
+     "Ethik Verantwortung",
+     "Big Data"
+    ],
+    "summary": "Das Modul vermittelt, wie Organisationen Social-Media-Content strategisch entwickeln, organisatorisch verankern und zur Gestaltung von Markenidentität, Image un",
+    "summaryEn": null,
+    "audience": "Geeignet für Studierende mit Interesse an Social Media, Unternehmenskommunikation, Markenführung und praktischer Content-Produktion. Besonders passend ist das Modul für alle, die digitale Kommunikation nicht nur kreativ gestalten, sondern auch ihre gesellschaftlichen und ethischen Wirkungen kritisch beurteilen möchten.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Wirtschaftskommunikation 1-3",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9716287?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9733118",
+    "title": "Innosuisse Start-up Training",
+    "titleEn": null,
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Wahlpflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Monday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BÖK-004161S.SN/a",
+        "day": "Monday",
+        "start": "17:30",
+        "end": "21:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Monday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BÖK-004161S.SN/a",
+      "day": "Monday",
+      "start": "17:30",
+      "end": "21:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Unternehmertum Innovation",
+     "Digitale Geschäftsmodelle",
+     "Finanzmanagement",
+     "Management Grundlagen",
+     "Kommunikation Auftreten"
+    ],
+    "summary": "Das Modul vermittelt die methodischen und praktischen Grundlagen, um eine eigene Geschäftsidee zu entwickeln, zu prüfen und in ein tragfähiges Geschäftsmodell z",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die ein Start-up gründen, eine eigene Geschäftsidee systematisch weiterentwickeln oder unternehmerisches Denken praktisch erproben möchten. Besonders passend ist es für kreative, initiative Personen mit Interesse an Innovation, Marktchancen und der Umsetzung neuer Angebote.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9733118?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9774564",
+    "title": "Principles of Management",
+    "titleEn": null,
+    "ects": 6,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Monday",
+       "Tuesday",
+       "Wednesday",
+       "Thursday",
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BÖK-Mgt.EN/VZ26a",
+        "day": "Monday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt.EN/TZT26a",
+        "day": "Monday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt.EN/TZT26a",
+        "day": "Tuesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt.EN/VZ26a",
+        "day": "Tuesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt.EN/TZT26b",
+        "day": "Wednesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WR-Mgt_de.EN/TZ26",
+        "day": "Wednesday",
+        "start": "17:30",
+        "end": "21:15",
+        "location": "Windisch, Online",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt_de.EN/TZF26a",
+        "day": "Wednesday",
+        "start": "17:30",
+        "end": "21:15",
+        "location": "Windisch, Online",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WR-Mgt_de.EN/VZ26",
+        "day": "Thursday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt_de.EN/TZT26a_VZ26",
+        "day": "Thursday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mgt.EN/VZ26b",
+        "day": "Thursday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-Mgt_de.EN/VZTZT26",
+        "day": "Friday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-Mgt_de.EN/TZA26",
+        "day": "Friday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BÖK-Mgt.EN/VZ26a",
+      "day": "Monday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt.EN/TZT26a",
+      "day": "Monday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt.EN/TZT26a",
+      "day": "Tuesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt.EN/VZ26a",
+      "day": "Tuesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt.EN/TZT26b",
+      "day": "Wednesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WR-Mgt_de.EN/TZ26",
+      "day": "Wednesday",
+      "start": "17:30",
+      "end": "21:15",
+      "location": "Windisch, Online",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt_de.EN/TZF26a",
+      "day": "Wednesday",
+      "start": "17:30",
+      "end": "21:15",
+      "location": "Windisch, Online",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WR-Mgt_de.EN/VZ26",
+      "day": "Thursday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt_de.EN/TZT26a_VZ26",
+      "day": "Thursday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mgt.EN/VZ26b",
+      "day": "Thursday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-Mgt_de.EN/VZTZT26",
+      "day": "Friday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-Mgt_de.EN/TZA26",
+      "day": "Friday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Management Grundlagen",
+     "Organisation Führung",
+     "Projektmanagement",
+     "Finanzmanagement",
+     "Digitale Transformation"
+    ],
+    "summary": "Das Modul vermittelt die zentralen Grundlagen der Unternehmensführung, darunter Strategie, Organisation, Personal, Marketing, Produktion, Finanzen und Controlli",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Bachelorstudierende, die ein breites Verständnis betrieblicher Abläufe und unternehmerischer Entscheidungen aufbauen möchten. Es eignet sich besonders für Studierende mit Interesse an Management, Organisation, Wertschöpfung und praxisnaher Problemlösung; betriebswirtschaftliche Vorkenntnisse sind nicht erforderlich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9774564?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9774570",
+    "title": "Kritisches Denken & Wissenschaftliches Schreiben",
+    "titleEn": "Critical Thinking & Academic Writing",
+    "ects": 6,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Monday",
+       "Tuesday",
+       "Wednesday",
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BÖK-KDWS_de.EN/TZT26a",
+        "day": "Monday",
+        "start": "10:15",
+        "end": "15:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/TZT26b",
+        "day": "Monday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS_de.EN/TZF26a",
+        "day": "Tuesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/TZF26a",
+        "day": "Tuesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-KDWS_de.EN/VZ26",
+        "day": "Tuesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/VZ26b",
+        "day": "Tuesday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/VZ26a",
+        "day": "Wednesday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/TZT26a",
+        "day": "Wednesday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS_de.EN/VZ26a",
+        "day": "Wednesday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/TZT26a",
+        "day": "Thursday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-KDWS.EN/VZ26a",
+        "day": "Thursday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BÖK-KDWS_de.EN/TZT26a",
+      "day": "Monday",
+      "start": "10:15",
+      "end": "15:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/TZT26b",
+      "day": "Monday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS_de.EN/TZF26a",
+      "day": "Tuesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/TZF26a",
+      "day": "Tuesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-KDWS_de.EN/VZ26",
+      "day": "Tuesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/VZ26b",
+      "day": "Tuesday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/VZ26a",
+      "day": "Wednesday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/TZT26a",
+      "day": "Wednesday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS_de.EN/VZ26a",
+      "day": "Wednesday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/TZT26a",
+      "day": "Thursday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-KDWS.EN/VZ26a",
+      "day": "Thursday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Studienkompetenzen",
+     "Kommunikation Auftreten",
+     "Künstliche Intelligenz",
+     "Verantwortungsvolle KI"
+    ],
+    "summary": "Das Modul vermittelt kritisches Denken, Informationskompetenz und die Grundlagen wissenschaftlichen Schreibens. Studierende lernen, Quellen und Medieninhalte hi",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Bachelorstudierende, die Informationen kritisch beurteilen und ihre wissenschaftlichen Recherche-, Argumentations- und Schreibkompetenzen für Studium und Beruf ausbauen möchten. Es eignet sich besonders für Studierende, die lernen wollen, aus einer unscharfen Problemstellung eine nachvollziehbare, faktenbasierte Arbeit zu entwickeln.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9774570?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9774571",
+    "title": "Angewandte Mathematik 1",
+    "titleEn": "Applied Mathematics 1",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Monday",
+       "Tuesday",
+       "Wednesday",
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/TZT26b",
+        "day": "Monday",
+        "start": "08:15",
+        "end": "10:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/TZT26a",
+        "day": "Monday",
+        "start": "10:15",
+        "end": "12:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/VZ26a",
+        "day": "Monday",
+        "start": "10:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-Mat1_de.EN/VZTZT26b",
+        "day": "Monday",
+        "start": "13:15",
+        "end": "15:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-Mat1_de.EN/VZTZT26a",
+        "day": "Monday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1_de.EN/TZT26a_VZ26",
+        "day": "Monday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/TZF26a",
+        "day": "Tuesday",
+        "start": "13:15",
+        "end": "15:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1_de.EN/TZF26a",
+        "day": "Tuesday",
+        "start": "13:15",
+        "end": "15:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/VZ26a",
+        "day": "Tuesday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/TZT26a",
+        "day": "Tuesday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-Mat1.EN/VZ26b",
+        "day": "Wednesday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-Mat1_de.EN/TZA26",
+        "day": "Friday",
+        "start": "08:15",
+        "end": "10:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/TZT26b",
+      "day": "Monday",
+      "start": "08:15",
+      "end": "10:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/TZT26a",
+      "day": "Monday",
+      "start": "10:15",
+      "end": "12:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/VZ26a",
+      "day": "Monday",
+      "start": "10:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-Mat1_de.EN/VZTZT26b",
+      "day": "Monday",
+      "start": "13:15",
+      "end": "15:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-Mat1_de.EN/VZTZT26a",
+      "day": "Monday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1_de.EN/TZT26a_VZ26",
+      "day": "Monday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/TZF26a",
+      "day": "Tuesday",
+      "start": "13:15",
+      "end": "15:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1_de.EN/TZF26a",
+      "day": "Tuesday",
+      "start": "13:15",
+      "end": "15:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/VZ26a",
+      "day": "Tuesday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/TZT26a",
+      "day": "Tuesday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-Mat1.EN/VZ26b",
+      "day": "Wednesday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-Mat1_de.EN/TZA26",
+      "day": "Friday",
+      "start": "08:15",
+      "end": "10:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Statistik",
+     "Datenanalyse",
+     "Finanzmanagement"
+    ],
+    "summary": "Das Modul vermittelt grundlegende mathematische Methoden für wirtschaftliche und wissenschaftliche Problemstellungen, darunter Algebra, Funktionen, Folgen und R",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Bachelorstudierende, die quantitative Grundlagen für betriebswirtschaftliche Analysen, Finanzfragen und weiterführende Fächer wie Statistik oder KI aufbauen möchten. Erwartet werden mathematische und statistische Grundkenntnisse auf Berufsmaturitätsniveau.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Mathematische und statistische Grundlagen auf dem Niveau der Berufsmaturität.",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9774571?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9774574",
+    "title": "Organisational Behaviour",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Monday",
+       "Tuesday",
+       "Wednesday",
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/TZT26a",
+        "day": "Monday",
+        "start": "08:15",
+        "end": "10:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB_de.EN/TZT26a_VZ26",
+        "day": "Monday",
+        "start": "08:15",
+        "end": "10:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/VZ26a",
+        "day": "Monday",
+        "start": "08:15",
+        "end": "10:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/TZT26b",
+        "day": "Monday",
+        "start": "10:15",
+        "end": "12:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-OB_de.EN/VZTZT25",
+        "day": "Monday",
+        "start": "13:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/VZ26a",
+        "day": "Tuesday",
+        "start": "13:15",
+        "end": "15:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/TZT26a",
+        "day": "Tuesday",
+        "start": "13:15",
+        "end": "15:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB_de.EN/TZF26a",
+        "day": "Tuesday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Windisch",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/TZF26a",
+        "day": "Tuesday",
+        "start": "15:15",
+        "end": "17:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BÖK-OB.EN/VZ26b",
+        "day": "Wednesday",
+        "start": "13:15",
+        "end": "15:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-WI-OB_de.EN/TZA25",
+        "day": "Friday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/TZT26a",
+      "day": "Monday",
+      "start": "08:15",
+      "end": "10:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB_de.EN/TZT26a_VZ26",
+      "day": "Monday",
+      "start": "08:15",
+      "end": "10:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/VZ26a",
+      "day": "Monday",
+      "start": "08:15",
+      "end": "10:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/TZT26b",
+      "day": "Monday",
+      "start": "10:15",
+      "end": "12:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-OB_de.EN/VZTZT25",
+      "day": "Monday",
+      "start": "13:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/VZ26a",
+      "day": "Tuesday",
+      "start": "13:15",
+      "end": "15:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/TZT26a",
+      "day": "Tuesday",
+      "start": "13:15",
+      "end": "15:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB_de.EN/TZF26a",
+      "day": "Tuesday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Windisch",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/TZF26a",
+      "day": "Tuesday",
+      "start": "15:15",
+      "end": "17:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BÖK-OB.EN/VZ26b",
+      "day": "Wednesday",
+      "start": "13:15",
+      "end": "15:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-WI-OB_de.EN/TZA25",
+      "day": "Friday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Organisation Führung",
+     "Management Grundlagen",
+     "Wohlbefinden Resilienz",
+     "Studienkompetenzen",
+     "Kommunikation Auftreten"
+    ],
+    "summary": "Das Modul vermittelt psychologische Grundlagen des individuellen Verhaltens und der Zusammenarbeit in Organisationen, darunter Persönlichkeit, Wahrnehmung, Emot",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die menschliches Verhalten im beruflichen Umfeld besser verstehen und ihre Selbstorganisation, Teamfähigkeit und Konfliktkompetenz ausbauen möchten. Besonders geeignet ist es für angehende Fach- und Führungskräfte, die offen für Selbstreflexion und erfahrungsorientiertes Lernen sind.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9774574?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9845636",
+    "title": "Chinese Basic Communication A1",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Thursday",
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-ChBCA1.EN/a",
+        "day": "Thursday",
+        "start": "17:30",
+        "end": "19:15",
+        "location": "Windisch",
+        "language": "en",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BSC-ChBCA1.EN/b",
+        "day": "Friday",
+        "start": "10:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "en",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Thursday",
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-ChBCA1.EN/a",
+      "day": "Thursday",
+      "start": "17:30",
+      "end": "19:15",
+      "location": "Windisch",
+      "language": "en",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BSC-ChBCA1.EN/b",
+      "day": "Friday",
+      "start": "10:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "en",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Asienkompetenz",
+     "Kommunikation Auftreten"
+    ],
+    "summary": "Das Modul vermittelt grundlegende Chinesischkenntnisse auf Niveau A1, darunter Pinyin-Aussprache, Basisgrammatik, Alltagswortschatz und eine Einführung in chine",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende ohne Chinesischvorkenntnisse, die sich für die chinesische Sprache und Kultur interessieren oder sich auf zukünftige Kontakte im chinesischsprachigen Raum vorbereiten möchten. Besonders passend ist es für Lernende, die grundlegende mündliche Kommunikationsfähigkeiten systematisch aufbauen wollen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9845636?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9845646",
+    "title": "Spanisch A1",
+    "titleEn": "Spanish A1",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "es"
+      ],
+      "weekdays": [
+       "Monday",
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-SpA1.EN/c",
+        "day": "Monday",
+        "start": "18:00",
+        "end": "19:45",
+        "location": "Olten",
+        "language": "es",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BSC-SpA1.EN/a",
+        "day": "Thursday",
+        "start": "17:30",
+        "end": "19:15",
+        "location": "Windisch",
+        "language": "es",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BSC-SpA1.EN/b",
+        "day": "Thursday",
+        "start": "18:15",
+        "end": "20:00",
+        "location": "Basel",
+        "language": "es",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "es"
+    ],
+    "weekdays": [
+     "Monday",
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-SpA1.EN/c",
+      "day": "Monday",
+      "start": "18:00",
+      "end": "19:45",
+      "location": "Olten",
+      "language": "es",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BSC-SpA1.EN/a",
+      "day": "Thursday",
+      "start": "17:30",
+      "end": "19:15",
+      "location": "Windisch",
+      "language": "es",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BSC-SpA1.EN/b",
+      "day": "Thursday",
+      "start": "18:15",
+      "end": "20:00",
+      "location": "Basel",
+      "language": "es",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Kommunikation Auftreten",
+     "Gesellschaft Kultur",
+     "Internationales Geschäft"
+    ],
+    "summary": "Das Modul vermittelt grundlegende Spanischkenntnisse auf Niveau A1 in den Bereichen Sprechen, Hören, Lesen und Schreiben sowie zentrale grammatische Strukturen ",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende ohne Spanischvorkenntnisse, die Spanisch für Alltag, Reisen oder den internationalen Berufsalltag lernen möchten. Es eignet sich besonders für Personen mit Interesse an interkultureller Kommunikation sowie an spanischen und lateinamerikanischen Kulturen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9845646?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9845649",
+    "title": "Italienisch A1",
+    "titleEn": "Italian A1",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "it"
+      ],
+      "weekdays": [
+       "Monday",
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-ItaA1.EN/a",
+        "day": "Monday",
+        "start": "18:00",
+        "end": "19:45",
+        "location": "Windisch",
+        "language": "it",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BSC-ItaA1.EN/b",
+        "day": "Thursday",
+        "start": "18:15",
+        "end": "20:00",
+        "location": "Basel",
+        "language": "it",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "it"
+    ],
+    "weekdays": [
+     "Monday",
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-ItaA1.EN/a",
+      "day": "Monday",
+      "start": "18:00",
+      "end": "19:45",
+      "location": "Windisch",
+      "language": "it",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BSC-ItaA1.EN/b",
+      "day": "Thursday",
+      "start": "18:15",
+      "end": "20:00",
+      "location": "Basel",
+      "language": "it",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Kommunikation Auftreten",
+     "Gesellschaft Kultur",
+     "Internationales Geschäft"
+    ],
+    "summary": "Das Modul vermittelt grundlegende Italienischkenntnisse auf Niveau A1 in den Bereichen Lesen, Hören, Schreiben und Sprechen. Studierende lernen, einfache Alltag",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende ohne Italienischvorkenntnisse, die sich im Alltag und im mehrsprachigen Schweizer Berufsumfeld auf einfache Weise verständigen möchten. Es passt besonders zu Interessen an Sprachen, italienischsprachiger Kultur, interkultureller Kommunikation und dem Aufbau beruflicher Kontakte.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9845649?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9845651",
+    "title": "Italienisch A2",
+    "titleEn": "Italian A2",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "it"
+      ],
+      "weekdays": [
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-ItaA2.EN/a",
+        "day": "Friday",
+        "start": "08:15",
+        "end": "10:00",
+        "location": "Windisch",
+        "language": "it",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "it"
+    ],
+    "weekdays": [
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-ItaA2.EN/a",
+      "day": "Friday",
+      "start": "08:15",
+      "end": "10:00",
+      "location": "Windisch",
+      "language": "it",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Kommunikation Auftreten",
+     "Internationales Geschäft",
+     "Gesellschaft Kultur"
+    ],
+    "summary": "Das Modul erweitert die im Italienisch-A1-Kurs erworbenen Sprachkenntnisse auf das Niveau A2 und trainiert Lesen, Hören, Schreiben und Sprechen. Studierende kön",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende mit Italienischkenntnissen auf Niveau A1, die ihre Kommunikationsfähigkeit für Alltag, Studium, internationale Kontakte oder den Schweizer Wirtschaftsraum ausbauen möchten. Besonders geeignet ist es für Studierende mit Interesse an Sprachen und der italienischsprachigen Kultur.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [
+     "9845649"
+    ],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9845651?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9845652",
+    "title": "Business English B2/C1 - Current Topics",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Thursday",
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-UtWtEng.EN/a",
+        "day": "Thursday",
+        "start": "17:30",
+        "end": "21:15",
+        "location": "Windisch",
+        "language": "en",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BSC-UtWtEng.EN/b",
+        "day": "Thursday",
+        "start": "18:15",
+        "end": "20:00",
+        "location": "Basel",
+        "language": "en",
+        "periodicity": 7
+       },
+       {
+        "number": "26HS.W-B-BSC-UtWtEng.EN/c",
+        "day": "Friday",
+        "start": "10:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "en",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Thursday",
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-UtWtEng.EN/a",
+      "day": "Thursday",
+      "start": "17:30",
+      "end": "21:15",
+      "location": "Windisch",
+      "language": "en",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BSC-UtWtEng.EN/b",
+      "day": "Thursday",
+      "start": "18:15",
+      "end": "20:00",
+      "location": "Basel",
+      "language": "en",
+      "periodicity": 7
+     },
+     {
+      "number": "26HS.W-B-BSC-UtWtEng.EN/c",
+      "day": "Friday",
+      "start": "10:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "en",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Kommunikation Auftreten",
+     "Internationales Geschäft",
+     "Geschichte Zeitgeschehen",
+     "Gesellschaft Kultur"
+    ],
+    "summary": "Das Modul verbindet die Weiterentwicklung von Business English auf Niveau B2/C1 mit der kritischen Auseinandersetzung mit aktuellen globalen, wirtschaftlichen u",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende mit Englischkenntnissen ab Niveau B2, die sich für internationale Nachrichten sowie wirtschaftliche und gesellschaftliche Debatten interessieren. Es eignet sich besonders für Studierende, die ihre mündliche Ausdrucksfähigkeit, Diskussionskompetenz und interkulturelle Perspektive ausbauen möchten.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Cambridge English Placement Test (CEPT) mit mindestens Niveau B2",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9845652?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9847298",
+    "title": "Russisch Basic A1.1",
+    "titleEn": "Russian Basic A1.1",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "ru"
+      ],
+      "weekdays": [
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-RusA1.EN/a",
+        "day": "Friday",
+        "start": "10:15",
+        "end": "12:00",
+        "location": "Windisch",
+        "language": "ru",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "ru"
+    ],
+    "weekdays": [
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-RusA1.EN/a",
+      "day": "Friday",
+      "start": "10:15",
+      "end": "12:00",
+      "location": "Windisch",
+      "language": "ru",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Gesellschaft Kultur",
+     "Kommunikation Auftreten",
+     "Internationales Geschäft"
+    ],
+    "summary": "Das Modul vermittelt erste Russischkenntnisse auf Niveau A1.1, darunter die kyrillische Schrift, grundlegende Aussprache, Basiswortschatz und zentrale Grammatik",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende ohne Russischvorkenntnisse, die eine neue Weltsprache erlernen und mit russischsprachigen Menschen kommunizieren möchten. Besonders passend ist es bei Interesse an slawischen und zentralasiatischen Gesellschaften, internationaler Zusammenarbeit oder interkultureller Kommunikation.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9847298?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9847826",
+    "title": "German Basic A1",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de",
+       "en"
+      ],
+      "weekdays": [
+       "Wednesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-GerA1.EN/a",
+        "day": "Wednesday",
+        "start": "17:30",
+        "end": "19:15",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de",
+     "en"
+    ],
+    "weekdays": [
+     "Wednesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-GerA1.EN/a",
+      "day": "Wednesday",
+      "start": "17:30",
+      "end": "19:15",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Kommunikation Auftreten",
+     "Studienkompetenzen",
+     "Gesellschaft Kultur"
+    ],
+    "summary": "Das Modul vermittelt grundlegende Deutschkenntnisse auf Niveau A1 für Alltag, Studium und erste berufliche Situationen. Studierende lernen, einfache Gespräche z",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende ohne Deutschvorkenntnisse, die sich im Alltag und im Studienumfeld der FHNW auf Deutsch verständigen möchten. Es eignet sich besonders für internationale Studierende, die sprachliche Sicherheit und interkulturelles Verständnis aufbauen wollen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9847826?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9853140",
+    "title": "Blockchain",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Monday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-BloC_en.EN/WM",
+        "day": "Monday",
+        "start": null,
+        "end": null,
+        "location": "Basel",
+        "language": "en",
+        "periodicity": -2
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Monday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-BloC_en.EN/WM",
+      "day": "Monday",
+      "start": null,
+      "end": null,
+      "location": "Basel",
+      "language": "en",
+      "periodicity": -2
+     }
+    ],
+    "tags": [
+     "Blockchain",
+     "Digitale Geschäftsmodelle",
+     "Banken Zahlungsverkehr",
+     "Webtechnologien",
+     "Zukunftstechnologien"
+    ],
+    "summary": "Das Modul vermittelt praxisnah die kryptografischen Grundlagen, Funktionsweisen und wirtschaftlichen Zusammenhänge von Blockchain-Technologien. Studierende erst",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die Blockchain, Kryptowährungen, DeFi und dezentrale Anwendungen praktisch kennenlernen möchten. Es eignet sich besonders für Interesse an neuen digitalen Geschäftsmodellen, Finanztechnologien und Web-3-Architekturen; Vorkenntnisse sind nicht erforderlich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9853140?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9853148",
+    "title": "Mastering learning strategies",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [],
+      "weekdays": [],
+      "lessons": []
+     }
+    ],
+    "languages": [],
+    "weekdays": [],
+    "lessons": [],
+    "tags": [
+     "Studienkompetenzen",
+     "Wohlbefinden Resilienz",
+     "Karriereentwicklung"
+    ],
+    "summary": "Das Modul vermittelt wissenschaftlich fundierte Lern- und Zeitmanagementstrategien sowie Ansätze für Achtsamkeit, Resilienz und persönliches Wohlbefinden. Studi",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die ihre Lerngewohnheiten, Konzentration, Selbstorganisation und nachhaltige Leistungsfähigkeit verbessern möchten. Besonders geeignet ist es für neugierige und lernbereite Personen, die akademische, berufliche und persönliche Anforderungen besser bewältigen wollen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Open to learn (Lernbereitschaft)",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9853148?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9897618",
+    "title": "Französisch B1-B2",
+    "titleEn": "French B1-B2",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "fr"
+      ],
+      "weekdays": [
+       "Monday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-FraB.EN/a",
+        "day": "Monday",
+        "start": "18:00",
+        "end": "19:45",
+        "location": "Olten",
+        "language": "fr",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "fr"
+    ],
+    "weekdays": [
+     "Monday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-FraB.EN/a",
+      "day": "Monday",
+      "start": "18:00",
+      "end": "19:45",
+      "location": "Olten",
+      "language": "fr",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Fremdsprachen",
+     "Internationales Geschäft",
+     "Kommunikation Auftreten",
+     "Karriereentwicklung",
+     "Gesellschaft Kultur"
+    ],
+    "summary": "Das Modul vertieft Französischkenntnisse von Niveau B1 mit Schwerpunkt auf beruflichen Situationen sowie aktuellen Themen aus Wirtschaft, Gesellschaft und Kultu",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende mit Französischkenntnissen auf Niveau B1, die ihre Sprachkompetenz für Studium, Bewerbung und berufliche Kontakte mit französischsprachigen Partnerinnen und Partnern auffrischen oder vertiefen möchten. Besonders angesprochen sind Studierende mit Interesse an internationaler Geschäftstätigkeit und frankophonen Wirtschaftsräumen.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": "Beherrschen von Grammatik und Wortschatz auf einem Niveau B1",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9897618?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9897625",
+    "title": "Geschichte des Wirtschaftsrechts",
+    "titleEn": "History of Economic Law",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Wednesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-GdW_de.EN/a",
+        "day": "Wednesday",
+        "start": "17:30",
+        "end": "21:15",
+        "location": "Windisch, Online",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Wednesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-GdW_de.EN/a",
+      "day": "Wednesday",
+      "start": "17:30",
+      "end": "21:15",
+      "location": "Windisch, Online",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Recht Justiz",
+     "Geschichte Zeitgeschehen",
+     "Volkswirtschaft Weltordnung",
+     "Politik Institutionen"
+    ],
+    "summary": "Das Modul vermittelt die europäische Entwicklung des Wirtschaftsrechts von der Antike bis zur Neuzeit und beleuchtet dabei die eigenständige Entwicklung der Sch",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende, die sich für Wirtschaftsrecht, Wirtschaftsgeschichte und die institutionellen Grundlagen der Marktwirtschaft interessieren. Besonders passend ist es für alle, die heutige Rechts- und Wirtschaftsordnungen aus ihrer historischen Entwicklung heraus verstehen möchten; juristische Vorkenntnisse sind nicht erforderlich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9897625?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9898673",
+    "title": "Balanced You – Mental stark, ruhig und fokussiert",
+    "titleEn": "Balanced You – Mentally strong, calm, and focused",
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-BaYo_de.EN/a",
+        "day": "Friday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 0
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-BaYo_de.EN/a",
+      "day": "Friday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 0
+     }
+    ],
+    "tags": [
+     "Wohlbefinden Resilienz",
+     "Studienkompetenzen",
+     "Karriereentwicklung"
+    ],
+    "summary": "Das Modul vermittelt wissenschaftlich fundierte Grundlagen zu Stress, Aufmerksamkeit, Regeneration und mentaler Gesundheit sowie deren Einfluss auf Lernen und L",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die konstruktiver mit Stress und hohen Anforderungen umgehen, ihre Konzentration verbessern oder ein nachhaltiges Gleichgewicht zwischen Leistung und Erholung entwickeln möchten. Vorkenntnisse sind nicht erforderlich; wichtig sind die Bereitschaft zu praktischen Übungen und persönlicher Selbstreflexion.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9898673?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9898680",
+    "title": "Generative KI für Unternehmen",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": "Wahlmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-GKfU_de.EN/a",
+        "day": "Thursday",
+        "start": "18:15",
+        "end": "20:00",
+        "location": "Basel",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-GKfU_de.EN/a",
+      "day": "Thursday",
+      "start": "18:15",
+      "end": "20:00",
+      "location": "Basel",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Künstliche Intelligenz",
+     "Verantwortungsvolle KI",
+     "Digitale Transformation",
+     "Digitale Geschäftsmodelle",
+     "Prozessmanagement"
+    ],
+    "summary": "Das Modul vermittelt Grundlagen generativer KI und grosser Sprachmodelle – von Architektur, Training und Datenaufbereitung bis zu Prompt Engineering, Retrieval-",
+    "summaryEn": null,
+    "audience": "Geeignet für Studierende, die generative KI praktisch im Unternehmenskontext einsetzen und deren technische, geschäftliche und ethische Dimensionen verstehen möchten. Besonders passend ist das Modul für Interessen an Prozessautomatisierung, KI-Anwendungen, Innovation und digitalen Geschäftsmodellen; Vorkenntnisse sind nicht erforderlich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9898680?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9902054",
+    "title": "Challenges in the Global Economic System",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-BSC-CitGES_en.EN/a",
+        "day": "Thursday",
+        "start": "17:30",
+        "end": "19:15",
+        "location": "Olten",
+        "language": "en",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-BSC-CitGES_en.EN/a",
+      "day": "Thursday",
+      "start": "17:30",
+      "end": "19:15",
+      "location": "Olten",
+      "language": "en",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Volkswirtschaft Weltordnung",
+     "Internationales Geschäft",
+     "Politik Institutionen",
+     "Nachhaltigkeit Klima",
+     "Künstliche Intelligenz"
+    ],
+    "summary": "Das Modul vermittelt ein strukturiertes Verständnis des globalen Wirtschaftssystems und analysiert aktuelle Herausforderungen wie Handelskonflikte, geopolitisch",
+    "summaryEn": null,
+    "audience": "Das Modul eignet sich für Studierende, die sich für Weltwirtschaft, internationale Politik, Handel, Nachhaltigkeit und technologische Umbrüche interessieren. Besonders passend ist es für alle, die aktuelle wirtschaftspolitische Entwicklungen kritisch analysieren und die Position der Schweiz im globalen Umfeld besser verstehen möchten.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9902054?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9903769",
+    "title": "Bank, Mobile and Crypto Payments",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Thursday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-BMCPay_en.EN/WM",
+        "day": "Thursday",
+        "start": "17:30",
+        "end": "21:15",
+        "location": "Basel, Olten, Windisch, Online",
+        "language": "en",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Thursday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-BMCPay_en.EN/WM",
+      "day": "Thursday",
+      "start": "17:30",
+      "end": "21:15",
+      "location": "Basel, Olten, Windisch, Online",
+      "language": "en",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Banken Zahlungsverkehr",
+     "Blockchain",
+     "Cybersecurity Datenschutz",
+     "Digitale Geschäftsmodelle",
+     "Internationales Geschäft"
+    ],
+    "summary": "Das Modul vermittelt einen vergleichenden Überblick über traditionelle Bankzahlungssysteme, Mobile-Money-Ökosysteme und kryptobasierte Zahlungsnetzwerke im Glob",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die sich für Banking, digitale Zahlungssysteme, Mobile Money, Kryptowährungen und deren internationale gesellschaftliche Bedeutung interessieren. Es eignet sich besonders für alle, die Zahlungsinfrastrukturen aus technischer, wirtschaftlicher, regulatorischer und sicherheitsbezogener Perspektive vergleichen möchten; Vorkenntnisse sind nicht erforderlich.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9903769?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  },
+  {
+   "module": {
+    "code": "9903784",
+    "title": "AI Risks and Enlightenment",
+    "titleEn": null,
+    "ects": 3,
+    "level": "Bachelor",
+    "moduleType": null,
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "en"
+      ],
+      "weekdays": [
+       "Saturday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBIT-AIREn_en.EN/WM",
+        "day": "Saturday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Basel, Olten, Windisch, Online",
+        "language": "en",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "en"
+    ],
+    "weekdays": [
+     "Saturday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBIT-AIREn_en.EN/WM",
+      "day": "Saturday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Basel, Olten, Windisch, Online",
+      "language": "en",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Künstliche Intelligenz",
+     "Verantwortungsvolle KI",
+     "Ethik Verantwortung",
+     "Cybersecurity Datenschutz",
+     "Gesellschaft Kultur"
+    ],
+    "summary": "Das Modul vermittelt einen interdisziplinären Überblick über KI-Risiken wie Diskriminierung, Datenschutzverletzungen, Desinformation, Missbrauch sowie sozioökon",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die sich für KI, Ethik, Sicherheit und die gesellschaftlichen Folgen technischer Systeme interessieren. Es eignet sich besonders für reflektierte, selbstständig lernende Studierende, die in einem asynchronen Online-Seminar wissenschaftliche Positionen kritisch diskutieren möchten.",
+    "prerequisites": [],
+    "prerequisiteGroups": [],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9903784?uiLanguage=de"
+   },
+   "interestMatches": [],
+   "missingRecommended": []
+  }
+ ],
+ "blocked": [
+  {
+   "module": {
+    "code": "9212177",
+    "title": "Datenbanken",
+    "titleEn": "Database Technology",
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Tuesday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WI-000304S1.SN/REP",
+        "day": "Tuesday",
+        "start": null,
+        "end": null,
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Tuesday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WI-000304S1.SN/REP",
+      "day": "Tuesday",
+      "start": null,
+      "end": null,
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Datenbanken",
+     "Programmierung",
+     "Software Engineering"
+    ],
+    "summary": "Das Modul vermittelt die Modellierung, Erstellung und Nutzung relationaler Datenbanken – von ER-Diagrammen, Normalisierung und relationaler Algebra bis zu kompl",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die strukturierte Datenbestände modellieren, mit SQL abfragen und zuverlässig in Geschäftsanwendungen integrieren möchten. Grundkenntnisse in Wirtschaftsinformatik und Programmierung sind hilfreich beziehungsweise vorausgesetzt.",
+    "prerequisites": [
+     "9776665"
+    ],
+    "prerequisiteGroups": [
+     [
+      "9776665",
+      "9776676"
+     ]
+    ],
+    "recommended": [],
+    "prerequisiteNotes": "Einführung Wirtschaftsinformatik",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212177?uiLanguage=de"
+   },
+   "missingPrerequisiteGroups": [
+    [
+     "9776665",
+     "9776676"
+    ]
+   ]
+  },
+  {
+   "module": {
+    "code": "9212217",
+    "title": "Internettechnologien",
+    "titleEn": "Internet Technology",
+    "ects": 5,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [
+       "Friday"
+      ],
+      "lessons": [
+       {
+        "number": "26HS.W-B-WIBB-050305S1.SN/BB24",
+        "day": "Friday",
+        "start": "08:15",
+        "end": "12:00",
+        "location": "Olten",
+        "language": "de",
+        "periodicity": 7
+       }
+      ]
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [
+     "Friday"
+    ],
+    "lessons": [
+     {
+      "number": "26HS.W-B-WIBB-050305S1.SN/BB24",
+      "day": "Friday",
+      "start": "08:15",
+      "end": "12:00",
+      "location": "Olten",
+      "language": "de",
+      "periodicity": 7
+     }
+    ],
+    "tags": [
+     "Webtechnologien",
+     "Programmierung",
+     "Software Engineering"
+    ],
+    "summary": "Das Modul vermittelt Grundlagen der Netzwerktechnik sowie der client- und serverseitigen Webentwicklung. Die Studierenden lernen unter anderem TCP/IP, HTTP, IP-",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende, die verstehen möchten, wie Netzwerke und moderne Webanwendungen technisch funktionieren, und selbst eine vollständige Webapplikation entwickeln wollen. Grundkenntnisse in Wirtschaftsinformatik, Datenbanken und Programmierung werden vorausgesetzt.",
+    "prerequisites": [
+     "9212177",
+     "9776665"
+    ],
+    "prerequisiteGroups": [
+     [
+      "9212177"
+     ],
+     [
+      "9776665",
+      "9776676"
+     ]
+    ],
+    "recommended": [],
+    "prerequisiteNotes": "Einführung in die Wirtschaftsinformatik",
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212217?uiLanguage=de"
+   },
+   "missingPrerequisiteGroups": [
+    [
+     "9212177"
+    ],
+    [
+     "9776665",
+     "9776676"
+    ]
+   ]
+  },
+  {
+   "module": {
+    "code": "9212344",
+    "title": "Praxisprojekt",
+    "titleEn": "Practical Project",
+    "ects": 10,
+    "level": "Bachelor",
+    "moduleType": "Pflichtmodul",
+    "offeredIn": [
+     "HS"
+    ],
+    "offerings": [
+     {
+      "semesterId": "26HS",
+      "languages": [
+       "de"
+      ],
+      "weekdays": [],
+      "lessons": []
+     }
+    ],
+    "languages": [
+     "de"
+    ],
+    "weekdays": [],
+    "lessons": [],
+    "tags": [
+     "Projektmanagement",
+     "Praxislernen",
+     "Kommunikation Auftreten",
+     "Management Grundlagen",
+     "Karriereentwicklung"
+    ],
+    "summary": "In diesem Praxisprojekt bearbeiten Studierende in kleinen Teams ein aktuelles Geschäftsproblem für ein Unternehmen oder eine Organisation und schaffen innerhalb",
+    "summaryEn": null,
+    "audience": "Das Modul richtet sich an Studierende der Wirtschaftsinformatik, die ihr Projektmanagementwissen in einem realen Unternehmensauftrag anwenden und Verantwortung für Ergebnisse übernehmen möchten. Besonders passend ist es für teamfähige, eigeninitiative Studierende, die mit Auftraggebenden professionell kommunizieren und auch unter Zeit- und Erwartungsdruck arbeiten wollen.",
+    "prerequisites": [
+     "9212188"
+    ],
+    "prerequisiteGroups": [
+     [
+      "9212188"
+     ]
+    ],
+    "recommended": [],
+    "prerequisiteNotes": null,
+    "url": "https://modulbeschreibungen.webapps.fhnw.ch/detail/26HS_9212344?uiLanguage=de"
+   },
+   "missingPrerequisiteGroups": [
+    [
+     "9212188"
+    ]
+   ]
+  }
+ ],
+ "totalEligibleEcts": 123,
+ "ectsTarget": 30,
+ "notOfferedCount": 0,
+ "completedCount": 0,
+ "proposed": [
+  "9212220",
+  "9212225",
+  "9212275",
+  "9212342",
+  "9491769",
+  "9491795"
+ ],
+ "proposedDropped": [],
+ "proposedClasses": {},
+ "note": ""
+}

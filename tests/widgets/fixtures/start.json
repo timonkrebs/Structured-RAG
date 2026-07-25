@@ -1,0 +1,720 @@
+{
+ "program": "BSc in Wirtschaftsinformatik",
+ "moduleCount": 118,
+ "tagCount": 40,
+ "compiledAt": "2026-01-01T00:00:00Z",
+ "semesters": [
+  "26HS",
+  "27FS"
+ ],
+ "modules": [
+  {
+   "code": "9212177",
+   "title": "Datenbanken",
+   "titleEn": "Database Technology",
+   "ects": 5
+  },
+  {
+   "code": "9212188",
+   "title": "Projektmanagement",
+   "titleEn": "Project Management",
+   "ects": 5
+  },
+  {
+   "code": "9212217",
+   "title": "Internettechnologien",
+   "titleEn": "Internet Technology",
+   "ects": 5
+  },
+  {
+   "code": "9212220",
+   "title": "Statistik und Wahrscheinlichkeit",
+   "titleEn": "Statistics and Probability",
+   "ects": 5
+  },
+  {
+   "code": "9212225",
+   "title": "Logistik und Supply Chain Management",
+   "titleEn": "Logistics and Supply Chain Management",
+   "ects": 5
+  },
+  {
+   "code": "9212275",
+   "title": "Topics in Business Information Technology",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9212342",
+   "title": "Business Intelligence",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9212344",
+   "title": "Praxisprojekt",
+   "titleEn": "Practical Project",
+   "ects": 10
+  },
+  {
+   "code": "9212348",
+   "title": "Bachelor Thesis",
+   "titleEn": null,
+   "ects": 10
+  },
+  {
+   "code": "9312101",
+   "title": "Bswiss - Swiss International Business Summer School",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9376104",
+   "title": "FHNW Summer School Entrepreneurship",
+   "titleEn": null,
+   "ects": 2
+  },
+  {
+   "code": "9458410",
+   "title": "SIY: Mindfulness-based Emotional Intelligence",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9469734",
+   "title": "Die United Nations Sustainable Development Goals",
+   "titleEn": "The United Nations Sustainable Development Goals",
+   "ects": 3
+  },
+  {
+   "code": "9481963",
+   "title": "Digitale Geschäftsmodelle",
+   "titleEn": "Digital Business Models",
+   "ects": 5
+  },
+  {
+   "code": "9491769",
+   "title": "Machine Learning with Python",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9491771",
+   "title": "Time Series Analysis with R",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9491774",
+   "title": "Big, Semi- and Unstructured Data",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9491795",
+   "title": "Strategic Digital Management",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9491802",
+   "title": "Agile Application Lifecycle Management",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9491812",
+   "title": "Software Engineering",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9577523",
+   "title": "Data Privacy",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9716287",
+   "title": "Content is King – das Spiel um Identität, Aufmerksamkeit und Macht",
+   "titleEn": "Content is King - when identity, attention and power are at stake",
+   "ects": 5
+  },
+  {
+   "code": "9728814",
+   "title": "Summer School EAFIT Colombia – Entrepreneurship in a cross-cultural context",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9733118",
+   "title": "Innosuisse Start-up Training",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9774564",
+   "title": "Principles of Management",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9774570",
+   "title": "Kritisches Denken & Wissenschaftliches Schreiben",
+   "titleEn": "Critical Thinking & Academic Writing",
+   "ects": 6
+  },
+  {
+   "code": "9774571",
+   "title": "Angewandte Mathematik 1",
+   "titleEn": "Applied Mathematics 1",
+   "ects": 3
+  },
+  {
+   "code": "9774574",
+   "title": "Organisational Behaviour",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9774578",
+   "title": "Statistik 1",
+   "titleEn": "Statistics 1",
+   "ects": 3
+  },
+  {
+   "code": "9776613",
+   "title": "Principles of Management",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9776616",
+   "title": "Critical Thinking & Academic Writing",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9776618",
+   "title": "Applied Mathematics 1",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9776619",
+   "title": "Organisational Behaviour",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9776620",
+   "title": "Statistics 1",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9776627",
+   "title": "Statistics 2",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9776631",
+   "title": "Digital Business",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9776645",
+   "title": "Statistik 2",
+   "titleEn": "Statistics 2",
+   "ects": 3
+  },
+  {
+   "code": "9776655",
+   "title": "Digital Business",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9776665",
+   "title": "Grundlagen Programmierung",
+   "titleEn": "Programming Foundations",
+   "ects": 6
+  },
+  {
+   "code": "9776667",
+   "title": "Geschäftsprozessmanagement",
+   "titleEn": "Business Process Management",
+   "ects": 6
+  },
+  {
+   "code": "9776676",
+   "title": "Programming Foundations",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9785785",
+   "title": "International Business",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827876",
+   "title": "Financial Management",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827881",
+   "title": "Finanzmanagement",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827885",
+   "title": "Digital Ethics",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827887",
+   "title": "Ethik & Technik",
+   "titleEn": "Digital Ethics",
+   "ects": 3
+  },
+  {
+   "code": "9827889",
+   "title": "Digital Marketing",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827890",
+   "title": "Digital Marketing",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827891",
+   "title": "Datenbanktechnologien",
+   "titleEn": "Database Technology",
+   "ects": 6
+  },
+  {
+   "code": "9827892",
+   "title": "Web-based Applications",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9827912",
+   "title": "Betriebliche IT-Systeme",
+   "titleEn": "Enterprise Systems",
+   "ects": 3
+  },
+  {
+   "code": "9827914",
+   "title": "Enterprise Systems",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9827917",
+   "title": "Webbasierte Anwendungen",
+   "titleEn": "Web-based Applications",
+   "ects": 6
+  },
+  {
+   "code": "9845636",
+   "title": "Chinese Basic Communication A1",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9845639",
+   "title": "Chinese Basic Communication A2",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9845642",
+   "title": "Intermediate Chinese for Business B1",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9845646",
+   "title": "Spanisch A1",
+   "titleEn": "Spanish A1",
+   "ects": 3
+  },
+  {
+   "code": "9845647",
+   "title": "Spanisch A2",
+   "titleEn": "Spanish A2",
+   "ects": 3
+  },
+  {
+   "code": "9845649",
+   "title": "Italienisch A1",
+   "titleEn": "Italian A1",
+   "ects": 3
+  },
+  {
+   "code": "9845651",
+   "title": "Italienisch A2",
+   "titleEn": "Italian A2",
+   "ects": 3
+  },
+  {
+   "code": "9845652",
+   "title": "Business English B2/C1 - Current Topics",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9845755",
+   "title": "Einblick in die Strafjustiz - Besuch und Analyse einer Gerichtsverhandlung",
+   "titleEn": "Insight into Criminal Justice System - Attending and Analysing a Court Hearing",
+   "ects": 2
+  },
+  {
+   "code": "9847298",
+   "title": "Russisch Basic A1.1",
+   "titleEn": "Russian Basic A1.1",
+   "ects": 3
+  },
+  {
+   "code": "9847301",
+   "title": "Russisch Basic to Intermediate A1.2",
+   "titleEn": "Russian Basic to Intermediate A1.2",
+   "ects": 3
+  },
+  {
+   "code": "9847306",
+   "title": "Quantencomputing",
+   "titleEn": "Quantum Computing",
+   "ects": 3
+  },
+  {
+   "code": "9847826",
+   "title": "German Basic A1",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9852233",
+   "title": "Spanisch B1",
+   "titleEn": "Spanish B1",
+   "ects": 3
+  },
+  {
+   "code": "9853140",
+   "title": "Blockchain",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9853148",
+   "title": "Mastering learning strategies",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9870393",
+   "title": "Job reflection 1",
+   "titleEn": null,
+   "ects": 6
+  },
+  {
+   "code": "9879640",
+   "title": "IT Project Management",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9879643",
+   "title": "IT Projektmanagement",
+   "titleEn": "IT Project Management",
+   "ects": 3
+  },
+  {
+   "code": "9881436",
+   "title": "Berufsreflexion 1",
+   "titleEn": "Jobreflection 1",
+   "ects": 6
+  },
+  {
+   "code": "9897612",
+   "title": "From Likes to Links: Social Network Analysis",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9897614",
+   "title": "Spanisch B2",
+   "titleEn": "Spanish B2",
+   "ects": 3
+  },
+  {
+   "code": "9897618",
+   "title": "Französisch B1-B2",
+   "titleEn": "French B1-B2",
+   "ects": 3
+  },
+  {
+   "code": "9897620",
+   "title": "Science 3: Urknall, Energie und Gene",
+   "titleEn": "Science 3: Big Bang, Energy and Genes",
+   "ects": 3
+  },
+  {
+   "code": "9897621",
+   "title": "Science 4: Technik, Klima und Zukunft",
+   "titleEn": "Science 4: Technology, Climate and Future",
+   "ects": 3
+  },
+  {
+   "code": "9897622",
+   "title": "Interreligiöse Kompetenz im Management",
+   "titleEn": "Interreligious Competence in Management",
+   "ects": 2
+  },
+  {
+   "code": "9897623",
+   "title": "Public Management",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9897625",
+   "title": "Geschichte des Wirtschaftsrechts",
+   "titleEn": "History of Economic Law",
+   "ects": 3
+  },
+  {
+   "code": "9897627",
+   "title": "Zwischen Motion und Medienhype: Wie Aargauer Politik gemacht wird",
+   "titleEn": "Between Motions and Media Hype: How Politics Is Made in Aargau",
+   "ects": 2
+  },
+  {
+   "code": "9898673",
+   "title": "Balanced You – Mental stark, ruhig und fokussiert",
+   "titleEn": "Balanced You – Mentally strong, calm, and focused",
+   "ects": 3
+  },
+  {
+   "code": "9898676",
+   "title": "Campus Global Brugg: Ukraine – der Krieg",
+   "titleEn": "Campus Global Brugg: Ukraine – the war",
+   "ects": 2
+  },
+  {
+   "code": "9898680",
+   "title": "Generative KI für Unternehmen",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9898681",
+   "title": "Starte deine Karriere - gestalte deine Zukunft",
+   "titleEn": "Start your career — shape your future",
+   "ects": 3
+  },
+  {
+   "code": "9898683",
+   "title": "Migration - Potentiale und Herausforderungen",
+   "titleEn": "Migration - potential and challenges (IP)",
+   "ects": 3
+  },
+  {
+   "code": "9898685",
+   "title": "Probleme der modernen Gesellschaft",
+   "titleEn": "Problems of todays society",
+   "ects": 3
+  },
+  {
+   "code": "9898687",
+   "title": "Smart Basel",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9898691",
+   "title": "Strafrecht in der Praxis",
+   "titleEn": "Criminal Law in practice",
+   "ects": 3
+  },
+  {
+   "code": "9898694",
+   "title": "Wein und Wirtschaft: Von der Rebe ins Glas und zum Gaumen",
+   "titleEn": "Wine and Business: From Vineyard to Glass to Palate",
+   "ects": 3
+  },
+  {
+   "code": "9898696",
+   "title": "Zeitgeschichte in Berlin: Zeitzeugen erzählen von der DDR-Planwirtschaft",
+   "titleEn": "Contemporary Hisory in Berlin: witness tell of the GDR's planned economy",
+   "ects": 3
+  },
+  {
+   "code": "9898698",
+   "title": "Zeitgeschichte: Osteuropa selbst entdecken",
+   "titleEn": "Contemporary History: Discover Eastern Europe for yourself",
+   "ects": 3
+  },
+  {
+   "code": "9898709",
+   "title": "Die Geschichte von Korruption und Wirtschaftskriminalität",
+   "titleEn": "The History of Corruption and Economic Crime",
+   "ects": 3
+  },
+  {
+   "code": "9898716",
+   "title": "ESG & Tokenization: impact driven business models",
+   "titleEn": null,
+   "ects": 5
+  },
+  {
+   "code": "9902054",
+   "title": "Challenges in the Global Economic System",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9903467",
+   "title": "SAP-Zertifizierung",
+   "titleEn": "SAP certification",
+   "ects": 3
+  },
+  {
+   "code": "9903479",
+   "title": "Soziale Roboter",
+   "titleEn": "Social robots",
+   "ects": 3
+  },
+  {
+   "code": "9903769",
+   "title": "Bank, Mobile and Crypto Payments",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9903770",
+   "title": "AI-assisted Software Developement",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9903775",
+   "title": "The Trust Factor: AI for Business Transformation",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9903780",
+   "title": "Digital Health",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9903784",
+   "title": "AI Risks and Enlightenment",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904554",
+   "title": "Japanisch Basic A1.1",
+   "titleEn": "Japanese Basic A1.1",
+   "ects": 3
+  },
+  {
+   "code": "9904904",
+   "title": "Die Psychodynamik des Menschen",
+   "titleEn": "Human psychodynamic",
+   "ects": 2
+  },
+  {
+   "code": "9904908",
+   "title": "Accessing the Chinese Mind",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904909",
+   "title": "EU Institutions and International Organisations",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904910",
+   "title": "Generative AI for Business",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904934",
+   "title": "The Swiss Banking Sector",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904937",
+   "title": "Bloodlands. A Brief History of Central & Eastern Europe",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904938",
+   "title": "Taiwan Study Tour",
+   "titleEn": null,
+   "ects": 3
+  },
+  {
+   "code": "9904945",
+   "title": "Einblicke in innovative Schweizer KMU",
+   "titleEn": "Insights into innovative Swiss companies",
+   "ects": 3
+  },
+  {
+   "code": "9904949",
+   "title": "Sportmarketing & eSports",
+   "titleEn": "Sport marketing & eSports",
+   "ects": 3
+  },
+  {
+   "code": "9904951",
+   "title": "Wirtschaftsethik: Umgang mit ethischen Dilemma-Situationen",
+   "titleEn": "Business Ethics: Dealing with ethical dilemma situations",
+   "ects": 3
+  },
+  {
+   "code": "9905077",
+   "title": "Digitales & Personal Branding in Sozialen Medien",
+   "titleEn": "Digital & Personal Branding in Social Media",
+   "ects": 3
+  },
+  {
+   "code": "9905080",
+   "title": "China, die unbekannte Weltmacht",
+   "titleEn": "China, the unknown world power",
+   "ects": 2
+  },
+  {
+   "code": "9905081",
+   "title": "Auftrittskompetenz stärken",
+   "titleEn": "Strengthen Appearance Skills",
+   "ects": 2
+  },
+  {
+   "code": "9905082",
+   "title": "Auftrittskompetenz: Rolle, Führen, Glaubwürdigkeit",
+   "titleEn": "Appearance Skills: role, leadership, credibility",
+   "ects": 2
+  }
+ ]
+}
