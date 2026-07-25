@@ -415,8 +415,15 @@
       };
       h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
       h.reportSize = function () {
+        // Height comes from the content root, not documentElement.scrollHeight:
+        // the latter is floored at the viewport, so once the host has grown the
+        // frame the widget could never ask for a SMALLER one again — collapsing
+        // a section would leave an oversized, mostly blank card in the chat.
+        var root = document.getElementById("root");
         post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
-               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+               params: { width: document.documentElement.scrollWidth,
+                         height: root ? Math.ceil(root.getBoundingClientRect().height)
+                                      : document.documentElement.scrollHeight } });
       };
       request("ui/initialize", {
         protocolVersion: "2026-01-26",
@@ -1134,9 +1141,16 @@
   var navCode = null;         // module row still to be revealed, null when idle
   var navScrolled = false;    // scroll already done — later renders only re-flash
   var navOwnScroller = false; // capped frame: the widget scrolls itself
-  var navDeadline = 0;        // stop waiting for a frame resize that never comes
+  var navHardStop = 0;        // ...but never defer the scroll indefinitely
   var navTimer = null;
   var navSeq = 0;
+  // How long a host gets to act on a size report before we accept that it will
+  // not resize. Measured per report, not per click: a host update re-rendering
+  // the widget mid-navigation sends a NEWER size, and scrolling while that one
+  // is still in flight is exactly the race this whole change is about.
+  var NAV_FRAME_WAIT_MS = 1200;
+  // Renders can keep arriving, so the per-report wait alone could stall forever.
+  var NAV_HARD_STOP_MS = 4000;
 
   // Hosts that cap the widget in a fixed-height, scrollable frame have no resize
   // to wait for — their own scroller is the one to move, so those scroll at once.
@@ -1171,7 +1185,7 @@
     navCode = code;
     navScrolled = false;
     navSeq++;
-    navDeadline = Date.now() + 1200;
+    navHardStop = Date.now() + NAV_HARD_STOP_MS;
     if (navTimer) { clearTimeout(navTimer); navTimer = null; }
     render(); // ends in revealNav()
   }
@@ -1185,8 +1199,13 @@
     el.classList.add("nav-flash");
     if (navScrolled) return; // already in view — a re-render must not yank the page
     if (navTimer) { clearTimeout(navTimer); navTimer = null; }
-    var settled = navOwnScroller || Date.now() >= navDeadline ||
-      document.documentElement.scrollHeight <= window.innerHeight + 2;
+    // askedAt is refreshed by every render, so the wait below always tracks the
+    // most recent size report rather than the click that started the navigation.
+    var now = Date.now();
+    var settled = navOwnScroller ||
+      document.documentElement.scrollHeight <= window.innerHeight + 2 ||
+      now - askedAt >= NAV_FRAME_WAIT_MS ||
+      now >= navHardStop;
     if (!settled) { navTimer = setTimeout(revealNav, 40); return; }
     navScrolled = true;
     el.scrollIntoView({ behavior: "smooth", block: "center" });

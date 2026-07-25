@@ -318,8 +318,15 @@
         request("ui/message", { role: "user", content: [{ type: "text", text: text }] }).catch(function () {});
       };
       h.reportSize = function () {
+        // Height comes from the content root, not documentElement.scrollHeight:
+        // the latter is floored at the viewport, so once the host has grown the
+        // frame the widget could never ask for a SMALLER one again — collapsing
+        // a section would leave an oversized, mostly blank card in the chat.
+        var root = document.getElementById("root");
         post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
-               params: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight } });
+               params: { width: document.documentElement.scrollWidth,
+                         height: root ? Math.ceil(root.getBoundingClientRect().height)
+                                      : document.documentElement.scrollHeight } });
       };
       request("ui/initialize", {
         protocolVersion: "2026-01-26",
