@@ -132,11 +132,16 @@ test.describe("timetable → module row", () => {
     const frame = await openWidget(page, { maxFrameHeight: 500 });
     const code = await deepestTimetableBlock(frame);
 
+    // Timed from the click itself — scrolling the timetable into view first would
+    // otherwise count against the budget on a loaded runner.
+    const block = await frame.$(`.tt-block[data-nav="${code}"]`);
+    await block.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(250);
     const startedAt = Date.now();
-    await clickBlock(page, frame, code);
+    await block.click();
     // A capped host never grows the frame, so there is nothing to wait for: the
     // scroll must not sit out the per-report wait (1.2s) before starting.
-    await expect.poll(async () => (await geometry(page, frame)).widgetScrollTop,
+    await expect.poll(async () => frame.evaluate(() => document.scrollingElement.scrollTop),
       { timeout: 4000, intervals: [25] }).toBeGreaterThan(0);
     expect(Date.now() - startedAt).toBeLessThan(1000);
 
@@ -148,11 +153,19 @@ test.describe("timetable → module row", () => {
     const frame = await openWidget(page);
     const codes = await timetableBlocks(frame);
 
+    const before = await page.evaluate(() => window.scrollY);
     await clickBlock(page, frame, await deepestTimetableBlock(frame));
-    await page.waitForTimeout(2600); // past the flash window
-    await pushHostUpdate(page, "de-CH");
-    await page.waitForTimeout(300);
+    expect(await frame.$$eval("li.nav-flash", (e) => e.length)).toBe(1);
 
+    // The cue's lifetime starts when the scroll lands, so wait for that rather
+    // than counting from the click — the class itself lingers on the row until
+    // the next render, which is precisely what this test is about.
+    await expect.poll(async () => page.evaluate(() => window.scrollY),
+      { timeout: 8000, intervals: [50] }).not.toBe(before);
+    await page.waitForTimeout(2400); // past the cue's 2s window
+
+    await pushHostUpdate(page, "de-CH"); // rebuilds the list
+    await page.waitForTimeout(400);
     expect(await frame.$$eval("li.nav-flash", (e) => e.length)).toBe(0);
   });
 });
