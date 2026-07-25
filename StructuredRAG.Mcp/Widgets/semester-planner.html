@@ -1154,13 +1154,11 @@
   // Renders can keep arriving, so the per-report wait alone could stall forever.
   var NAV_HARD_STOP_MS = 4000;
 
-  // Hosts that cap the widget in a fixed-height, scrollable frame have no resize
-  // to wait for — their own scroller is the one to move, so those scroll at once.
-  // Momentary overflow does NOT identify them: the document also outgrows the
-  // frame in the window between a size report and the host acting on it. What
-  // does identify them is a host that has had its chance and still keeps the
-  // frame smaller than the height the last report asked for.
-  var HOST_GRACE_MS = 500;
+  // Scrolling is safe as soon as the document fits the frame: the scroll then
+  // propagates to the host page instead of moving the widget's own scroller, and
+  // a host page's scroll survives the frame being resized underneath it — only
+  // the widget's internal scroll gets clamped. Overflow is the dangerous state,
+  // and it does NOT mean the host will never grow the frame.
   var askedHeight = 0, askedAt = 0;
 
   function reportSize() {
@@ -1173,8 +1171,13 @@
       (root ? root.scrollHeight : document.documentElement.scrollHeight);
     askedAt = Date.now();
   }
+  // A host that has had the full wait and still keeps the frame smaller than we
+  // asked caps the widget in a scrollable frame: no resize is coming, so its own
+  // scroller is the one to move. Deliberately the SAME threshold as the wait —
+  // a shorter one classifies a slow host's pending resize as "capped" while the
+  // wait still considers it in flight, and then scrolls into the resize.
   function frameIsCapped() {
-    return askedHeight > 0 && Date.now() - askedAt > HOST_GRACE_MS &&
+    return askedHeight > 0 && Date.now() - askedAt >= NAV_FRAME_WAIT_MS &&
       window.innerHeight < askedHeight - 2;
   }
 

@@ -85,12 +85,16 @@ async function rowInView(frame, code) {
   return { visible: box.y >= 0 && box.y + slice <= VIEWPORT.height, y: Math.round(box.y) };
 }
 
-/** Clicks a category accordion's summary — the native <details> toggle path. */
-async function toggleFirstCategory(frame) {
+/**
+ * Clicks a category accordion's summary — the native <details> toggle path,
+ * which changes the widget's height without going through render().
+ */
+async function toggleCategory(frame, index = 0) {
   // Re-queried each call: a render replaces #root wholesale, detaching handles.
-  const summary = await frame.$("details.cat > summary");
-  await summary.evaluate((el) => el.click());
+  const summaries = await frame.$$("details.cat > summary");
+  await summaries[index].evaluate((el) => el.click());
 }
+const toggleFirstCategory = (frame) => toggleCategory(frame, 0);
 
 /** Pushes a host-context change, which makes the widget re-render mid-flight. */
 async function pushHostUpdate(page, locale = "en-US") {
@@ -104,5 +108,6 @@ async function pushHostUpdate(page, locale = "en-US") {
 
 module.exports = {
   PORT, VIEWPORT, openWidget, settle, geometry,
-  timetableBlocks, deepestTimetableBlock, rowInView, toggleFirstCategory, pushHostUpdate,
+  timetableBlocks, deepestTimetableBlock, rowInView,
+  toggleCategory, toggleFirstCategory, pushHostUpdate,
 };

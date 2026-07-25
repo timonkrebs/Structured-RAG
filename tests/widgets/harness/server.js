@@ -33,12 +33,16 @@ const HOST_PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>widge
 <div id="card" style="max-width:760px;margin:0 auto;border:1px solid #ccc;overflow:hidden">
   <div id="slot"></div>
 </div>
-<div style="height:2000px;background:#f2f2f2;padding:8px">transcript below</div>
+<div id="below" style="background:#f2f2f2;padding:8px">transcript below</div>
 <script>
 var q = new URLSearchParams(location.search);
 var WIDGET = q.get("w") || "semester-planner.html";
 var RESIZE_DELAY = q.get("delay") === null ? 60 : +q.get("delay");
 var MAXH = +(q.get("maxh") || 0);
+// How much transcript sits below the widget. A widget at the very end of the
+// conversation is the normal case, and it changes what a frame resize does to
+// the surrounding scroll position.
+document.getElementById("below").style.height = (q.get("below") === null ? 2000 : +q.get("below")) + "px";
 window.__resizes = 0;
 window.__lastReported = 0;
 window.__ready = false;

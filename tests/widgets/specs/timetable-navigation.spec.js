@@ -5,8 +5,8 @@
 // scroller, dumping the student at the top of the widget.
 const { test, expect } = require("@playwright/test");
 const {
-  VIEWPORT, openWidget, geometry, timetableBlocks, deepestTimetableBlock, rowInView,
-  toggleFirstCategory, pushHostUpdate,
+  VIEWPORT, openWidget, settle, timetableBlocks, deepestTimetableBlock, rowInView,
+  toggleCategory, toggleFirstCategory, pushHostUpdate,
 } = require("../harness/widget");
 
 test.use({ viewport: VIEWPORT });
@@ -124,6 +124,59 @@ test.describe("timetable → module row", () => {
     const code = await deepestTimetableBlock(frame);
     await clickBlock(page, frame, code);
     await page.waitForTimeout(1800);
+
+    expect(await rowInView(frame, code)).toMatchObject({ visible: true });
+  });
+
+  test("lands on the row when a frame shrink is still in flight", async ({ page }) => {
+    // Collapsing sections asks the host for a SMALLER frame, so the click below
+    // happens while a resize is pending and the document fits the old, larger
+    // frame. That is safe — the scroll goes to the host page, which a frame
+    // resize does not disturb — and this pins that down: the widget must not
+    // start scrolling itself here, or the pending shrink would clamp it.
+    const frame = await openWidget(page, { resizeDelay: 800 });
+    await toggleCategory(frame, 0);
+    await toggleCategory(frame, 1);
+    await settle(page, frame, 800);
+
+    const code = await deepestTimetableBlock(frame);
+    const block = await frame.$(`.tt-block[data-nav="${code}"]`);
+    await block.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(200);
+
+    // Collapse both, then click before the host has applied either shrink: the
+    // click reopens one category, so the document is smaller than the frame it
+    // is sitting in.
+    await toggleCategory(frame, 0);
+    await toggleCategory(frame, 1);
+    expect(await frame.evaluate(() =>
+      document.documentElement.scrollHeight <= window.innerHeight + 2)).toBe(true);
+    await block.click();
+    // The widget's own scroller must stay put; the host page does the scrolling.
+    expect(await frame.evaluate(() => document.scrollingElement.scrollTop)).toBe(0);
+    await page.waitForTimeout(3000);
+
+    expect(await rowInView(frame, code)).toMatchObject({ visible: true });
+  });
+
+  test("a host slower than the capped-frame grace is not mistaken for capped", async ({ page }) => {
+    // An auto-sizing host that takes longer than the grace period to honour a
+    // report still overflows the frame when the student clicks. Reading that as
+    // a fixed-height host scrolls immediately, and the late resize resets it.
+    const frame = await openWidget(page, { resizeDelay: 900 });
+    const code = await deepestTimetableBlock(frame);
+    // Positioned before the window opens: scrolling the timetable into view
+    // afterwards would eat most of it and the click would land after the resize.
+    const block = await frame.$(`.tt-block[data-nav="${code}"]`);
+    await block.scrollIntoViewIfNeeded();
+
+    await toggleCategory(frame, 0); // size report the host will honour at +900ms
+    await page.waitForTimeout(600);  // past a 500ms grace, before the resize lands
+    expect(await frame.evaluate(() =>
+      document.documentElement.scrollHeight > window.innerHeight + 2)).toBe(true);
+
+    await block.click();
+    await page.waitForTimeout(3000);
 
     expect(await rowInView(frame, code)).toMatchObject({ visible: true });
   });
