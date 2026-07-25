@@ -822,7 +822,7 @@
       // In MCP Apps the tool result arrives asynchronously after ui/initialize —
       // don't flash the "no data" message while waiting.
       root.innerHTML = '<div class="empty">' + esc(Host.mode === "mcp" && !Host.ready ? "…" : s.noData) + "</div>";
-      Host.reportSize();
+      reportSize();
       return;
     }
 
@@ -969,7 +969,7 @@
       "</div>";
 
     root.innerHTML = html;
-    Host.reportSize();
+    reportSize();
     // The row a timetable click is navigating to was just rebuilt — re-apply the
     // flash and, if the frame has caught up with the reported size, the scroll.
     revealNav();
@@ -1133,10 +1133,29 @@
   // trigger at any time (they would otherwise replace the row mid-scroll).
   var navCode = null;         // module row still to be revealed, null when idle
   var navScrolled = false;    // scroll already done — later renders only re-flash
-  var navOwnScroller = false; // fixed-height frame: the widget scrolls itself
+  var navOwnScroller = false; // capped frame: the widget scrolls itself
   var navDeadline = 0;        // stop waiting for a frame resize that never comes
   var navTimer = null;
   var navSeq = 0;
+
+  // Hosts that cap the widget in a fixed-height, scrollable frame have no resize
+  // to wait for — their own scroller is the one to move, so those scroll at once.
+  // Momentary overflow does NOT identify them: the document also outgrows the
+  // frame in the window between a size report and the host acting on it. What
+  // does identify them is a host that has had its chance and still keeps the
+  // frame smaller than the height the last report asked for.
+  var HOST_GRACE_MS = 500;
+  var askedHeight = 0, askedAt = 0;
+
+  function reportSize() {
+    Host.reportSize();
+    askedHeight = document.documentElement.scrollHeight;
+    askedAt = Date.now();
+  }
+  function frameIsCapped() {
+    return askedHeight > 0 && Date.now() - askedAt > HOST_GRACE_MS &&
+      window.innerHeight < askedHeight - 2;
+  }
 
   function navigateTo(code) {
     var d = data();
@@ -1145,10 +1164,10 @@
       if (c.entries.some(function (e) { return e.module.code === code; })) catOpen[c.label] = true;
     });
     if (blockedEntries().some(function (e) { return e.module.code === code; })) blockedOpen = true;
-    // Measured BEFORE the render: a widget that already overflows its frame sits
-    // in a host that scrolls it internally rather than resizing it, so there is
-    // no resize to wait for and its own scroller is the right one to move.
-    navOwnScroller = document.documentElement.scrollHeight > window.innerHeight + 2;
+    // Classified BEFORE the render, while the reference still describes a frame
+    // the host has settled on — the render below asks for a new size and starts
+    // that clock over.
+    navOwnScroller = frameIsCapped();
     navCode = code;
     navScrolled = false;
     navSeq++;
@@ -1249,6 +1268,11 @@
     if (!ev.target.matches) return;
     if (ev.target.matches("details.blocked")) blockedOpen = ev.target.open;
     else if (ev.target.matches("details.cat")) catOpen[ev.target.getAttribute("data-cat")] = ev.target.open;
+    else return;
+    // The native expansion changes the widget's height without going through
+    // render(), so the host would never hear about it: an auto-sizing frame
+    // stays at its old size and clips the category the student just opened.
+    reportSize();
   }, true);
   document.getElementById("root").addEventListener("change", function (ev) {
     var el = ev.target;
