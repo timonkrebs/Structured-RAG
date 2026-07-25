@@ -318,15 +318,17 @@
         request("ui/message", { role: "user", content: [{ type: "text", text: text }] }).catch(function () {});
       };
       h.reportSize = function () {
-        // Height comes from the content root, not documentElement.scrollHeight:
-        // the latter is floored at the viewport, so once the host has grown the
-        // frame the widget could never ask for a SMALLER one again — collapsing
-        // a section would leave an oversized, mostly blank card in the chat.
+        // Height comes from the content root's scrollHeight, and returns what was
+        // sent so callers can track it. documentElement.scrollHeight is floored at
+        // the viewport — a widget measuring that way could never ask for a SMALLER
+        // frame, so collapsing a section would leave a blank card in the chat —
+        // while the root's bounding box would miss absolutely positioned overflow
+        // such as the autocomplete list. scrollHeight covers both.
         var root = document.getElementById("root");
+        var height = root ? root.scrollHeight : document.documentElement.scrollHeight;
         post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
-               params: { width: document.documentElement.scrollWidth,
-                         height: root ? Math.ceil(root.getBoundingClientRect().height)
-                                      : document.documentElement.scrollHeight } });
+               params: { width: document.documentElement.scrollWidth, height: height } });
+        return height;
       };
       request("ui/initialize", {
         protocolVersion: "2026-01-26",
