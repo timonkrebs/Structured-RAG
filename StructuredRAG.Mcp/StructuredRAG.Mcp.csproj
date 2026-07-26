@@ -16,8 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- ChatGPT Apps-SDK widget templates, served via resources/read (see Resources/WidgetResources.cs) -->
+    <!-- Widget templates served via resources/read, plus the shared design tokens and
+         host bridge they pull in through {{include:...}} (see Resources/WidgetResources.cs) -->
     <EmbeddedResource Include="Widgets\*.html" />
+    <EmbeddedResource Include="Widgets\_tokens.css" />
+    <EmbeddedResource Include="Widgets\_host.js" />
   </ItemGroup>
 
 </Project>

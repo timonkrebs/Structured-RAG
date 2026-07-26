@@ -63,7 +63,10 @@ with widget support they render interactive UI:
   re-plans the path live (the widget re-calls `plan_path`).
 
 The same self-contained HTML files (`Widgets/*.html`, embedded in the assembly)
-serve **both host conventions** — each widget detects its host at runtime:
+serve **both host conventions** — each widget detects its host at runtime. The
+host bridge that abstracts the two, the shared helpers and the design tokens live
+in `Widgets/_host.js` and `Widgets/_tokens.css`, inlined into each page at serve
+time (see DEVELOPMENT.md), so the pages stay self-contained without four copies:
 
 | | OpenAI Apps SDK (ChatGPT) | [MCP Apps extension](https://modelcontextprotocol.io/extensions/apps/overview) (Claude, VS Code, …) |
 |---|---|---|

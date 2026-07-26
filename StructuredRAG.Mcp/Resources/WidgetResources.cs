@@ -174,13 +174,47 @@ public static class WidgetResources
 
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> HtmlCache = new();
 
+    /// <summary>
+    /// A line whose only content is <c>{{include:name}}</c> inside a line comment —
+    /// <c>/* {{include:_tokens.css}} */</c> in CSS, <c>// {{include:_host.js}}</c> in JS.
+    /// The whole line is replaced by the named resource, so the shared design tokens
+    /// and the host bridge live in one file each instead of being copied into all four
+    /// widgets. Character classes are <c>[ \t]</c> rather than <c>\s</c> on purpose: a
+    /// newline-crossing match would swallow the surrounding structure.
+    ///
+    /// The trailing <c>\r?</c> is load-bearing on Windows checkouts. .NET's multiline
+    /// <c>$</c> matches immediately before <c>\n</c>, leaving the <c>\r</c> of a CRLF
+    /// line unconsumed — without it no marker matches, and because the guard below uses
+    /// this same pattern it would not fire either: every widget would ship with its
+    /// markers intact and die at <c>boot()</c>. .gitattributes keeps these files LF, but
+    /// the pattern does not depend on that holding.
+    /// </summary>
+    private static readonly System.Text.RegularExpressions.Regex IncludeMarker = new(
+        @"^[ \t]*(?://|/\*)[ \t]*\{\{include:([\w.\-]+)\}\}[ \t]*(?:\*/)?[ \t]*\r?$",
+        System.Text.RegularExpressions.RegexOptions.Multiline |
+        System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    // Widgets are served on every resources/read, so the composed HTML is cached.
     private static string LoadWidgetHtml(string fileName) => HtmlCache.GetOrAdd(fileName, static f =>
     {
+        var html = IncludeMarker.Replace(ReadWidgetResource(f),
+            m => ReadWidgetResource(m.Groups[1].Value).TrimEnd('\r', '\n'));
+        // Substitution is a single pass, so a marker inside an included file would
+        // ship verbatim to the host. Fail loudly instead of serving a broken widget.
+        if (IncludeMarker.IsMatch(html))
+            throw new InvalidOperationException($"Unresolved include marker in widget '{f}'.");
+        return html;
+    });
+
+    private static string ReadWidgetResource(string fileName)
+    {
         var assembly = typeof(WidgetResources).Assembly;
-        var resourceName = $"StructuredRAG.Mcp.Widgets.{f}";
+        var resourceName = $"StructuredRAG.Mcp.Widgets.{fileName}";
         using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Embedded widget template '{resourceName}' not found.");
+            ?? throw new InvalidOperationException(
+                $"Embedded widget resource '{resourceName}' not found. Available: " +
+                string.Join(", ", assembly.GetManifestResourceNames()));
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
-    });
+    }
 }

@@ -4,84 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* FHNW design system × modern glass. Keep the token block in sync across
-     all four widgets (start, module-comparer, path-planner, semester-planner).
-     Palette and type cues come from fhnw.ch: yellow #fde70e (hover #fef16e),
-     ink #141414, muted #767676, dark-olive #716800 as the yellow-on-white
-     text stand-in, Poppins/Inter type stacks. Glassmorphism adds translucent,
-     blurred panels, soft shadows and rounded geometry. Dark mode is its own
-     selected set, not an automatic flip. The body stays transparent so the
-     host's card background shows through; --surface is only for elements
-     that need an opaque fill (inputs, the sticky row-label column). */
-  :root {
-    color-scheme: light;
-    --surface: #ffffff;
-    --glass: rgba(255, 255, 255, 0.58);
-    --glass-hi: rgba(255, 255, 255, 0.82);
-    --glass-border: rgba(20, 20, 20, 0.10);
-    --plane: rgba(20, 20, 20, 0.045);
-    --ink: #141414;
-    --ink-2: #535353;
-    --muted: #767676;
-    --hairline: rgba(20, 20, 20, 0.12);
-    --ring: rgba(20, 20, 20, 0.22);
-    --accent: #fde70e;
-    --accent-hover: #fef16e;
-    --accent-ink: #141414;
-    --accent-text: #716800;
-    --accent-soft: rgba(253, 231, 14, 0.16);
-    --accent-edge: rgba(20, 20, 20, 0.35);
-    --check: #141414;
-    --warn: #b87e00;
-    --good-text: #3d8730;
-    --blur: saturate(1.6) blur(14px);
-    --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
-    --shadow-soft: 0 6px 18px rgba(20, 20, 20, 0.06);
-  }
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --surface: #1f1f1f;
-    --glass: rgba(30, 30, 30, 0.55);
-    --glass-hi: rgba(48, 48, 48, 0.74);
-    --glass-border: rgba(255, 255, 255, 0.12);
-    --plane: rgba(255, 255, 255, 0.055);
-    --ink: #ffffff;
-    --ink-2: #c9c9c9;
-    --muted: #999999;
-    --hairline: rgba(255, 255, 255, 0.13);
-    --ring: rgba(255, 255, 255, 0.24);
-    --accent: #fde70e;
-    --accent-hover: #feec38;
-    --accent-ink: #141414;
-    --accent-text: #fde70e;
-    --accent-soft: rgba(253, 231, 14, 0.14);
-    --accent-edge: rgba(253, 231, 14, 0.50);
-    --check: #fde70e;
-    --warn: #fab219;
-    --good-text: #5ccb48;
-    --shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.35);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: transparent;
-    color: var(--ink);
-    font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  /* Brand glow behind the glass — a hint of FHNW yellow for panels to
-     refract; low alpha keeps the host card readable underneath. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(420px 240px at 95% -70px, rgba(253, 231, 14, 0.16), transparent 70%),
-      radial-gradient(360px 260px at -90px 110%, rgba(253, 231, 14, 0.08), transparent 70%);
-  }
+  /* {{include:_tokens.css}} */
   #root { padding: 16px 18px 14px; }
   h1 {
     position: relative; padding-left: 13px;
@@ -94,27 +17,7 @@
     width: 5px; border-radius: 3px;
     background: linear-gradient(180deg, var(--accent-hover), var(--accent));
   }
-  button {
-    font: inherit;
-    color: var(--ink);
-    background: var(--plane);
-    border: 1px solid var(--hairline);
-    border-radius: 9px;
-    padding: 5px 12px;
-    cursor: pointer;
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
-  }
-  button:hover { background: var(--glass-hi); border-color: var(--ring); transform: translateY(-1px); }
-  button:active { transform: none; }
-  button:focus-visible, input:focus-visible {
-    outline: none;
-    border-color: var(--accent-ink);
-    box-shadow: 0 0 0 3px rgba(253, 231, 14, 0.45);
-  }
   button:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: none; }
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
 
   /* Alert strips: yellow brand bar on the left, like the headings. */
   .notice, .footer .err {
@@ -227,7 +130,6 @@
     box-shadow: 0 4px 14px rgba(253, 231, 14, 0.35);
   }
   button#add:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
 </style>
 </head>
 <body>
@@ -236,156 +138,8 @@
 (function () {
   "use strict";
 
-  // ---------- host bridge ----------
-  // Abstracts the two widget host conventions over one interface:
-  //  - OpenAI Apps SDK (ChatGPT): window.openai globals + methods
-  //  - MCP Apps extension (Claude, ...): JSON-RPC 2.0 over postMessage (spec 2026-01-26)
-  var Host = (function () {
-    var h = {
-      mode: "none",       // "openai" | "mcp" | "none"
-      ready: false,       // becomes true once host data has arrived (mcp is async)
-      theme: null,
-      locale: null,
-      toolOutput: null,
-      widgetState: null,  // openai only; MCP Apps has no widget-state store
-      canCall: false,
-      onchange: null,
-      setState: function () {},
-      callTool: function () { return Promise.reject(new Error("no host")); },
-      sendMessage: function () {},
-      openLink: function (url) { window.open(url, "_blank", "noopener"); },
-      reportSize: function () {}
-    };
-    function notify() { if (h.onchange) h.onchange(); }
+  // {{include:_host.js}}
 
-    if (window.openai) {
-      var api = window.openai;
-      h.mode = "openai";
-      h.ready = true;
-      h.theme = api.theme || null;
-      h.locale = api.locale || null;
-      h.toolOutput = api.toolOutput || null;
-      h.widgetState = api.widgetState || null;
-      h.canCall = typeof api.callTool === "function";
-      h.setState = function (state, summary) {
-        // Widget state persists between renders but is NOT reliably model-visible in
-        // ChatGPT. Mirror the model-facing summary into the state snapshot and, where
-        // the host supports ui/update-model-context, push it there too — otherwise a
-        // profile recorded here never reaches the model unless a flow button is used.
-        var snapshot = summary ? Object.assign({}, state, { modelSummary: summary }) : state;
-        if (typeof api.setWidgetState === "function") api.setWidgetState(snapshot);
-        // Always push — an empty summary must CLEAR previously pushed context
-        // (a cleared draft would otherwise stay model-visible), like the MCP branch.
-        if (typeof api.updateModelContext === "function") {
-          try { api.updateModelContext({ content: summary ? [{ type: "text", text: summary }] : [] }); } catch (e) {}
-        }
-      };
-      h.callTool = function (name, args) { return api.callTool(name, args); };
-      h.sendMessage = function (text) { if (typeof api.sendFollowUpMessage === "function") api.sendFollowUpMessage({ prompt: text }); };
-      h.openLink = function (url) {
-        if (typeof api.openExternal === "function") api.openExternal({ href: url });
-        else window.open(url, "_blank", "noopener");
-      };
-      // ChatGPT fires set_globals for many reasons (scroll, keyboard, layout
-      // changes — very frequently on mobile). Re-rendering on every event snaps
-      // open dropdowns shut mid-pick, so only notify when something the widget
-      // actually renders from has changed.
-      var sigOf = function () {
-        var ws; try { ws = JSON.stringify(h.widgetState || null); } catch (e) { ws = ""; }
-        return [h.theme, h.locale, ws].join("|");
-      };
-      var lastSig = sigOf();
-      window.addEventListener("openai:set_globals", function () {
-        var toolChanged = !!api.toolOutput && api.toolOutput !== h.toolOutput;
-        h.theme = api.theme || h.theme;
-        h.locale = api.locale || h.locale;
-        h.toolOutput = api.toolOutput || h.toolOutput;
-        h.widgetState = api.widgetState || h.widgetState;
-        var sig = sigOf();
-        if (!toolChanged && sig === lastSig) return;
-        lastSig = sig;
-        notify();
-      });
-    } else if (window.parent && window.parent !== window) {
-      h.mode = "mcp";
-      h.canCall = true;
-      var nextId = 1, pending = {};
-      var post = function (msg) { window.parent.postMessage(msg, "*"); };
-      var request = function (method, params) {
-        return new Promise(function (resolve, reject) {
-          var id = nextId++;
-          pending[id] = { resolve: resolve, reject: reject };
-          post({ jsonrpc: "2.0", id: id, method: method, params: params });
-        });
-      };
-      window.addEventListener("message", function (ev) {
-        var m = ev.data;
-        if (!m || m.jsonrpc !== "2.0") return;
-        if (m.id !== undefined && m.method === undefined) {
-          var p = pending[m.id];
-          if (!p) return;
-          delete pending[m.id];
-          if (m.error) p.reject(new Error(m.error.message || "host error")); else p.resolve(m.result);
-          return;
-        }
-        if (m.method === "ui/notifications/tool-result") {
-          var pr = m.params || {};
-          if (pr.structuredContent) { h.toolOutput = pr.structuredContent; h.ready = true; notify(); }
-        } else if (m.method === "ui/notifications/host-context-changed") {
-          var c = m.params || {};
-          if (c.theme) h.theme = c.theme;
-          if (c.locale) h.locale = c.locale;
-          notify();
-        }
-      });
-      h.setState = function (state, summary) {
-        // Nearest MCP Apps equivalent of widget state: persist into the model
-        // context (each request overwrites the previous one).
-        request("ui/update-model-context", {
-          structuredContent: state,
-          content: summary ? [{ type: "text", text: summary }] : []
-        }).catch(function () {});
-      };
-      h.callTool = function (name, args) { return request("tools/call", { name: name, arguments: args }); };
-      h.sendMessage = function (text) {
-        // MCP Apps expects content as a ContentBlock ARRAY — validating hosts
-        // reject a bare object, and the send-to-chat buttons silently do nothing.
-        request("ui/message", { role: "user", content: [{ type: "text", text: text }] }).catch(function () {});
-      };
-      h.openLink = function (url) { request("ui/open-link", { url: url }).catch(function () {}); };
-      h.reportSize = function () {
-        // Height comes from the content root's scrollHeight, and returns what was
-        // sent so callers can track it. documentElement.scrollHeight is floored at
-        // the viewport — a widget measuring that way could never ask for a SMALLER
-        // frame, so collapsing a section would leave a blank card in the chat —
-        // while the root's bounding box would miss absolutely positioned overflow
-        // such as the autocomplete list. scrollHeight covers both.
-        var root = document.getElementById("root");
-        var height = root ? root.scrollHeight : document.documentElement.scrollHeight;
-        post({ jsonrpc: "2.0", method: "ui/notifications/size-changed",
-               params: { width: document.documentElement.scrollWidth, height: height } });
-        return height;
-      };
-      request("ui/initialize", {
-        protocolVersion: "2026-01-26",
-        clientInfo: { name: "module-catalog-widget", version: "1.0.0" },
-        capabilities: {},
-        appCapabilities: {}
-      }).then(function (res) {
-        var ctx = (res && res.hostContext) || {};
-        if (ctx.theme) h.theme = ctx.theme;
-        if (ctx.locale) h.locale = ctx.locale;
-        notify();
-      }).catch(function () { notify(); });
-    }
-    return h;
-  })();
-
-  // ---------- i18n ----------
-  function isDe() {
-    var loc = Host.locale || "de";
-    return String(loc).toLowerCase().indexOf("de") === 0;
-  }
   var STR = {
     de: {
       title: "Modulvergleich",
@@ -445,11 +199,6 @@
     }
   };
   function t() { return isDe() ? STR.de : STR.en; }
-  var DAYS = {
-    de: { Monday: "Mo", Tuesday: "Di", Wednesday: "Mi", Thursday: "Do", Friday: "Fr", Saturday: "Sa", Sunday: "So" },
-    en: { Monday: "Mon", Tuesday: "Tue", Wednesday: "Wed", Thursday: "Thu", Friday: "Fri", Saturday: "Sat", Sunday: "Sun" }
-  };
-  function day(d) { return (isDe() ? DAYS.de : DAYS.en)[d] || d; }
 
   // ---------- state ----------
   var current = null;      // {modules:[], notFound:[]} — starts as toolOutput, updated via callTool
@@ -481,31 +230,9 @@
   }
 
   // ---------- helpers ----------
-  function esc(s) {
-    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-  function locTitle(m) { return (!isDe() && m.titleEn) ? m.titleEn : m.title; }
-  function locSummary(m) { return (!isDe() && m.summaryEn) ? m.summaryEn : m.summary; }
   function semesters(m) {
     if ((m.offerings || []).length > 0) return m.offerings.map(function (o) { return o.semesterId; });
     return m.offeredIn || [];
-  }
-  // callTool result → structured payload: prefer structuredContent, fall back to
-  // parsing the JSON text block hosts emit when structured output is unavailable.
-  function extractStructured(res) {
-    if (!res) return null;
-    var sc = res.structuredContent || (res.result && res.result.structuredContent);
-    if (sc) return sc;
-    var content = res.content || (res.result && res.result.content);
-    if (Array.isArray(content)) {
-      var text = content.map(function (c) { return c && c.text ? c.text : ""; }).join("\n");
-      if (text) {
-        try { return JSON.parse(text); } catch (e) { return null; }
-      }
-    }
-    return null;
   }
   function sharedTags(mods) {
     if (mods.length < 2) return {};
@@ -765,47 +492,7 @@
     if (ev.target.id === "add-code") onAddInput(ev.target.value);
   });
 
-  function applyTheme() {
-    var theme = Host.theme ||
-      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    document.documentElement.dataset.theme = theme;
-  }
-
-  // Host-triggered re-renders must never destroy a form control the student is
-  // using: replacing an open <select> closes it before a choice can be made.
-  // Defer the render until the control is committed or left; our own event
-  // handlers keep calling render() directly (the dropdown is closed by then).
-  var hostRenderDeferred = false;
-  function hostRender() {
-    var root = document.getElementById("root");
-    var active = document.activeElement;
-    if (active && root.contains(active) && (active.tagName === "SELECT" || active.tagName === "INPUT")) {
-      if (hostRenderDeferred) return;
-      hostRenderDeferred = true;
-      var done = function (ev) {
-        active.removeEventListener("blur", done);
-        active.removeEventListener("change", done);
-        hostRenderDeferred = false;
-        // Focus moving to another element inside the widget (e.g. clicking an
-        // autocomplete suggestion or a button): rendering right now would replace
-        // the click target mid-gesture — let the click land first, then refresh.
-        if (ev && ev.type === "blur" && ev.relatedTarget && root.contains(ev.relatedTarget)) {
-          setTimeout(hostRender, 150);
-          return;
-        }
-        render();
-      };
-      active.addEventListener("blur", done);
-      active.addEventListener("change", done);
-      return;
-    }
-    render();
-  }
-
-  Host.onchange = function () { applyTheme(); hostRender(); };
-
-  applyTheme();
-  render();
+  boot();
 })();
 </script>
 </body>

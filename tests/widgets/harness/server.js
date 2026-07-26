@@ -94,6 +94,31 @@ fetch("/fixture.json?w=" + WIDGET).then(function (r) { return r.json(); }).then(
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".json": "application/json" };
 
+// The widgets are composed from shared parts: a line holding only
+// {{include:name}} inside a comment is replaced by that file. The server does
+// this in WidgetResources.LoadWidgetHtml — mirrored here so the tests drive the
+// same HTML a host receives, not the un-composed source. Keep the two in sync;
+// a marker that survives substitution is a broken widget, so it throws.
+//
+// The \r? is redundant here (JS treats \r as a line terminator, so $ matches
+// before it) but not in .NET, where its absence silently breaks every CRLF
+// checkout. Kept identical to the C# pattern precisely so this harness cannot
+// compose a file the real server would choke on and leave the suite green.
+const INCLUDE_MARKER = /^[ \t]*(?:\/\/|\/\*)[ \t]*\{\{include:([\w.\-]+)\}\}[ \t]*(?:\*\/)?[ \t]*\r?$/gm;
+
+function composeWidget(file) {
+  const html = fs.readFileSync(file, "utf8").replace(INCLUDE_MARKER, (_, name) => {
+    const part = path.join(WIDGETS, name);
+    if (!fs.existsSync(part)) throw new Error(`widget include not found: ${name}`);
+    return fs.readFileSync(part, "utf8").replace(/[\r\n]+$/, "");
+  });
+  // Anchored, so the shared files may still talk about include markers in prose.
+  INCLUDE_MARKER.lastIndex = 0;
+  if (INCLUDE_MARKER.test(html)) throw new Error(`unresolved include in ${path.basename(file)}`);
+  INCLUDE_MARKER.lastIndex = 0;
+  return html;
+}
+
 const server = http.createServer(function (req, res) {
   const url = req.url.split("?")[0];
   if (url === "/" || url === "/host.html") {
@@ -109,7 +134,7 @@ const server = http.createServer(function (req, res) {
   }
   if (!file || !fs.existsSync(file)) { res.writeHead(404); return res.end("not found"); }
   res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "text/plain" });
-  res.end(fs.readFileSync(file));
+  res.end(url.startsWith("/widgets/") ? composeWidget(file) : fs.readFileSync(file));
 });
 
 server.listen(PORT, function () {

@@ -1,0 +1,103 @@
+  /* FHNW design system × modern glass — the single source of the shared look.
+     Inlined into every widget's <style> by the include marker near the top of
+     each file (see Resources/WidgetResources.cs), so there is nothing to sync.
+     Palette and type cues come from fhnw.ch: yellow #fde70e (hover #fef16e),
+     ink #141414, muted #767676, dark-olive #716800 as the yellow-on-white
+     text stand-in, Poppins/Inter type stacks. Glassmorphism adds translucent,
+     blurred panels, soft shadows and rounded geometry. Dark mode is its own
+     selected set, not an automatic flip. The body stays transparent so the
+     host's card background shows through; --surface is only for elements
+     that need an opaque fill (inputs, sticky columns).
+
+     Widget-specific rules follow this block in each file — including #root's
+     padding and the heading selectors, which differ per widget. */
+  :root {
+    color-scheme: light;
+    --surface: #ffffff;
+    --glass: rgba(255, 255, 255, 0.58);
+    --glass-hi: rgba(255, 255, 255, 0.82);
+    --glass-border: rgba(20, 20, 20, 0.10);
+    --plane: rgba(20, 20, 20, 0.045);
+    --ink: #141414;
+    --ink-2: #535353;
+    --muted: #767676;
+    --hairline: rgba(20, 20, 20, 0.12);
+    --ring: rgba(20, 20, 20, 0.22);
+    --accent: #fde70e;
+    --accent-hover: #fef16e;
+    --accent-ink: #141414;
+    --accent-text: #716800;
+    --accent-soft: rgba(253, 231, 14, 0.16);
+    --accent-edge: rgba(20, 20, 20, 0.35);
+    --check: #141414;
+    --warn: #b87e00;
+    --good-text: #3d8730;
+    --blur: saturate(1.6) blur(14px);
+    --shadow: 0 10px 28px rgba(20, 20, 20, 0.10);
+    --shadow-soft: 0 6px 18px rgba(20, 20, 20, 0.06);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface: #1f1f1f;
+    --glass: rgba(30, 30, 30, 0.55);
+    --glass-hi: rgba(48, 48, 48, 0.74);
+    --glass-border: rgba(255, 255, 255, 0.12);
+    --plane: rgba(255, 255, 255, 0.055);
+    --ink: #ffffff;
+    --ink-2: #c9c9c9;
+    --muted: #999999;
+    --hairline: rgba(255, 255, 255, 0.13);
+    --ring: rgba(255, 255, 255, 0.24);
+    --accent: #fde70e;
+    --accent-hover: #feec38;
+    --accent-ink: #141414;
+    --accent-text: #fde70e;
+    --accent-soft: rgba(253, 231, 14, 0.14);
+    --accent-edge: rgba(253, 231, 14, 0.50);
+    --check: #fde70e;
+    --warn: #fab219;
+    --good-text: #5ccb48;
+    --shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    --shadow-soft: 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 14px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Brand glow behind the glass — a hint of FHNW yellow for panels to
+     refract; low alpha keeps the host card readable underneath. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(420px 240px at 95% -70px, rgba(253, 231, 14, 0.16), transparent 70%),
+      radial-gradient(360px 260px at -90px 110%, rgba(253, 231, 14, 0.08), transparent 70%);
+  }
+  button {
+    font: inherit;
+    color: var(--ink);
+    background: var(--plane);
+    border: 1px solid var(--hairline);
+    border-radius: 9px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  }
+  button:hover { background: var(--glass-hi); border-color: var(--ring); transform: translateY(-1px); }
+  button:active { transform: none; }
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: none;
+    border-color: var(--accent-ink);
+    box-shadow: 0 0 0 3px rgba(253, 231, 14, 0.45);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+  .empty { color: var(--muted); padding: 18px 0; text-align: center; }
