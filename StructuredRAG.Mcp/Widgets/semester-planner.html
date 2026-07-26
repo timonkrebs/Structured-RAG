@@ -354,7 +354,8 @@
   var catOpen = {};         // category label -> open (accordion state, survives re-renders)
   var catInit = false;      // defaults computed once, afterwards purely student-driven
   var proposalApplied = false;  // the assistant's proposal initialized the selection
-  var showAll = null;       // false = plan view, true = full list; null = decide on first render
+  var showAll = null;       // false = plan view, true = full list; null = no choice restored
+  var viewDecided = false;  // the opening view has been settled (first render with data)
   var viewTouched = false;  // the student picked the view themselves — persist it
   var keepVisible = {};     // code -> true: unticked in the plan view, still listed (undo)
   var slotsOpen = {};       // code -> true (summarized class list expanded in the row)
@@ -628,14 +629,20 @@
     var mods = selectedModules();
     var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
     var anyMatches = (d.eligible || []).some(function (e) { return (e.interestMatches || []).length > 0; });
-    // Which view the student lands in, decided once: with something to show —
-    // the assistant's proposal or a restored draft — that is the plan itself
-    // (issue #34: a semester's full offering is not an overview), otherwise the
-    // full list, because there would be nothing else to look at. Decided on the
-    // modules this payload actually has, not on the codes in the draft: a draft
-    // restored against a semester that no longer offers them would otherwise
-    // open on an empty plan.
-    if (showAll === null) showAll = mods.length === 0;
+    // Which view the student lands in, decided once, on the modules this
+    // payload actually has: with something to show — the assistant's proposal
+    // or a restored draft — that is the plan itself (issue #34: a semester's
+    // full offering is not an overview), otherwise the catalog, because there
+    // would be nothing else to look at. An empty plan is never the opening
+    // screen, not even when a draft asked for the plan view: its codes may be
+    // stale for this semester, and then the catalog is the only useful answer.
+    // Afterwards the view is the student's alone — emptying the plan by hand
+    // does NOT bounce them back to the catalog.
+    if (!viewDecided) {
+      viewDecided = true;
+      if (mods.length === 0) showAll = true;
+      else if (showAll === null) showAll = false;
+    }
 
     var html = "";
 
