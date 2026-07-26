@@ -8,12 +8,14 @@
 const { test, expect } = require("@playwright/test");
 const {
   VIEWPORT, openWidget, settle, activeView, listedRows, setView,
-  deepestTimetableBlock, rowInView, pushHostUpdate,
+  deepestTimetableBlock, rowInView, pushHostUpdate, pushToolResult,
 } = require("../harness/widget");
 const fixture = require("../fixtures/plan-semester.json");
 
 test.use({ viewport: VIEWPORT });
 
+// Mirrors the widget's chip budget (CHIP_LIMIT in semester-planner.html).
+const CHIP_LIMIT = 3;
 const classCount = (m) =>
   new Set((m.lessons || []).map((l, i) => l.number || `#${i}`)).size;
 /** The eligible module with the most parallel classes — the worst chip case. */
@@ -23,6 +25,26 @@ const multiClass = fixture.eligible
 
 const chips = (frame, code) =>
   frame.$$eval(`li[data-mod="${code}"] .chip.day`, (els) => els.map((e) => e.textContent.trim()));
+const moreButton = (code) => `li[data-mod="${code}"] button.chip.more`;
+
+/**
+ * Expands the category a module sits in. Rows inside a closed <details> are in
+ * the DOM (and have a box) but cannot be focused, so anything driving the
+ * keyboard has to open the category first — as a student would.
+ */
+async function openCategoryOf(frame, code) {
+  await frame.$eval(`li[data-mod="${code}"]`, (el) => {
+    const details = el.closest("details");
+    if (details && !details.open) details.querySelector("summary").click();
+  });
+}
+
+/** A copy of the fixture with one module's lessons replaced. */
+function withLessons(code, lessons) {
+  const plan = JSON.parse(JSON.stringify(fixture));
+  plan.eligible.find((e) => e.module.code === code).module.lessons = lessons;
+  return plan;
+}
 
 test.describe("plan view", () => {
   test("opens on the proposed plan, with the catalog one click away", async ({ page }) => {
@@ -162,5 +184,71 @@ test.describe("class chips", () => {
     // ...and they are exactly what the timetable draws for it.
     expect(await frame.$$eval(`.tt-block[data-nav="${multiClass.code}"]`, (e) => e.length))
       .toBe(chosen.filter((l) => l.day && l.start && l.end).length);
+  });
+
+  test("the folded-away classes open from the keyboard, not only on hover", async ({ page }) => {
+    // A title on a <span> reaches a hovering mouse and nobody else: on touch and
+    // by keyboard the summarized times would be unreachable without changing the
+    // plan first.
+    const frame = await openWidget(page, { view: "all" });
+    await openCategoryOf(frame, multiClass.code);
+    await settle(page, frame);
+    expect(await frame.$eval(moreButton(multiClass.code), (el) => el.getAttribute("aria-expanded")))
+      .toBe("false");
+
+    await frame.press(moreButton(multiClass.code), "Enter");
+    await settle(page, frame);
+
+    const shown = await chips(frame, multiClass.code);
+    expect(await frame.$eval(moreButton(multiClass.code), (el) => el.getAttribute("aria-expanded")))
+      .toBe("true");
+    // Every class is accounted for: one chip each, except classes that meet at
+    // the same time and place, which share a chip carrying their count.
+    const listed = shown.slice(0, -1); // last chip is the collapse button
+    const total = listed.reduce((n, label) => n + Number((label.match(/×(\d+)$/) || [, 1])[1]), 0);
+    expect(total).toBe(classCount(multiClass));
+    expect(listed.length).toBeGreaterThan(CHIP_LIMIT);
+    // The classes are told apart by where they meet, like in the picker.
+    const locations = new Set(multiClass.lessons.map((l) => l.location).filter(Boolean));
+    for (const where of locations) expect(shown.join(" | ")).toContain(where);
+
+    await frame.$eval(moreButton(multiClass.code), (el) => el.click());
+    await settle(page, frame);
+    expect((await chips(frame, multiClass.code)).length).toBeLessThan(classCount(multiClass));
+  });
+
+  test("counts parallel classes even when their times look identical", async ({ page }) => {
+    // Five classes at two time slots, told apart only by room. The deduplicated
+    // times fit in three chips, but the choice must not disappear with them.
+    const frame = await openWidget(page, { view: "all" });
+    const lessons = [0, 1, 2, 3, 4].map((i) => ({
+      number: `26HS.TEST/${i}`, day: i % 2 ? "Tuesday" : "Monday",
+      start: "08:15", end: "10:00", location: `Room ${i}`, periodicity: 7,
+    }));
+    await pushToolResult(page, withLessons(multiClass.code, lessons));
+    await settle(page, frame);
+
+    const shown = await chips(frame, multiClass.code);
+    expect(shown).toHaveLength(3); // Mo, Di, and the button
+    expect(shown[2]).toMatch(/^5\b/);
+  });
+
+  test("a chosen class with many sessions counts sessions, not alternatives", async ({ page }) => {
+    const frame = await openWidget(page, { view: "all" });
+    const lessons = ["Monday", "Tuesday", "Wednesday", "Thursday"]
+      .map((d) => ({ number: "26HS.TEST/A", day: d, start: "08:15", end: "10:00", periodicity: 7 }))
+      .concat([{ number: "26HS.TEST/B", day: "Friday", start: "13:15", end: "15:00", periodicity: 7 }]);
+    await pushToolResult(page, withLessons(multiClass.code, lessons));
+    await settle(page, frame);
+
+    // Unticked, the row is about the two classes to choose between.
+    expect((await chips(frame, multiClass.code)).pop()).toMatch(/^2\b/);
+
+    await frame.$eval(`li[data-mod="${multiClass.code}"] input[data-toggle]`, (el) => el.click());
+    await settle(page, frame);
+
+    // Ticked, it is about the chosen class alone — four sessions a week, and
+    // the alternative is the picker's business.
+    expect((await chips(frame, multiClass.code)).pop()).toMatch(/^4\b/);
   });
 });

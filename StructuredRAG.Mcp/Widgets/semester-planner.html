@@ -115,8 +115,12 @@
     background: var(--accent-soft);
   }
   /* Stands for the slot chips it replaces on modules with many parallel
-     classes; the full list is its title. */
-  .chip.more { border-style: dashed; cursor: help; }
+     classes, and expands them in place — a button, so touch and keyboard reach
+     the folded-away times too, not just a hovering mouse. */
+  button.chip.more { border-style: dashed; cursor: pointer; font-weight: 600; }
+  button.chip.more:hover { background: var(--accent-soft); border-color: var(--ring); transform: none; }
+  /* Expanded class labels carry a location, so they may wrap. */
+  .chip.slot { white-space: normal; }
   .mod-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .mod-note.warn-note::before { content: "△ "; }
   /* Two lines are enough to tell modules apart while scanning a category —
@@ -353,6 +357,7 @@
   var showAll = null;       // false = plan view, true = full list; null = decide on first render
   var viewTouched = false;  // the student picked the view themselves — persist it
   var keepVisible = {};     // code -> true: unticked in the plan view, still listed (undo)
+  var slotsOpen = {};       // code -> true (summarized class list expanded in the row)
 
   function data() { return Host.toolOutput; }
 
@@ -612,8 +617,11 @@
     // Which view the student lands in, decided once: with something to show —
     // the assistant's proposal or a restored draft — that is the plan itself
     // (issue #34: a semester's full offering is not an overview), otherwise the
-    // full list, because there would be nothing else to look at.
-    if (showAll === null) showAll = Object.keys(selected).length === 0;
+    // full list, because there would be nothing else to look at. Decided on the
+    // modules this payload actually has, not on the codes in the draft: a draft
+    // restored against a semester that no longer offers them would otherwise
+    // open on an empty plan.
+    if (showAll === null) showAll = mods.length === 0;
 
     var html = "";
 
@@ -786,35 +794,70 @@
   //
   // A module can publish a dozen parallel classes (Anlässe) — Angewandte
   // Mathematik 1 has twelve — and spelling every one of them out is what turns
-  // the list into a wall of times (issue #34). So a row shows at most CHIP_LIMIT
-  // slots: beyond that it collapses to the weekdays the module can be attended
-  // on plus how many classes there are, with the full list on hover. A selected
-  // row (chosenOnly) shows only the class it actually occupies in the timetable
-  // — the alternatives live in the class picker right below it.
+  // the list into a wall of times (issue #34). A row therefore collapses to the
+  // weekdays it can be attended on plus a button naming what was folded away,
+  // which expands the full list in place. A selected row (chosenOnly) narrows
+  // to the class it actually occupies in the timetable — the alternatives are
+  // the class picker's business by then.
   var CHIP_LIMIT = 3;
   function uniq(list) {
     var seen = {}, out = [];
     list.forEach(function (x) { if (!seen[x]) { seen[x] = true; out.push(x); } });
     return out;
   }
-  function dayChips(labels) {
-    return labels.map(function (l) { return '<span class="chip day">' + esc(l) + "</span>"; }).join("");
+  // Parallel classes can meet at the same time in the same room (different
+  // groups, own enrolment). Rendering that label twice looks like a glitch —
+  // say how many there are instead.
+  function countedUniq(list) {
+    var count = {}, order = [];
+    list.forEach(function (x) { if (count[x]) count[x]++; else { count[x] = 1; order.push(x); } });
+    return order.map(function (x) { return count[x] > 1 ? x + " ×" + count[x] : x; });
+  }
+  function chips(labels, extra) {
+    return labels.map(function (l) {
+      return '<span class="chip day' + (extra ? " " + extra : "") + '">' + esc(l) + "</span>";
+    }).join("");
   }
   function scheduleChips(m, chosenOnly) {
     var s = t();
     var groups = lessonGroups(m);
-    var source = chosenOnly && groups.length > 1 ? chosenLessons(m) : (m.lessons || []);
-    var lessons = source.filter(function (l) { return l.day || l.start; });
-    if (lessons.length === 0) return dayChips((m.weekdays || []).map(day));
+    var narrowed = chosenOnly && groups.length > 1;
+    var lessons = (narrowed ? chosenLessons(m) : (m.lessons || []))
+      .filter(function (l) { return l.day || l.start; });
+    if (lessons.length === 0) return chips((m.weekdays || []).map(day));
+
     // Dedupe: several day-less block slots produce the same label — one chip suffices.
     var labels = uniq(lessons.map(lessonLabel));
-    if (labels.length <= CHIP_LIMIT) return dayChips(labels);
-    var days = uniq(lessons.map(function (l) { return l.day ? day(l.day) : s.noFixedDay; }));
-    // Alternatives to pick from vs. slots of one class the student attends
+    var manySlots = labels.length > CHIP_LIMIT;
+    // Deduped labels also hide parallel classes that meet at the same time in
+    // different rooms, so the class count decides too — otherwise ten classes
+    // sharing two time slots would look like a module with no choice at all.
+    var manyClasses = !narrowed && groups.length > CHIP_LIMIT;
+    if (!manySlots && !manyClasses) return chips(labels);
+
+    // What the button folds away — and what expanding it shows: the classes to
+    // choose between, or the sessions of the one class this row is about.
+    var one = narrowed || groups.length === 1;
+    var full = one ? labels : countedUniq(groups.map(function (g) {
+      return uniq(g.map(lessonLabel)).join(", ") + (g[0].location ? " · " + g[0].location : "");
+    }));
+    if (slotsOpen[m.code]) {
+      return chips(full, "slot") + moreButton(m.code, s.hide, true, "");
+    }
+    var visible = manySlots
+      ? uniq(lessons.map(function (l) { return l.day ? day(l.day) : s.noFixedDay; }))
+      : labels;
+    // Alternatives to pick from vs. sessions of one class the student attends
     // wholesale — a single class must not be announced as "1 Anlässe".
-    var count = groups.length > 1 ? s.classCount(groups.length) : s.slotCount(labels.length);
-    return dayChips(days) +
-      '<span class="chip day more" title="' + esc(labels.join(", ")) + '">' + esc(count) + "</span>";
+    var count = one ? s.slotCount(labels.length) : s.classCount(groups.length);
+    return chips(visible) + moreButton(m.code, count, false, full.join(", "));
+  }
+  // The folded-away times must be reachable without a pointer: a button, not a
+  // title on a <span> that only a hovering mouse can read.
+  function moreButton(code, label, open, title) {
+    return '<button class="chip day more" data-slots="' + esc(code) + '" aria-expanded="' +
+      (open ? "true" : "false") + '"' + (title ? ' title="' + esc(title) + '"' : "") + ">" +
+      esc(label) + "</button>";
   }
 
   // Modules with published times but no weekday (block courses) can never clash in
@@ -1071,6 +1114,13 @@
     if (!showAll) keepVisible[code] = true;
   }
 
+  // Expand/collapse the classes a row summarized. Kept per module and outside
+  // render(), like the details panels, so a host re-render cannot fold it back.
+  function toggleSlots(code) {
+    if (slotsOpen[code]) delete slotsOpen[code]; else slotsOpen[code] = true;
+    render();
+  }
+
   function setView(all) {
     if (showAll === all) return;
     showAll = all;
@@ -1115,7 +1165,7 @@
 
   // ---------- events ----------
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-details],[data-open],[data-nav],[data-unselect],[data-view],#send");
+    var el = ev.target.closest("[data-details],[data-open],[data-nav],[data-unselect],[data-view],[data-slots],#send");
     if (!el) return;
     if (el.hasAttribute("data-details")) { toggleDetails(el.getAttribute("data-details")); }
     else if (el.hasAttribute("data-open")) {
@@ -1125,6 +1175,7 @@
     else if (el.hasAttribute("data-nav")) navigateTo(el.getAttribute("data-nav"));
     else if (el.hasAttribute("data-unselect")) unselect(el.getAttribute("data-unselect"));
     else if (el.hasAttribute("data-view")) setView(el.getAttribute("data-view") === "all");
+    else if (el.hasAttribute("data-slots")) toggleSlots(el.getAttribute("data-slots"));
     else if (el.id === "send") sendPlan();
   });
   // "toggle" does not bubble — listen in the capture phase. Without this, any

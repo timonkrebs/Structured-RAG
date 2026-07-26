@@ -127,6 +127,20 @@ async function toggleCategory(frame, index = 0) {
 }
 const toggleFirstCategory = (frame) => toggleCategory(frame, 0);
 
+/**
+ * Pushes a tool result into the widget the way a host delivers one, so a spec
+ * can drive a payload shape the committed fixture does not contain (rather than
+ * teaching the harness server about every edge case).
+ */
+async function pushToolResult(page, payload) {
+  await page.evaluate((data) => {
+    document.getElementById("w").contentWindow.postMessage({
+      jsonrpc: "2.0", method: "ui/notifications/tool-result",
+      params: { structuredContent: data },
+    }, "*");
+  }, payload);
+}
+
 /** Pushes a host-context change, which makes the widget re-render mid-flight. */
 async function pushHostUpdate(page, locale = "en-US") {
   await page.evaluate((loc) => {
@@ -140,6 +154,6 @@ async function pushHostUpdate(page, locale = "en-US") {
 module.exports = {
   PORT, VIEWPORT, openWidget, settle, geometry,
   timetableBlocks, deepestTimetableBlock, rowInView,
-  toggleCategory, toggleFirstCategory, pushHostUpdate,
+  toggleCategory, toggleFirstCategory, pushHostUpdate, pushToolResult,
   setView, activeView, listedRows,
 };
