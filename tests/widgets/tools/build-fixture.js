@@ -114,9 +114,16 @@ const data = {
   note: "",
 };
 
+const parallelClasses = (m) =>
+  new Set((m.lessons || []).map((l, i) => l.number || `#${i}`)).size;
+
 const categories = [...new Set(eligible.map((e) => e.module.moduleType))];
 if (categories.length < 2) throw new Error("fixture needs >1 module type for the accordion");
 if (proposed.length < 2) throw new Error("fixture needs timetable blocks to click");
+// The chip summary only kicks in above CHIP_LIMIT slots in the widget.
+if (!eligible.some((e) => parallelClasses(e.module) > 3)) {
+  throw new Error("fixture needs a module with several parallel classes");
+}
 
 fs.mkdirSync(fixtureDir, { recursive: true });
 fs.writeFileSync(out, JSON.stringify(data, null, 1) + "\n");

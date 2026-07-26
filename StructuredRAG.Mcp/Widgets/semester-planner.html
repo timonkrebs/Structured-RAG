@@ -65,6 +65,22 @@
 
   .legend { font-size: 12px; color: var(--muted); margin: 2px 0 8px; }
 
+  /* Plan ⇄ catalog switch. The widget opens on the student's plan and keeps the
+     full list one click away (issue #34) — a segmented control rather than a
+     checkbox, so both counts are readable without toggling anything. */
+  .view-switch {
+    display: inline-flex; gap: 2px; margin: 4px 0 2px; padding: 2px;
+    border: 1px solid var(--hairline); border-radius: 999px; background: var(--plane);
+  }
+  .view-switch button {
+    background: transparent; border: 1px solid transparent; border-radius: 999px;
+    padding: 3px 11px; font-size: 12.5px; color: var(--ink-2); box-shadow: none;
+  }
+  .view-switch button:hover { background: var(--glass-hi); border-color: transparent; transform: none; }
+  .view-switch button[aria-pressed="true"] {
+    background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-soft);
+  }
+
   ul.modules { list-style: none; margin: 8px 0 0; padding: 0; }
   ul.modules > li { border-top: 1px solid var(--hairline); padding: 10px 4px; }
   ul.modules > li.selected {
@@ -98,9 +114,23 @@
     border-color: var(--accent-text); color: var(--accent-text);
     background: var(--accent-soft);
   }
+  /* Stands for the slot chips it replaces on modules with many parallel
+     classes, and expands them in place — a button, so touch and keyboard reach
+     the folded-away times too, not just a hovering mouse. */
+  button.chip.more { border-style: dashed; cursor: pointer; font-weight: 600; }
+  button.chip.more:hover { background: var(--accent-soft); border-color: var(--ring); transform: none; }
+  /* Expanded class labels carry a location, so they may wrap. */
+  .chip.slot { white-space: normal; }
   .mod-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .mod-note.warn-note::before { content: "△ "; }
-  .mod-summary { font-size: 12.5px; color: var(--ink-2); margin-top: 4px; }
+  /* Two lines are enough to tell modules apart while scanning a category —
+     at ~400 characters the compiled summaries otherwise make every row a
+     paragraph. Opening "Details" unclamps the row (li.expanded). */
+  .mod-summary {
+    font-size: 12.5px; color: var(--ink-2); margin-top: 4px;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  }
+  ul.modules > li.expanded .mod-summary { display: block; }
   .mod-actions { flex: none; }
   .mod-actions button { font-size: 12px; padding: 3px 9px; }
 
@@ -222,6 +252,12 @@
       unselect: function (code) { return code + " abwählen"; },
       timetable: "Stundenplan",
       chooseClass: "Anlass wählen",
+      viewSwitch: "Ansicht",
+      viewPlan: function (n) { return "Mein Plan · " + n; },
+      viewAll: function (n) { return "Alle Module · " + n; },
+      planEmpty: "Noch nichts gewählt — unter „Alle Module“ auswählen oder den Assistenten im Chat um einen Vorschlag bitten.",
+      classCount: function (n) { return n + " Anlässe"; },
+      slotCount: function (n) { return n + " Termine"; },
       everyNDays: function (n) { return "alle " + n + " Tage"; },
       matchLegend: "★ = passt zu deinen Interessen",
       otherCat: "Weitere Module",
@@ -270,6 +306,12 @@
       unselect: function (code) { return "drop " + code; },
       timetable: "Timetable",
       chooseClass: "Choose class",
+      viewSwitch: "View",
+      viewPlan: function (n) { return "My plan · " + n; },
+      viewAll: function (n) { return "All modules · " + n; },
+      planEmpty: "Nothing selected yet — pick modules under “All modules”, or ask your assistant in the chat for a proposal.",
+      classCount: function (n) { return n + " classes"; },
+      slotCount: function (n) { return n + " sessions"; },
       everyNDays: function (n) { return "every " + n + " days"; },
       matchLegend: "★ = matches your interests",
       otherCat: "Other modules",
@@ -312,6 +354,11 @@
   var catOpen = {};         // category label -> open (accordion state, survives re-renders)
   var catInit = false;      // defaults computed once, afterwards purely student-driven
   var proposalApplied = false;  // the assistant's proposal initialized the selection
+  var showAll = null;       // false = plan view, true = full list; null = no choice restored
+  var viewDecided = false;  // the opening view has been settled (first render with data)
+  var viewTouched = false;  // the student picked the view themselves — persist it
+  var keepVisible = {};     // code -> true: unticked in the plan view, still listed (undo)
+  var slotsOpen = {};       // code -> true (summarized class list expanded in the row)
 
   function data() { return Host.toolOutput; }
 
@@ -327,6 +374,7 @@
         Object.keys(ws.chosenClasses).forEach(function (c) { chosenClass[c] = ws.chosenClasses[c]; });
       }
       if (typeof ws.ectsTarget === "number" && ws.ectsTarget > 0) { target = ws.ectsTarget; targetTouched = true; }
+      if (typeof ws.showAll === "boolean") { showAll = ws.showAll; viewTouched = true; }
     } else if (d && (d.proposed || []).length > 0) {
       // First render without a saved draft: start from the assistant's proposal.
       // A saved draft (even an empty selection) is the student's own state and wins.
@@ -375,6 +423,7 @@
     var state = { selectedCodes: Object.keys(selected) };
     if (Object.keys(chosenClass).length > 0) state.chosenClasses = chosenClass;
     if (targetTouched) state.ectsTarget = target;
+    if (viewTouched) state.showAll = showAll;
     Host.setState(state, draftSummary());
   }
 
@@ -440,6 +489,20 @@
   // Stable key of a class group for state/select values; classes without an official
   // number fall back to their position.
   function groupKey(g, i) { return g[0].number || ("#" + i); }
+  // Human label of one class (Modulanlass): its slots, each with the campus it
+  // meets at. Classes routinely hop campuses between weekdays — Principles of
+  // Management meets Monday in Olten and Tuesday in Basel — so the location may
+  // only move to the end when every slot shares it. A student choosing by
+  // campus would otherwise read the first slot's and be wrong on the second.
+  function classLabel(g) {
+    var locs = uniq(g.map(function (l) { return l.location || ""; }));
+    if (locs.length === 1) {
+      return uniq(g.map(lessonLabel)).join(", ") + (locs[0] ? " · " + locs[0] : "");
+    }
+    return uniq(g.map(function (l) {
+      return lessonLabel(l) + (l.location ? " · " + l.location : "");
+    })).join(", ");
+  }
   function chosenLessons(m) {
     var groups = lessonGroups(m);
     if (groups.length === 0) return [];
@@ -528,6 +591,26 @@
     catInit = true;
   }
 
+  // The plan view lists exactly what is in the plan — eligible and blocked
+  // modules alike, in the accordion's category order so both views agree on
+  // where a module sits. Modules unticked while in this view stay listed
+  // (keepVisible): the row would otherwise vanish under the click, and taking
+  // that back would mean hunting for it in the full list.
+  function planEntries(s) {
+    var d = data();
+    var out = [];
+    groupByType(d && d.eligible ? d.eligible : [], s).forEach(function (c) {
+      c.entries.forEach(function (e) { out.push(e); });
+    });
+    blockedEntries().forEach(function (e) { out.push(e); });
+    return out.filter(function (e) { return selected[e.module.code] || keepVisible[e.module.code]; });
+  }
+
+  function viewButton(id, label, on) {
+    return '<button data-view="' + id + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+      esc(label) + "</button>";
+  }
+
   // ---------- rendering ----------
   function render() {
     hostRenderDeferred = false; // any render satisfies a pending host update
@@ -546,6 +629,20 @@
     var mods = selectedModules();
     var sum = mods.reduce(function (a, m) { return a + (m.ects || 0); }, 0);
     var anyMatches = (d.eligible || []).some(function (e) { return (e.interestMatches || []).length > 0; });
+    // Which view the student lands in, decided once, on the modules this
+    // payload actually has: with something to show — the assistant's proposal
+    // or a restored draft — that is the plan itself (issue #34: a semester's
+    // full offering is not an overview), otherwise the catalog, because there
+    // would be nothing else to look at. An empty plan is never the opening
+    // screen, not even when a draft asked for the plan view: its codes may be
+    // stale for this semester, and then the catalog is the only useful answer.
+    // Afterwards the view is the student's alone — emptying the plan by hand
+    // does NOT bounce them back to the catalog.
+    if (!viewDecided) {
+      viewDecided = true;
+      if (mods.length === 0) showAll = true;
+      else if (showAll === null) showAll = false;
+    }
 
     var html = "";
 
@@ -612,7 +709,8 @@
       var matches = {};
       (e.interestMatches || []).forEach(function (tag) { matches[tag.toLowerCase()] = true; });
 
-      return '<li data-mod="' + esc(m.code) + '" class="' + (isSel ? "selected" : "") + '">' +
+      return '<li data-mod="' + esc(m.code) + '" class="' + (isSel ? "selected " : "") +
+        (expanded[m.code] ? "expanded" : "") + '">' +
         '<div class="mod-row">' +
         '<input type="checkbox" data-toggle="' + esc(m.code) + '"' + (isSel ? " checked" : "") + ">" +
         '<div class="mod-main">' +
@@ -620,7 +718,7 @@
         '<div class="badges">' +
         '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
         (m.moduleType && !hideTypeChip ? '<span class="chip">' + esc(m.moduleType) + "</span>" : "") +
-        scheduleChips(m) +
+        scheduleChips(m, isSel) +
         (m.tags || []).map(function (tag) {
           var hit = matches[tag.toLowerCase()];
           return '<span class="chip' + (hit ? " match" : "") + '">' + (hit ? "★ " : "") + esc(tag) + "</span>";
@@ -642,40 +740,60 @@
         "</li>";
     }
 
-    if ((d.eligible || []).length === 0) {
-      html += '<div class="empty">' + esc(s.noEligible) + "</div>";
-    } else {
-      var cats = groupByType(d.eligible, s);
-      initCatOpen(cats);
-      if (cats.length === 1) {
-        // A single category (e.g. catalogs without module types) needs no accordion.
-        html += '<ul class="modules">' + cats[0].entries.map(function (e) { return moduleLi(e, false); }).join("") + "</ul>";
-      } else {
-        cats.forEach(function (c) {
-          var selCount = 0, selEcts = 0;
-          c.entries.forEach(function (e) {
-            if (selected[e.module.code]) { selCount++; selEcts += e.module.ects || 0; }
-          });
-          var catMatch = c.entries.some(function (e) { return (e.interestMatches || []).length > 0; });
-          html += '<details class="cat" data-cat="' + esc(c.label) + '"' + (catOpen[c.label] ? " open" : "") + ">" +
-            '<summary><span class="cat-title">' + (catMatch ? "★ " : "") + esc(c.label) + "</span>" +
-            '<span class="cat-count">' + esc(s.catCount(c.entries.length, selCount, selEcts)) + "</span></summary>" +
-            '<ul class="modules">' + c.entries.map(function (e) { return moduleLi(e, true); }).join("") + "</ul>" +
-            "</details>";
-        });
-      }
-    }
-
-    html += timetableHtml(mods);
-    html += blockListHtml(mods);
-
-    // Blocked modules: selectable like eligible ones (a student may satisfy a
-    // requirement in a way the module graph cannot see), rendered by the same
-    // moduleLi — including checkbox, class picker and the open-prerequisites note.
+    // Plan ⇄ catalog switch. Both counts are on the buttons, so what the other
+    // view holds is readable without switching to it.
     var bEntries = blockedEntries();
-    if (bEntries.length > 0) {
-      html += '<details class="blocked"' + (blockedOpen ? " open" : "") + "><summary>" + esc(s.blocked(bEntries.length)) + "</summary>" +
-        '<ul class="modules">' + bEntries.map(function (e) { return moduleLi(e, false); }).join("") + "</ul></details>";
+    html += '<div class="view-switch" role="group" aria-label="' + esc(s.viewSwitch) + '">' +
+      viewButton("plan", s.viewPlan(mods.length), !showAll) +
+      viewButton("all", s.viewAll((d.eligible || []).length + bEntries.length), showAll) +
+      "</div>";
+
+    if (!showAll) {
+      // Plan view: the week grid comes first — with only the chosen modules
+      // below it, the timetable is the overview the student came for, and the
+      // list underneath is what they adjust.
+      html += timetableHtml(mods);
+      html += blockListHtml(mods);
+      var plan = planEntries(s);
+      html += plan.length === 0
+        ? '<div class="empty">' + esc(s.planEmpty) + "</div>"
+        : '<ul class="modules">' + plan.map(function (e) { return moduleLi(e, false); }).join("") + "</ul>";
+    } else {
+      if ((d.eligible || []).length === 0) {
+        html += '<div class="empty">' + esc(s.noEligible) + "</div>";
+      } else {
+        var cats = groupByType(d.eligible, s);
+        initCatOpen(cats);
+        if (cats.length === 1) {
+          // A single category (e.g. catalogs without module types) needs no accordion.
+          html += '<ul class="modules">' + cats[0].entries.map(function (e) { return moduleLi(e, false); }).join("") + "</ul>";
+        } else {
+          cats.forEach(function (c) {
+            var selCount = 0, selEcts = 0;
+            c.entries.forEach(function (e) {
+              if (selected[e.module.code]) { selCount++; selEcts += e.module.ects || 0; }
+            });
+            var catMatch = c.entries.some(function (e) { return (e.interestMatches || []).length > 0; });
+            html += '<details class="cat" data-cat="' + esc(c.label) + '"' + (catOpen[c.label] ? " open" : "") + ">" +
+              '<summary><span class="cat-title">' + (catMatch ? "★ " : "") + esc(c.label) + "</span>" +
+              '<span class="cat-count">' + esc(s.catCount(c.entries.length, selCount, selEcts)) + "</span></summary>" +
+              '<ul class="modules">' + c.entries.map(function (e) { return moduleLi(e, true); }).join("") + "</ul>" +
+              "</details>";
+          });
+        }
+      }
+
+      html += timetableHtml(mods);
+      html += blockListHtml(mods);
+
+      // Blocked modules: selectable like eligible ones (a student may satisfy a
+      // requirement in a way the module graph cannot see), rendered by the same
+      // moduleLi — including checkbox, class picker and the open-prerequisites
+      // note. In the plan view the selected ones sit in the list above instead.
+      if (bEntries.length > 0) {
+        html += '<details class="blocked"' + (blockedOpen ? " open" : "") + "><summary>" + esc(s.blocked(bEntries.length)) + "</summary>" +
+          '<ul class="modules">' + bEntries.map(function (e) { return moduleLi(e, false); }).join("") + "</ul></details>";
+      }
     }
 
     // Footer
@@ -694,18 +812,71 @@
 
   // Day/time chips: with lesson slots each class slot gets a chip incl. times;
   // catalogs without lesson data keep the plain weekday chips.
-  function scheduleChips(m) {
-    var lessons = (m.lessons || []).filter(function (l) { return l.day || l.start; });
-    if (lessons.length === 0) {
-      return (m.weekdays || []).map(function (w) { return '<span class="chip day">' + esc(day(w)) + "</span>"; }).join("");
-    }
+  //
+  // A module can publish a dozen parallel classes (Anlässe) — Angewandte
+  // Mathematik 1 has twelve — and spelling every one of them out is what turns
+  // the list into a wall of times (issue #34). A row therefore collapses to the
+  // weekdays it can be attended on plus a button naming what was folded away,
+  // which expands the full list in place. A selected row (chosenOnly) narrows
+  // to the class it actually occupies in the timetable — the alternatives are
+  // the class picker's business by then.
+  var CHIP_LIMIT = 3;
+  function uniq(list) {
+    var seen = {}, out = [];
+    list.forEach(function (x) { if (!seen[x]) { seen[x] = true; out.push(x); } });
+    return out;
+  }
+  // Parallel classes can meet at the same time in the same room (different
+  // groups, own enrolment). Rendering that label twice looks like a glitch —
+  // say how many there are instead.
+  function countedUniq(list) {
+    var count = {}, order = [];
+    list.forEach(function (x) { if (count[x]) count[x]++; else { count[x] = 1; order.push(x); } });
+    return order.map(function (x) { return count[x] > 1 ? x + " ×" + count[x] : x; });
+  }
+  function chips(labels, extra) {
+    return labels.map(function (l) {
+      return '<span class="chip day' + (extra ? " " + extra : "") + '">' + esc(l) + "</span>";
+    }).join("");
+  }
+  function scheduleChips(m, chosenOnly) {
+    var s = t();
+    var groups = lessonGroups(m);
+    var narrowed = chosenOnly && groups.length > 1;
+    var lessons = (narrowed ? chosenLessons(m) : (m.lessons || []))
+      .filter(function (l) { return l.day || l.start; });
+    if (lessons.length === 0) return chips((m.weekdays || []).map(day));
+
     // Dedupe: several day-less block slots produce the same label — one chip suffices.
-    var seen = {};
-    return lessons.map(lessonLabel).filter(function (l) {
-      if (seen[l]) return false;
-      seen[l] = true;
-      return true;
-    }).map(function (l) { return '<span class="chip day">' + esc(l) + "</span>"; }).join("");
+    var labels = uniq(lessons.map(lessonLabel));
+    var manySlots = labels.length > CHIP_LIMIT;
+    // Deduped labels also hide parallel classes that meet at the same time in
+    // different rooms, so the class count decides too — otherwise ten classes
+    // sharing two time slots would look like a module with no choice at all.
+    var manyClasses = !narrowed && groups.length > CHIP_LIMIT;
+    if (!manySlots && !manyClasses) return chips(labels);
+
+    // What the button folds away — and what expanding it shows: the classes to
+    // choose between, or the sessions of the one class this row is about.
+    var one = narrowed || groups.length === 1;
+    var full = one ? labels : countedUniq(groups.map(classLabel));
+    if (slotsOpen[m.code]) {
+      return chips(full, "slot") + moreButton(m.code, s.hide, true, "");
+    }
+    var visible = manySlots
+      ? uniq(lessons.map(function (l) { return l.day ? day(l.day) : s.noFixedDay; }))
+      : labels;
+    // Alternatives to pick from vs. sessions of one class the student attends
+    // wholesale — a single class must not be announced as "1 Anlässe".
+    var count = one ? s.slotCount(labels.length) : s.classCount(groups.length);
+    return chips(visible) + moreButton(m.code, count, false, full.join(", "));
+  }
+  // The folded-away times must be reachable without a pointer: a button, not a
+  // title on a <span> that only a hovering mouse can read.
+  function moreButton(code, label, open, title) {
+    return '<button class="chip day more" data-slots="' + esc(code) + '" aria-expanded="' +
+      (open ? "true" : "false") + '"' + (title ? ' title="' + esc(title) + '"' : "") + ">" +
+      esc(label) + "</button>";
   }
 
   // Modules with published times but no weekday (block courses) can never clash in
@@ -730,8 +901,7 @@
     groups.forEach(function (g, i) {
       // The class number is part of the label — it is how the official timetable
       // identifies the Durchführung the student has to enrol in.
-      var label = g.map(lessonLabel).join(", ") + (g[0].location ? " · " + g[0].location : "") +
-        (g[0].number ? " · " + g[0].number : "");
+      var label = classLabel(g) + (g[0].number ? " · " + g[0].number : "");
       html += '<option value="' + esc(groupKey(g, i)) + '"' + (i === chosen ? " selected" : "") + ">" + esc(label) + "</option>";
     });
     return html + "</select></div>";
@@ -816,7 +986,7 @@
     blocks.forEach(function (m) {
       html += "<li><span>" + esc(locTitle(m)) + '</span><span class="code">' + esc(m.code) + "</span>" +
         '<span class="chip ects">' + m.ects + " " + esc(s.ects) + "</span>" +
-        scheduleChips(m) + "</li>";
+        scheduleChips(m, true) + "</li>";
     });
     return html + "</ul></div>";
   }
@@ -891,6 +1061,9 @@
   function navigateTo(code) {
     var d = data();
     if (!d) return;
+    // Timetable blocks only exist for selected modules, so the plan view has the
+    // row — but never navigate to one the current view does not render.
+    if (!showAll && !selected[code] && !keepVisible[code]) { showAll = true; viewTouched = true; }
     groupByType(d.eligible || [], t()).forEach(function (c) {
       if (c.entries.some(function (e) { return e.module.code === code; })) catOpen[c.label] = true;
     });
@@ -938,7 +1111,8 @@
   }
 
   function toggle(code) {
-    if (selected[code]) delete selected[code]; else selected[code] = true;
+    if (selected[code]) { delete selected[code]; keepListed(code); }
+    else { selected[code] = true; delete keepVisible[code]; }
     persistState();
     render();
   }
@@ -947,6 +1121,29 @@
   function unselect(code) {
     if (!selected[code]) return;
     delete selected[code];
+    keepListed(code);
+    persistState();
+    render();
+  }
+
+  // Unticking in the plan view would drop the row out of the list under the
+  // student's cursor; keep it there so the click stays undoable in place.
+  function keepListed(code) {
+    if (!showAll) keepVisible[code] = true;
+  }
+
+  // Expand/collapse the classes a row summarized. Kept per module and outside
+  // render(), like the details panels, so a host re-render cannot fold it back.
+  function toggleSlots(code) {
+    if (slotsOpen[code]) delete slotsOpen[code]; else slotsOpen[code] = true;
+    render();
+  }
+
+  function setView(all) {
+    if (showAll === all) return;
+    showAll = all;
+    viewTouched = true;
+    keepVisible = {};   // the list is rebuilt anyway — start the plan view clean
     persistState();
     render();
   }
@@ -986,7 +1183,7 @@
 
   // ---------- events ----------
   document.getElementById("root").addEventListener("click", function (ev) {
-    var el = ev.target.closest("[data-details],[data-open],[data-nav],[data-unselect],#send");
+    var el = ev.target.closest("[data-details],[data-open],[data-nav],[data-unselect],[data-view],[data-slots],#send");
     if (!el) return;
     if (el.hasAttribute("data-details")) { toggleDetails(el.getAttribute("data-details")); }
     else if (el.hasAttribute("data-open")) {
@@ -995,6 +1192,8 @@
     }
     else if (el.hasAttribute("data-nav")) navigateTo(el.getAttribute("data-nav"));
     else if (el.hasAttribute("data-unselect")) unselect(el.getAttribute("data-unselect"));
+    else if (el.hasAttribute("data-view")) setView(el.getAttribute("data-view") === "all");
+    else if (el.hasAttribute("data-slots")) toggleSlots(el.getAttribute("data-slots"));
     else if (el.id === "send") sendPlan();
   });
   // "toggle" does not bubble — listen in the capture phase. Without this, any

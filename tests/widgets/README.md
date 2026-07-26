@@ -31,8 +31,9 @@ CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium-*/chrome-linux/chrome npm test
 
 | Path | What it is |
 | --- | --- |
-| `harness/server.js` | Static server plus the scriptable host page. Query string controls which widget is loaded, how long the host takes to apply a reported size (`delay`), and whether it caps the frame (`maxh`). Also composes the widgets (see below). |
-| `harness/widget.js` | Helpers the specs share: open a widget, wait for the frame to settle, read geometry, click accordions, push host updates. |
+| `harness/server.js` | Static server plus the scriptable host page. Query string controls which widget is loaded, how long the host takes to apply a reported size (`delay`), whether it caps the frame (`maxh`) and whether the payload carries the assistant's preselection (`proposal`). Also composes the widgets (see below). |
+| `harness/widget.js` | Helpers the specs share: open a widget, wait for the frame to settle, read geometry, switch the planner's view, click accordions, push host updates. |
+| `specs/plan-view.spec.js` | The planner opens on the student's plan, the catalog stays one click away, and rows summarize modules with many classes (issue #34). |
 | `specs/timetable-navigation.spec.js` | Clicking a Modulanlass in the timetable lands on that module's row (issue #35). |
 | `specs/frame-sizing.spec.js` | The height a widget reports tracks its content in both directions, including absolutely positioned overflow. |
 | `specs/composition.spec.js` | The shared-part assembly: every include resolves, nothing is defined twice, the composed script parses. No browser. |
@@ -59,8 +60,10 @@ npm run build-fixture          # reads ../../compiled/modules.json
 
 The scenarios need several module types in the payload (the planner only draws
 the category accordion when there is more than one), enough rows that opening a
-category outgrows the frame, and modules with timed lessons so the timetable has
-blocks to click. `tools/build-fixture.js` asserts the first two.
+category outgrows the frame, modules with timed lessons so the timetable has
+blocks to click, and at least one module with a handful of parallel classes —
+that is the row whose chips get summarized. `tools/build-fixture.js` asserts all
+of them.
 
 ## The host is the point
 

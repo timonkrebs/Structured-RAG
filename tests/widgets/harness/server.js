@@ -6,9 +6,10 @@
 // the widget reports the way a real host does: asynchronously, and optionally
 // capped. Both are configurable per test via the query string:
 //
-//   w      widget file name          (default semester-planner.html)
-//   delay  ms before a reported size is applied to the frame   (default 60)
-//   maxh   cap the frame at this height; 0 = grow to fit       (default 0)
+//   w         widget file name       (default semester-planner.html)
+//   delay     ms before a reported size is applied to the frame   (default 60)
+//   maxh      cap the frame at this height; 0 = grow to fit       (default 0)
+//   proposal  0 = strip the assistant's preselection from the payload (default: keep)
 //
 // window.__resizes / window.__lastReported record what the host received.
 const http = require("http");
@@ -48,6 +49,9 @@ window.__lastReported = 0;
 window.__ready = false;
 
 fetch("/fixture.json?w=" + WIDGET).then(function (r) { return r.json(); }).then(function (plan) {
+  // plan_semester answers without a proposal too (the student asked for the
+  // offering, not for a plan) — the planner opens differently then.
+  if (plan && q.get("proposal") === "0") { plan.proposed = []; plan.proposedClasses = {}; }
   var f = document.createElement("iframe");
   f.id = "w";
   f.style.cssText = "width:100%;height:${INITIAL_FRAME_HEIGHT}px;border:0;display:block";
