@@ -488,6 +488,20 @@
   // Stable key of a class group for state/select values; classes without an official
   // number fall back to their position.
   function groupKey(g, i) { return g[0].number || ("#" + i); }
+  // Human label of one class (Modulanlass): its slots, each with the campus it
+  // meets at. Classes routinely hop campuses between weekdays — Principles of
+  // Management meets Monday in Olten and Tuesday in Basel — so the location may
+  // only move to the end when every slot shares it. A student choosing by
+  // campus would otherwise read the first slot's and be wrong on the second.
+  function classLabel(g) {
+    var locs = uniq(g.map(function (l) { return l.location || ""; }));
+    if (locs.length === 1) {
+      return uniq(g.map(lessonLabel)).join(", ") + (locs[0] ? " · " + locs[0] : "");
+    }
+    return uniq(g.map(function (l) {
+      return lessonLabel(l) + (l.location ? " · " + l.location : "");
+    })).join(", ");
+  }
   function chosenLessons(m) {
     var groups = lessonGroups(m);
     if (groups.length === 0) return [];
@@ -838,9 +852,7 @@
     // What the button folds away — and what expanding it shows: the classes to
     // choose between, or the sessions of the one class this row is about.
     var one = narrowed || groups.length === 1;
-    var full = one ? labels : countedUniq(groups.map(function (g) {
-      return uniq(g.map(lessonLabel)).join(", ") + (g[0].location ? " · " + g[0].location : "");
-    }));
+    var full = one ? labels : countedUniq(groups.map(classLabel));
     if (slotsOpen[m.code]) {
       return chips(full, "slot") + moreButton(m.code, s.hide, true, "");
     }
@@ -882,8 +894,7 @@
     groups.forEach(function (g, i) {
       // The class number is part of the label — it is how the official timetable
       // identifies the Durchführung the student has to enrol in.
-      var label = g.map(lessonLabel).join(", ") + (g[0].location ? " · " + g[0].location : "") +
-        (g[0].number ? " · " + g[0].number : "");
+      var label = classLabel(g) + (g[0].number ? " · " + g[0].number : "");
       html += '<option value="' + esc(groupKey(g, i)) + '"' + (i === chosen ? " selected" : "") + ">" + esc(label) + "</option>";
     });
     return html + "</select></div>";

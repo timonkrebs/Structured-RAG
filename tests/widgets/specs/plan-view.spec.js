@@ -18,6 +18,18 @@ test.use({ viewport: VIEWPORT });
 const CHIP_LIMIT = 3;
 const classCount = (m) =>
   new Set((m.lessons || []).map((l, i) => l.number || `#${i}`)).size;
+/** A module's lessons grouped into the classes a student enrols in. */
+const groupsOf = (m) => {
+  const by = new Map();
+  (m.lessons || []).forEach((l, i) => {
+    const key = l.number || `#${i}`;
+    by.set(key, (by.get(key) || []).concat(l));
+  });
+  return [...by.values()];
+};
+/** A class that meets at more than one campus — the label trap. */
+const splitClass = (m) =>
+  groupsOf(m).find((g) => new Set(g.map((l) => l.location)).size > 1);
 /** The eligible module with the most parallel classes — the worst chip case. */
 const multiClass = fixture.eligible
   .map((e) => e.module)
@@ -171,8 +183,14 @@ test.describe("class chips", () => {
     await settle(page, frame);
 
     // The picker below the row is where the other classes live now.
-    expect(await frame.$$eval(`li[data-mod="${multiClass.code}"] select.class-pick option`,
-      (e) => e.length)).toBe(classCount(multiClass));
+    const options = await frame.$$eval(`li[data-mod="${multiClass.code}"] select.class-pick option`,
+      (e) => e.map((o) => o.textContent));
+    expect(options.length).toBe(classCount(multiClass));
+    // ...and it names the campus per session too, for the same reason.
+    const split = splitClass(multiClass);
+    const option = options.find((o) => split.every((l) => o.includes(l.location)));
+    expect(option, `no option carries both campuses: ${options.join(" | ")}`).toBeTruthy();
+    for (const l of split) expect(option).toContain(`${l.start}–${l.end} · ${l.location}`);
     // The row now shows the slots of that one class — a class can have two
     // weekly slots — and none of the other classes' times.
     const chosen = multiClass.lessons.filter((l) => l.number === multiClass.lessons[0].number);
@@ -211,6 +229,14 @@ test.describe("class chips", () => {
     // The classes are told apart by where they meet, like in the picker.
     const locations = new Set(multiClass.lessons.map((l) => l.location).filter(Boolean));
     for (const where of locations) expect(shown.join(" | ")).toContain(where);
+    // A class can meet at two campuses on two weekdays, so each session keeps
+    // its own — reading the first one off the whole class sends the student to
+    // the wrong place on the second day.
+    const split = splitClass(multiClass);
+    expect(split, "fixture needs a class spanning campuses").toBeTruthy();
+    const chip = listed.find((c) => split.every((l) => c.includes(l.location)));
+    expect(chip, `no chip carries both campuses: ${listed.join(" | ")}`).toBeTruthy();
+    for (const l of split) expect(chip).toContain(`${l.start}–${l.end} · ${l.location}`);
 
     await frame.$eval(moreButton(multiClass.code), (el) => el.click());
     await settle(page, frame);
