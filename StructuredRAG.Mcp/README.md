@@ -49,11 +49,13 @@ milliseconds.
 `plan_semester`, `compare_modules` and `plan_path` don't just return JSON — in hosts
 with widget support they render interactive UI:
 
-- **Semester plan builder** (on `plan_semester`): pick eligible modules via checkboxes,
-  watch a live ECTS meter against the target (`ectsTarget` parameter, default 30), get
-  same-weekday hints and see why blocked modules are blocked. "Details" fetches the
-  current official description through the `fetch` tool; "Send plan to chat" hands the
-  draft back to the model for review.
+- **Semester plan builder** (on `plan_semester`): opens on the plan itself — the
+  modules the assistant proposed, their week timetable and a live ECTS meter against
+  the target (`ectsTarget` parameter, default 30) — with a switch to the semester's
+  full offering, where eligible modules are picked via checkboxes inside the category
+  accordion. Clash hints, class (Anlass) pickers and the reasons blocked modules are
+  blocked come along; "Details" fetches the current official description through the
+  `fetch` tool, and "Send plan to chat" hands the draft back to the model for review.
 - **Module comparer** (on `compare_modules`): side-by-side table with tags shared by
   all modules highlighted; columns can be removed or added (the widget re-calls
   `compare_modules`).

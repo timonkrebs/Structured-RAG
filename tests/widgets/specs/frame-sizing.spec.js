@@ -27,7 +27,7 @@ test.describe("frame sizing", () => {
   }
 
   test("collapsing a category shrinks the frame back to the content", async ({ page }) => {
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     const collapsed = await geometry(page, frame);
 
     await toggleFirstCategory(frame);
@@ -46,7 +46,7 @@ test.describe("frame sizing", () => {
   test("expanding a category by hand grows the frame", async ({ page }) => {
     // The native <details> toggle bypasses render(); without its own size report
     // the host never hears about the new height and clips the open category.
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     const before = await geometry(page, frame);
 
     await toggleFirstCategory(frame);
@@ -79,7 +79,7 @@ test.describe("frame sizing", () => {
   test("a shrink through an ordinary render is reported too", async ({ page }) => {
     // Same floor, reached without the accordion: grow the frame, then let a
     // render (unticking a module drops it from the timetable) shrink the content.
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     await toggleFirstCategory(frame);
     await settle(page, frame);
     const expanded = await geometry(page, frame);

@@ -4,19 +4,50 @@ const { expect } = require("@playwright/test");
 const PORT = Number(process.env.WIDGET_TEST_PORT || 5601);
 const VIEWPORT = { width: 1000, height: 800 };
 
-/** Opens the host page and returns the widget's frame once it has rendered. */
+/**
+ * Opens the host page and returns the widget's frame once it has rendered.
+ *
+ * The semester planner opens on the student's plan when the payload carries a
+ * proposal (issue #34), so specs about the full module list — the accordion,
+ * everything the catalog view holds — pass `{ view: "all" }` and get there the
+ * way a student does: by clicking the switch.
+ */
 async function openWidget(page, opts = {}) {
   const q = new URLSearchParams({
     w: opts.widget || "semester-planner.html",
     delay: String(opts.resizeDelay === undefined ? 60 : opts.resizeDelay),
     maxh: String(opts.maxFrameHeight || 0),
+    proposal: opts.proposal === false ? "0" : "1",
   });
   await page.goto(`http://localhost:${PORT}/?${q}`);
   const frame = await (await page.waitForSelector("#w")).contentFrame();
   await frame.waitForSelector(opts.waitFor || "#root > *", { timeout: 20000 });
   // Let the opening size report land, so tests start from a settled frame.
   await settle(page, frame, opts.resizeDelay);
+  if (opts.view) {
+    await setView(frame, opts.view);
+    await settle(page, frame, opts.resizeDelay);
+  }
   return frame;
+}
+
+/** Clicks the plan ⇄ catalog switch of the semester planner ("plan" | "all"). */
+async function setView(frame, view) {
+  // Re-queried each call: a render replaces #root wholesale, detaching handles.
+  const button = await frame.$(`.view-switch button[data-view="${view}"]`);
+  if (!button) throw new Error(`no view switch button for "${view}"`);
+  await button.evaluate((el) => el.click());
+}
+
+/** Which view the switch reports as active, or null when there is no switch. */
+async function activeView(frame) {
+  return frame.$eval(".view-switch button[aria-pressed='true']",
+    (el) => el.getAttribute("data-view")).catch(() => null);
+}
+
+/** The module codes of the rows the list currently renders, in order. */
+async function listedRows(frame) {
+  return frame.$$eval("li[data-mod]", (els) => els.map((e) => e.getAttribute("data-mod")));
 }
 
 /**
@@ -110,4 +141,5 @@ module.exports = {
   PORT, VIEWPORT, openWidget, settle, geometry,
   timetableBlocks, deepestTimetableBlock, rowInView,
   toggleCategory, toggleFirstCategory, pushHostUpdate,
+  setView, activeView, listedRows,
 };

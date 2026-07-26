@@ -3,6 +3,10 @@
 // holding the row changes the widget's height, and the host applies heights
 // asynchronously: scroll too early and the host's resize resets the widget's own
 // scroller, dumping the student at the top of the widget.
+//
+// These scenarios drive the catalog view ({ view: "all" }) because that is where
+// the accordion lives; plan-view.spec.js covers the same jump in the view the
+// widget opens in.
 const { test, expect } = require("@playwright/test");
 const {
   VIEWPORT, openWidget, settle, timetableBlocks, deepestTimetableBlock, rowInView,
@@ -21,7 +25,7 @@ async function clickBlock(page, frame, code) {
 
 test.describe("timetable → module row", () => {
   test("the accordion starts collapsed, so the row is hidden before the click", async ({ page }) => {
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     expect(await frame.$$eval("details.cat", (e) => e.length)).toBeGreaterThan(1);
     expect(await frame.$$eval("details.cat[open]", (e) => e.length)).toBe(0);
     expect((await timetableBlocks(frame)).length).toBeGreaterThan(1);
@@ -29,7 +33,7 @@ test.describe("timetable → module row", () => {
 
   for (const resizeDelay of [60, 400]) {
     test(`lands on the row with a collapsed accordion (host resize latency ${resizeDelay}ms)`, async ({ page }) => {
-      const frame = await openWidget(page, { resizeDelay });
+      const frame = await openWidget(page, { resizeDelay, view: "all" });
       const code = await deepestTimetableBlock(frame);
 
       await clickBlock(page, frame, code);
@@ -41,7 +45,7 @@ test.describe("timetable → module row", () => {
   }
 
   test("lands on the row when the accordion is already open", async ({ page }) => {
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     const codes = await timetableBlocks(frame);
 
     await clickBlock(page, frame, await deepestTimetableBlock(frame));
@@ -53,7 +57,7 @@ test.describe("timetable → module row", () => {
   });
 
   test("survives a host re-render arriving mid-navigation", async ({ page }) => {
-    const frame = await openWidget(page, { resizeDelay: 200 });
+    const frame = await openWidget(page, { resizeDelay: 200, view: "all" });
     const code = await deepestTimetableBlock(frame);
 
     await clickBlock(page, frame, code);
@@ -67,7 +71,7 @@ test.describe("timetable → module row", () => {
   });
 
   test("lands on the row after the student expanded a category by hand", async ({ page }) => {
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     const code = await deepestTimetableBlock(frame);
 
     await toggleFirstCategory(frame); // native <details> toggle, not a render
@@ -82,7 +86,7 @@ test.describe("timetable → module row", () => {
     // The widget genuinely overflows its frame at click time here, which is what
     // a fixed-height host looks like from the inside — it must not be mistaken
     // for one, or it scrolls its own scroller and the host resets it.
-    const frame = await openWidget(page, { resizeDelay: 400 });
+    const frame = await openWidget(page, { resizeDelay: 400, view: "all" });
     const code = await deepestTimetableBlock(frame);
 
     await toggleFirstCategory(frame);
@@ -99,7 +103,7 @@ test.describe("timetable → module row", () => {
   test("waits for the newest size report, not the click that started it", async ({ page }) => {
     // A slow host plus a re-render late in the wait: the newer report is still
     // in flight when the original fallback would have expired.
-    const frame = await openWidget(page, { resizeDelay: 2000 });
+    const frame = await openWidget(page, { resizeDelay: 2000, view: "all" });
     const code = await deepestTimetableBlock(frame);
 
     await clickBlock(page, frame, code);
@@ -115,7 +119,7 @@ test.describe("timetable → module row", () => {
     // the widget remembers the OLD height as what it asked the host for, it reads
     // the shrunken frame as a host that caps it, scrolls immediately, and the
     // resize that follows the next expansion resets that scroll.
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     await toggleFirstCategory(frame); // grow
     await page.waitForTimeout(400);
     await toggleFirstCategory(frame); // ...and back down
@@ -134,7 +138,7 @@ test.describe("timetable → module row", () => {
     // frame. That is safe — the scroll goes to the host page, which a frame
     // resize does not disturb — and this pins that down: the widget must not
     // start scrolling itself here, or the pending shrink would clamp it.
-    const frame = await openWidget(page, { resizeDelay: 800 });
+    const frame = await openWidget(page, { resizeDelay: 800, view: "all" });
     await toggleCategory(frame, 0);
     await toggleCategory(frame, 1);
     await settle(page, frame, 800);
@@ -163,7 +167,7 @@ test.describe("timetable → module row", () => {
     // An auto-sizing host that takes longer than the grace period to honour a
     // report still overflows the frame when the student clicks. Reading that as
     // a fixed-height host scrolls immediately, and the late resize resets it.
-    const frame = await openWidget(page, { resizeDelay: 900 });
+    const frame = await openWidget(page, { resizeDelay: 900, view: "all" });
     const code = await deepestTimetableBlock(frame);
     // Positioned before the window opens: scrolling the timetable into view
     // afterwards would eat most of it and the click would land after the resize.
@@ -182,7 +186,7 @@ test.describe("timetable → module row", () => {
   });
 
   test("scrolls itself, promptly, when the host caps the frame", async ({ page }) => {
-    const frame = await openWidget(page, { maxFrameHeight: 500 });
+    const frame = await openWidget(page, { maxFrameHeight: 500, view: "all" });
     const code = await deepestTimetableBlock(frame);
 
     // Timed from the click itself — scrolling the timetable into view first would
@@ -203,7 +207,7 @@ test.describe("timetable → module row", () => {
   });
 
   test("the flash cue expires instead of firing on every later render", async ({ page }) => {
-    const frame = await openWidget(page);
+    const frame = await openWidget(page, { view: "all" });
     const codes = await timetableBlocks(frame);
 
     const before = await page.evaluate(() => window.scrollY);
