@@ -50,6 +50,12 @@ StructuredRAG.sln
   [StructuredRAG.Mcp/README.md](StructuredRAG.Mcp/README.md) for the tool reference.
   The widget HTML files in `Widgets/` are embedded in the assembly and served as MCP
   resources for both the OpenAI Apps SDK (ChatGPT) and the MCP Apps extension.
+  Each page is composed at serve time from its own markup plus two shared parts,
+  `Widgets/_tokens.css` (design system) and `Widgets/_host.js` (host bridge and
+  common helpers), pulled in by a line holding only `{{include:<file>}}` inside a
+  comment. `WidgetResources.LoadWidgetHtml` does the substitution and caches the
+  result; `tests/widgets/harness/server.js` mirrors it so the browser tests drive
+  the same HTML a host receives. Edit the shared file, not four copies.
 
 ## LLM Transport (`ILlmClient`)
 

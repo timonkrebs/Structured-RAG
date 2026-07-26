@@ -31,11 +31,21 @@ CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium-*/chrome-linux/chrome npm test
 
 | Path | What it is |
 | --- | --- |
-| `harness/server.js` | Static server plus the scriptable host page. Query string controls which widget is loaded, how long the host takes to apply a reported size (`delay`), and whether it caps the frame (`maxh`). |
+| `harness/server.js` | Static server plus the scriptable host page. Query string controls which widget is loaded, how long the host takes to apply a reported size (`delay`), and whether it caps the frame (`maxh`). Also composes the widgets (see below). |
 | `harness/widget.js` | Helpers the specs share: open a widget, wait for the frame to settle, read geometry, click accordions, push host updates. |
 | `specs/timetable-navigation.spec.js` | Clicking a Modulanlass in the timetable lands on that module's row (issue #35). |
 | `specs/frame-sizing.spec.js` | The height a widget reports tracks its content in both directions, including absolutely positioned overflow. |
+| `specs/composition.spec.js` | The shared-part assembly: every include resolves, nothing is defined twice, the composed script parses. No browser. |
 | `fixtures/*.json` | Committed tool payloads. |
+
+## Composition
+
+A widget page is not what ships: `Widgets/_tokens.css` and `Widgets/_host.js`
+are inlined into it at serve time, wherever a line holds only
+`{{include:<file>}}` inside a comment. The real server does this in
+`WidgetResources.LoadWidgetHtml`; `harness/server.js` repeats it so these tests
+drive the same HTML a host receives. Change one and change the other — a
+mismatch means the tests stop testing what is deployed.
 
 ## Fixtures
 
