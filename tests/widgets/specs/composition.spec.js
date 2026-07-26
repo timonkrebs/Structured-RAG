@@ -59,4 +59,18 @@ test.describe("widget composition", () => {
         .not.toMatch(new RegExp(MARKER.source, "m"));
     }
   });
+
+  // The marker is anchored to end-of-line, and .NET's multiline $ sits before the
+  // \n of a CRLF pair — so a CRLF working tree used to make LoadWidgetHtml match
+  // nothing and, because the guard shares the pattern, fail silently. The C# regex
+  // now tolerates \r, but this suite cannot prove that: JS treats \r as a line
+  // terminator, so the harness composes CRLF happily and would stay green while the
+  // server shipped raw markers. .gitattributes pins these files to LF; this asserts
+  // it actually held, which is the part CI can check.
+  test("widget sources are LF, as .gitattributes requires", () => {
+    for (const name of [...PAGES, ...SHARED]) {
+      const raw = fs.readFileSync(path.join(WIDGETS, name), "latin1");
+      expect(raw.indexOf("\r"), `CR byte in ${name}`).toBe(-1);
+    }
+  });
 });

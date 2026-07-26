@@ -99,7 +99,12 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".json": "application/json"
 // this in WidgetResources.LoadWidgetHtml — mirrored here so the tests drive the
 // same HTML a host receives, not the un-composed source. Keep the two in sync;
 // a marker that survives substitution is a broken widget, so it throws.
-const INCLUDE_MARKER = /^[ \t]*(?:\/\/|\/\*)[ \t]*\{\{include:([\w.\-]+)\}\}[ \t]*(?:\*\/)?[ \t]*$/gm;
+//
+// The \r? is redundant here (JS treats \r as a line terminator, so $ matches
+// before it) but not in .NET, where its absence silently breaks every CRLF
+// checkout. Kept identical to the C# pattern precisely so this harness cannot
+// compose a file the real server would choke on and leave the suite green.
+const INCLUDE_MARKER = /^[ \t]*(?:\/\/|\/\*)[ \t]*\{\{include:([\w.\-]+)\}\}[ \t]*(?:\*\/)?[ \t]*\r?$/gm;
 
 function composeWidget(file) {
   const html = fs.readFileSync(file, "utf8").replace(INCLUDE_MARKER, (_, name) => {

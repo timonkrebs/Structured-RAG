@@ -1,0 +1,16 @@
+# Normalize line endings on checkin; let Git decide the working-tree form.
+* text=auto
+
+# The widget sources are composed at serve time by matching an include marker
+# anchored to end-of-line (WidgetResources.LoadWidgetHtml). Keep them LF in every
+# working tree: the pattern tolerates CRLF, but the composed HTML is also compared
+# byte-for-byte against the test harness's output, and a CRLF checkout would make
+# the two disagree for no useful reason.
+StructuredRAG.Mcp/Widgets/*.html text eol=lf
+StructuredRAG.Mcp/Widgets/*.css  text eol=lf
+StructuredRAG.Mcp/Widgets/*.js   text eol=lf
+
+# Committed build inputs/outputs that are diffed and hashed.
+compiled/*.json         text eol=lf
+compiled-sample/*.json  text eol=lf
+data/*.json             text eol=lf

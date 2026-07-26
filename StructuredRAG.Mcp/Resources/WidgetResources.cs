@@ -181,9 +181,16 @@ public static class WidgetResources
     /// and the host bridge live in one file each instead of being copied into all four
     /// widgets. Character classes are <c>[ \t]</c> rather than <c>\s</c> on purpose: a
     /// newline-crossing match would swallow the surrounding structure.
+    ///
+    /// The trailing <c>\r?</c> is load-bearing on Windows checkouts. .NET's multiline
+    /// <c>$</c> matches immediately before <c>\n</c>, leaving the <c>\r</c> of a CRLF
+    /// line unconsumed — without it no marker matches, and because the guard below uses
+    /// this same pattern it would not fire either: every widget would ship with its
+    /// markers intact and die at <c>boot()</c>. .gitattributes keeps these files LF, but
+    /// the pattern does not depend on that holding.
     /// </summary>
     private static readonly System.Text.RegularExpressions.Regex IncludeMarker = new(
-        @"^[ \t]*(?://|/\*)[ \t]*\{\{include:([\w.\-]+)\}\}[ \t]*(?:\*/)?[ \t]*$",
+        @"^[ \t]*(?://|/\*)[ \t]*\{\{include:([\w.\-]+)\}\}[ \t]*(?:\*/)?[ \t]*\r?$",
         System.Text.RegularExpressions.RegexOptions.Multiline |
         System.Text.RegularExpressions.RegexOptions.Compiled);
 
